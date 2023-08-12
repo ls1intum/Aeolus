@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JsonSchemaMappingsProjectConfiguration">
+    <state>
+      <map>
+        <entry key="ma_action_schema">
+          <value>
+            <SchemaInfo>
+              <option name="generatedName" value="New Schema" />
+              <option name="name" value="ma_action_schema" />
+              <option name="relativePathToSchema" value="schemas/action_0.0.1.schema.json" />
+              <option name="schemaVersion" value="JSON Schema version 7" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="schemas/examples/wind.yaml" />
+                  </Item>
+                  <Item>
+                    <option name="path" value="schemas/examples/action.yaml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+        <entry key="ma_windfile_schema">
+          <value>
+            <SchemaInfo>
+              <option name="generatedName" value="New Schema" />
+              <option name="name" value="ma_windfile_schema" />
+              <option name="relativePathToSchema" value="schemas/windfile_0.0.1.schema.json" />
+              <option name="patterns">
+                <list>
+                  <Item>
+                    <option name="path" value="schemas/examples/windfile.yml" />
+                  </Item>
+                </list>
+              </option>
+            </SchemaInfo>
+          </value>
+        </entry>
+      </map>
+    </state>
+  </component>
+</project>

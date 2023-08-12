@@ -1,0 +1,16 @@
+api: v0.0.1
+metadata:
+  name: action file
+  description: |
+    This is a simple example of an action spec that passes validation.
+  author:
+    name: Andreas Resch
+    email: aeolus@resch.io
+steps:
+  clone:
+    use: clone-default
+    description: |
+      This job clones a git repository.
+  build:
+    script: |
+      cargo build

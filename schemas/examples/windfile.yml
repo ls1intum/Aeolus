@@ -1,0 +1,15 @@
+api: v0.0.1
+metadata:
+  name: windfile
+  description: |
+    This is a simple example of a windfile that passes validation.
+  author:
+    name: Andreas Resch
+jobs:
+  clone:
+    use: clone-default
+    description: |
+      This job clones a git repository.
+  run:
+    script: |
+      echo "Hello World"
