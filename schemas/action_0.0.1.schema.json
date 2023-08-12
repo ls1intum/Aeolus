@@ -1,0 +1,257 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "action_0.0.1.schema.json",
+  "title": "actionfile",
+  "description": "Defines an action that can be used in a windfile",
+  "type": "object",
+  "required": [
+    "api",
+    "metadata",
+    "steps"
+  ],
+  "properties": {
+    "api": {
+      "title": "API Version",
+      "description": "The API version of the windfile.",
+      "type": "string",
+      "examples": [
+        "v0.0.1"
+      ]
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "steps": {
+      "$ref": "#/$defs/steps"
+    }
+  },
+  "$defs": {
+    "metadata": {
+      "title": "Metadata",
+      "description": "Metadata of the windfile.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "description": "The name of the windfile.",
+          "type": "string",
+          "examples": [
+            "rust-exercise-jobs"
+          ]
+        },
+        "description": {
+          "description": "Description of what this list of actions is supposed to achieve",
+          "type": "string",
+          "examples": [
+            "This windfile contains the jobs that are executed during the CI of the rust-exercise."
+          ]
+        },
+        "author": {
+          "description": "The author of the windfile.",
+          "$ref": "#/$defs/author"
+        },
+        "targets": {
+          "description": "The targets of the windfile.",
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/target"
+          }
+        }
+      },
+      "required": [
+        "name",
+        "description",
+        "author"
+      ]
+    },
+    "author": {
+      "title": "Author",
+      "description": "The author of the windfile.",
+      "oneOf": [
+        {
+          "type": "string",
+          "examples": [
+            "Andreas Resch <aeolus@resch.io>"
+          ]
+        },
+        {
+          "$ref": "#/$defs/contact-data"
+        }
+      ]
+    },
+    "contact-data": {
+      "type": "object",
+      "title": "Contact Data",
+      "properties": {
+        "name": {
+          "description": "The name of the author.",
+          "type": "string",
+          "examples": [
+            "Andreas Resch"
+          ]
+        },
+        "email": {
+          "description": "The email of the author.",
+          "type": "string",
+          "examples": [
+            "aeolus@resch.io"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ]
+    },
+    "action": {
+      "title": "Action",
+      "description": "Action that can be executed.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/external-action"
+        },
+        {
+          "$ref": "#/$defs/internal-action"
+        }
+      ]
+    },
+    "external-action-without-parameters": {
+      "title": "External Action without parameters",
+      "description": "The name of the external action.",
+      "type": "object",
+      "properties": {
+        "use": {
+          "description": "The name of the external action.",
+          "title": "Name of the external action.",
+          "type": "string"
+        },
+        "exclude-during": {
+          "type": "array",
+          "title": "Exclude during",
+          "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+          "items": {
+            "$ref": "#/$defs/lifecycle"
+          }
+        }
+      },
+      "examples": [
+        "clone-default"
+      ]
+    },
+    "internal-action": {
+      "title": "Internal Action",
+      "description": "Internally defined action that can be executed.",
+      "type": "object",
+      "properties": {
+        "script": {
+          "description": "The script of the internal action. Written in aeolus DSL",
+          "type": "string"
+        },
+        "exclude-during": {
+          "type": "array",
+          "title": "Exclude during",
+          "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+          "items": {
+            "$ref": "#/$defs/lifecycle"
+          }
+        }
+      }
+    },
+    "external-action": {
+      "title": "External Action",
+      "description": "External action that can be executed without parameters or with parameters.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/external-action-without-parameters"
+        },
+        {
+          "$ref": "#/$defs/external-action-with-parameters"
+        }
+      ]
+    },
+    "external-action-with-parameters": {
+      "title": "External Action with parameters",
+      "description": "External action that needs parameters to be executed.",
+      "type": "object",
+      "properties": {
+        "use": {
+          "description": "The name of the external action.",
+          "title": "Name of the external action.",
+          "type": "string"
+        },
+        "parameters": {
+          "description": "The parameters of the external action.",
+          "title": "Parameters of the external action.",
+          "$ref": "#/$defs/list_or_dict"
+        },
+        "exclude-during": {
+          "type": "array",
+          "title": "Exclude during",
+          "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+          "items": {
+            "$ref": "#/$defs/lifecycle"
+          }
+        }
+      }
+    },
+    "list_or_dict": {
+      "title": "List or Dictionary",
+      "oneOf": [
+        {
+          "type": "object",
+          "title": "Dictionary"
+        },
+        {
+          "type": "array",
+          "title": "List",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        }
+      ]
+    },
+    "steps": {
+      "title": "Steps",
+      "type": "object",
+      "properties": {
+        "actions": {
+          "description": "The actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the windfile.",
+          "title": "Actions",
+          "type": "object",
+          "patternProperties": {
+            "^[a-zA-Z0-9._-]+$": {
+              "$ref": "#/$defs/action"
+            }
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "title": "Lifecycle",
+      "description": "Defines a part of the lifecycle of a job.",
+      "type": "string",
+      "enum": [
+        "preparation",
+        "working_time",
+        "post_deadline",
+        "evaluation",
+        "always"
+      ],
+      "examples": [
+        "preparation"
+      ]
+    },
+    "target": {
+      "title": "Targets",
+      "description": "The CI platforms that are able to run this windfile.",
+      "type": "string",
+      "enum": [
+        "cli",
+        "jenkins",
+        "bamboo"
+      ],
+      "examples": [
+        "jenkins"
+      ]
+    }
+  }
+}
