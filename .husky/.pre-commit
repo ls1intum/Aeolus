@@ -1,0 +1,11 @@
+!#/usr/bin/env bash
+. "$(dirname "$0")/_/husky.sh"
+source ./cli/venv/bin/activate
+directory="schemas"
+latest_schema_version=$(ls -1v ${directory} | tail -n 1)
+for schema in $(ls ${directory}/${latest_schema_version}/*.schema.json)
+do
+  filename=$(echo "$schema" | sed "s|$directory/$latest_schema_version/||" | sed "s|.schema.json||")
+  echo "Generating $filename.py from $schema"
+  datamodel-codegen --input ${schema} --input-file-type jsonschema --output cli/classes/${filename}.py --output-model-type pydantic_v2.BaseModel
+done

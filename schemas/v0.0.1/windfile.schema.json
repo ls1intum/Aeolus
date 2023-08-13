@@ -1,13 +1,13 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "action_0.0.1.schema.json",
-  "title": "actionfile",
-  "description": "Defines an action that can be used in a windfile",
+  "$id": "windfile.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Windfile",
+  "description": "Defines the actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the windfile.",
   "type": "object",
   "required": [
     "api",
     "metadata",
-    "steps"
+    "jobs"
   ],
   "properties": {
     "api": {
@@ -19,13 +19,18 @@
       ]
     },
     "metadata": {
-      "$ref": "#/$defs/metadata"
+      "$ref": "#/defs/metadata"
     },
-    "steps": {
-      "$ref": "#/$defs/steps"
+    "jobs": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9._-]+$": {
+          "$ref": "#/defs/jobs"
+        }
+      }
     }
   },
-  "$defs": {
+  "defs": {
     "metadata": {
       "title": "Metadata",
       "description": "Metadata of the windfile.",
@@ -47,13 +52,13 @@
         },
         "author": {
           "description": "The author of the windfile.",
-          "$ref": "#/$defs/author"
+          "$ref": "#/defs/author"
         },
         "targets": {
           "description": "The targets of the windfile.",
           "type": "array",
           "items": {
-            "$ref": "#/$defs/target"
+            "$ref": "#/defs/target"
           }
         }
       },
@@ -74,7 +79,7 @@
           ]
         },
         {
-          "$ref": "#/$defs/contact-data"
+          "$ref": "#/defs/contact-data"
         }
       ]
     },
@@ -103,13 +108,12 @@
     },
     "action": {
       "title": "Action",
-      "description": "Action that can be executed.",
       "oneOf": [
         {
-          "$ref": "#/$defs/external-action"
+          "$ref": "#/defs/external-action"
         },
         {
-          "$ref": "#/$defs/internal-action"
+          "$ref": "#/defs/internal-action"
         }
       ]
     },
@@ -128,7 +132,7 @@
           "title": "Exclude during",
           "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
           "items": {
-            "$ref": "#/$defs/lifecycle"
+            "$ref": "#/defs/lifecycle"
           }
         }
       },
@@ -150,7 +154,7 @@
           "title": "Exclude during",
           "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
           "items": {
-            "$ref": "#/$defs/lifecycle"
+            "$ref": "#/defs/lifecycle"
           }
         }
       }
@@ -160,10 +164,10 @@
       "description": "External action that can be executed without parameters or with parameters.",
       "oneOf": [
         {
-          "$ref": "#/$defs/external-action-without-parameters"
+          "$ref": "#/defs/external-action-without-parameters"
         },
         {
-          "$ref": "#/$defs/external-action-with-parameters"
+          "$ref": "#/defs/external-action-with-parameters"
         }
       ]
     },
@@ -180,14 +184,14 @@
         "parameters": {
           "description": "The parameters of the external action.",
           "title": "Parameters of the external action.",
-          "$ref": "#/$defs/list_or_dict"
+          "$ref": "#/defs/list_or_dict"
         },
         "exclude-during": {
           "type": "array",
           "title": "Exclude during",
           "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
           "items": {
-            "$ref": "#/$defs/lifecycle"
+            "$ref": "#/defs/lifecycle"
           }
         }
       }
@@ -209,8 +213,8 @@
         }
       ]
     },
-    "steps": {
-      "title": "Steps",
+    "jobs": {
+      "title": "Jobs",
       "type": "object",
       "properties": {
         "actions": {
@@ -219,7 +223,7 @@
           "type": "object",
           "patternProperties": {
             "^[a-zA-Z0-9._-]+$": {
-              "$ref": "#/$defs/action"
+              "$ref": "#/defs/action"
             }
           }
         }

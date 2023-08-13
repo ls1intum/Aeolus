@@ -1,18 +1,18 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "windfile_0.0.1.schema.json",
-  "title": "Windfile",
-  "description": "Defines the actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the windfile.",
+  "$id": "action.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "actionfile",
+  "description": "Defines an action that can be used in a windfile",
   "type": "object",
   "required": [
     "api",
     "metadata",
-    "jobs"
+    "steps"
   ],
   "properties": {
     "api": {
       "title": "API Version",
-      "description": "The API version of the windfile.",
+      "description": "The API version of the action.",
       "type": "string",
       "examples": [
         "v0.0.1"
@@ -21,23 +21,18 @@
     "metadata": {
       "$ref": "#/$defs/metadata"
     },
-    "jobs": {
-      "type": "object",
-      "patternProperties": {
-        "^[a-zA-Z0-9._-]+$": {
-          "$ref": "#/$defs/jobs"
-        }
-      }
+    "steps": {
+      "$ref": "#/$defs/steps"
     }
   },
   "$defs": {
     "metadata": {
       "title": "Metadata",
-      "description": "Metadata of the windfile.",
+      "description": "Metadata of the action.",
       "type": "object",
       "properties": {
         "name": {
-          "description": "The name of the windfile.",
+          "description": "The name of the action.",
           "type": "string",
           "examples": [
             "rust-exercise-jobs"
@@ -47,15 +42,15 @@
           "description": "Description of what this list of actions is supposed to achieve",
           "type": "string",
           "examples": [
-            "This windfile contains the jobs that are executed during the CI of the rust-exercise."
+            "This actionfile contains the jobs that are executed during the CI of the rust-exercise."
           ]
         },
         "author": {
-          "description": "The author of the windfile.",
+          "description": "The author of the action.",
           "$ref": "#/$defs/author"
         },
         "targets": {
-          "description": "The targets of the windfile.",
+          "description": "The targets of the action.",
           "type": "array",
           "items": {
             "$ref": "#/$defs/target"
@@ -70,7 +65,7 @@
     },
     "author": {
       "title": "Author",
-      "description": "The author of the windfile.",
+      "description": "The author of the action.",
       "oneOf": [
         {
           "type": "string",
@@ -108,6 +103,7 @@
     },
     "action": {
       "title": "Action",
+      "description": "Action that can be executed.",
       "oneOf": [
         {
           "$ref": "#/$defs/external-action"
@@ -213,12 +209,12 @@
         }
       ]
     },
-    "jobs": {
-      "title": "Jobs",
+    "steps": {
+      "title": "Steps",
       "type": "object",
       "properties": {
         "actions": {
-          "description": "The actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the windfile.",
+          "description": "The actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the action.",
           "title": "Actions",
           "type": "object",
           "patternProperties": {
@@ -246,7 +242,7 @@
     },
     "target": {
       "title": "Targets",
-      "description": "The CI platforms that are able to run this windfile.",
+      "description": "The CI platforms that are able to run this action.",
       "type": "string",
       "enum": [
         "cli",
