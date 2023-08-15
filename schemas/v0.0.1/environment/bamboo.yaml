@@ -1,0 +1,7 @@
+# taken from https://confluence.atlassian.com/bamboo/bamboo-variables-289277087.html
+JOB_NAME: bamboo.buildPlanName
+JOB_ID: bamboo.buildNumber
+JOB_URI: bamboo.buildResultKey
+JOB_URL: bamboo.buildResultsUrl
+RUNNER_NAME: bamboo.agentId
+BRANCH_NAME: bamboo.planRepository.branchName
