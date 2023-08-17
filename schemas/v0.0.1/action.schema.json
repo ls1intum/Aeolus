@@ -106,43 +106,27 @@
       "description": "Action that can be executed.",
       "oneOf": [
         {
-          "$ref": "#/$defs/external-action"
+          "$ref": "#/$defs/file-action"
         },
         {
           "$ref": "#/$defs/internal-action"
-        }
-      ]
-    },
-    "external-action-without-parameters": {
-      "title": "External Action without parameters",
-      "description": "The name of the external action.",
-      "type": "object",
-      "properties": {
-        "use": {
-          "description": "The name of the external action.",
-          "title": "Name of the external action.",
-          "type": "string"
         },
-        "exclude-during": {
-          "type": "array",
-          "title": "Exclude during",
-          "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
-          "items": {
-            "$ref": "#/$defs/lifecycle"
-          }
+        {
+          "$ref": "#/$defs/platform-action"
         }
-      },
-      "examples": [
-        "clone-default"
       ]
     },
-    "internal-action": {
-      "title": "Internal Action",
-      "description": "Internally defined action that can be executed.",
+    "platform-action": {
+      "title": "Platform Action",
+      "description": "Action that is defined for a specific platform.",
       "type": "object",
       "properties": {
-        "script": {
-          "description": "The script of the internal action. Written in aeolus DSL",
+        "platform": {
+          "description": "The platform that this action is defined for.",
+          "$ref": "#/$defs/target"
+        },
+        "file": {
+          "description": "The file of the platform action. Written in Python",
           "type": "string"
         },
         "exclude-during": {
@@ -155,32 +139,33 @@
         }
       }
     },
-    "external-action": {
-      "title": "External Action",
-      "description": "External action that can be executed without parameters or with parameters.",
-      "oneOf": [
-        {
-          "$ref": "#/$defs/external-action-without-parameters"
-        },
-        {
-          "$ref": "#/$defs/external-action-with-parameters"
-        }
-      ]
-    },
-    "external-action-with-parameters": {
-      "title": "External Action with parameters",
-      "description": "External action that needs parameters to be executed.",
+    "file-action": {
+      "title": "File Action",
+      "description": "Action that is defined in a file.",
       "type": "object",
       "properties": {
-        "use": {
-          "description": "The name of the external action.",
-          "title": "Name of the external action.",
+        "file": {
+          "description": "The file that contains the action.",
           "type": "string"
         },
-        "parameters": {
-          "description": "The parameters of the external action.",
-          "title": "Parameters of the external action.",
-          "$ref": "#/$defs/list_or_dict"
+        "exclude-during": {
+          "type": "array",
+          "title": "Exclude during",
+          "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+          "items": {
+            "$ref": "#/$defs/lifecycle"
+          }
+        }
+      }
+    },
+    "internal-action": {
+      "title": "Internal Action",
+      "description": "Internally defined action that can be executed.",
+      "type": "object",
+      "properties": {
+        "script": {
+          "description": "The script of the internal action. Written in aeolus DSL",
+          "type": "string"
         },
         "exclude-during": {
           "type": "array",

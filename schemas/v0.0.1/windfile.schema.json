@@ -19,18 +19,18 @@
       ]
     },
     "metadata": {
-      "$ref": "#/defs/metadata"
+      "$ref": "#/$defs/metadata"
     },
     "jobs": {
       "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9._-]+$": {
-          "$ref": "#/defs/jobs"
+          "$ref": "#/$defs/jobs"
         }
       }
     }
   },
-  "defs": {
+  "$defs": {
     "metadata": {
       "title": "Metadata",
       "description": "Metadata of the windfile.",
@@ -52,13 +52,13 @@
         },
         "author": {
           "description": "The author of the windfile.",
-          "$ref": "#/defs/author"
+          "$ref": "#/$defs/author"
         },
         "targets": {
           "description": "The targets of the windfile.",
           "type": "array",
           "items": {
-            "$ref": "#/defs/target"
+            "$ref": "#/$defs/target"
           }
         }
       },
@@ -79,7 +79,7 @@
           ]
         },
         {
-          "$ref": "#/defs/contact-data"
+          "$ref": "#/$defs/contact-data"
         }
       ]
     },
@@ -108,12 +108,16 @@
     },
     "action": {
       "title": "Action",
+      "description": "Action that can be executed.",
       "oneOf": [
         {
-          "$ref": "#/defs/external-action"
+          "$ref": "#/$defs/file-action"
         },
         {
-          "$ref": "#/defs/internal-action"
+          "$ref": "#/$defs/internal-action"
+        },
+        {
+          "$ref": "#/$defs/platform-action"
         }
       ]
     },
@@ -132,13 +136,55 @@
           "title": "Exclude during",
           "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
           "items": {
-            "$ref": "#/defs/lifecycle"
+            "$ref": "#/$defs/lifecycle"
           }
         }
       },
       "examples": [
         "clone-default"
       ]
+    },
+    "platform-action": {
+      "title": "Platform Action",
+      "description": "Action that is defined for a specific platform.",
+      "type": "object",
+      "properties": {
+        "platform": {
+          "description": "The platform that this action is defined for.",
+          "$ref": "#/$defs/target"
+        },
+        "file": {
+          "description": "The file of the platform action. Written in Python",
+          "type": "string"
+        },
+        "exclude-during": {
+          "type": "array",
+          "title": "Exclude during",
+          "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+          "items": {
+            "$ref": "#/$defs/lifecycle"
+          }
+        }
+      }
+    },
+    "file-action": {
+      "title": "File Action",
+      "description": "Action that is defined in a file.",
+      "type": "object",
+      "properties": {
+        "file": {
+          "description": "The file that contains the action.",
+          "type": "string"
+        },
+        "exclude-during": {
+          "type": "array",
+          "title": "Exclude during",
+          "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+          "items": {
+            "$ref": "#/$defs/lifecycle"
+          }
+        }
+      }
     },
     "internal-action": {
       "title": "Internal Action",
@@ -154,7 +200,7 @@
           "title": "Exclude during",
           "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
           "items": {
-            "$ref": "#/defs/lifecycle"
+            "$ref": "#/$defs/lifecycle"
           }
         }
       }
@@ -164,10 +210,10 @@
       "description": "External action that can be executed without parameters or with parameters.",
       "oneOf": [
         {
-          "$ref": "#/defs/external-action-without-parameters"
+          "$ref": "#/$defs/external-action-without-parameters"
         },
         {
-          "$ref": "#/defs/external-action-with-parameters"
+          "$ref": "#/$defs/external-action-with-parameters"
         }
       ]
     },
@@ -184,14 +230,14 @@
         "parameters": {
           "description": "The parameters of the external action.",
           "title": "Parameters of the external action.",
-          "$ref": "#/defs/list_or_dict"
+          "$ref": "#/$defs/list_or_dict"
         },
         "exclude-during": {
           "type": "array",
           "title": "Exclude during",
           "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
           "items": {
-            "$ref": "#/defs/lifecycle"
+            "$ref": "#/$defs/lifecycle"
           }
         }
       }
@@ -223,7 +269,7 @@
           "type": "object",
           "patternProperties": {
             "^[a-zA-Z0-9._-]+$": {
-              "$ref": "#/defs/action"
+              "$ref": "#/$defs/action"
             }
           }
         }
