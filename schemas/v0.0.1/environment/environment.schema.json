@@ -1,0 +1,65 @@
+{
+  "$id": "environment.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Environment Schema",
+  "description": "Defines the available environment variables that can be used in an aeolus job. To be compliant with aeolus, all environment variables need to be mapped to the corresponding environment variables of the CI system.",
+  "type": "object",
+  "required": [
+    "JOB_NAME",
+    "JOB_ID",
+    "JOB_URI",
+    "JOB_URL",
+    "RUNNER_NAME",
+    "BRANCH_NAME"
+  ],
+  "properties": {
+    "JOB_NAME": {
+      "description": "The name of the job that is currently executed.",
+      "type": "string",
+      "examples": [
+        "JOB_NAME",
+        "bamboo.buildPlanName"
+      ]
+    },
+    "JOB_ID": {
+      "description": "The id of the job that is currently executed.",
+      "type": "string",
+      "examples": [
+        "BUILD_ID",
+        "bamboo.buildNumber"
+      ]
+    },
+    "JOB_URI": {
+      "description": "The identifier of the job that is currently executed.",
+      "type": "string",
+      "examples": [
+        "BUILD_TAG",
+        "bamboo.buildResultKey"
+      ]
+    },
+    "JOB_URL": {
+      "description": "The url of the result of the job that is currently executed.",
+      "type": "string",
+      "examples": [
+        "BUILD_URL",
+        "bamboo.buildResultsUrl"
+      ]
+    },
+    "RUNNER_NAME": {
+      "description": "The name of the runner that is executing the job.",
+      "type": "string",
+      "examples": [
+        "NODE_NAME",
+        "bamboo.agentId"
+      ]
+    },
+    "BRANCH_NAME": {
+      "description": "The name of the branch that is currently executed.",
+      "type": "string",
+      "examples": [
+        "BRANCH_NAME",
+        "bamboo.planRepository.branchName"
+      ]
+    }
+  }
+}

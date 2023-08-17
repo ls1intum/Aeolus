@@ -1,0 +1,8 @@
+# taken from https://www.jenkins.io/doc/book/pipeline/jenkinsfile/#using-environment-variables
+# and with artemis setup http://localhost:8082/pipeline-syntax/globals#env
+JOB_NAME: JOB_NAME
+JOB_ID: BUILD_ID
+JOB_URI: BUILD_TAG
+JOB_URL: BUILD_URL
+RUNNER_NAME: NODE_NAME
+BRANCH_NAME: BRANCH_NAME

@@ -1,0 +1,6 @@
+JOB_NAME: cli.job
+JOB_ID: 1 # we don't have a build number in cli
+JOB_URI: PWD
+JOB_URL: PWD
+RUNNER_NAME: $0
+BRANCH_NAME: cli.branch
