@@ -118,7 +118,11 @@ class Validator(Subcommand):
         :param path: path to input
         :return: Windfile or None
         """
-        return self.read_file(filetype=Windfile, path=path)
+        # this shuts mypy up about the type
+        windfile: type[Windfile] | None = self.read_file(filetype=Windfile, path=path)
+        if isinstance(windfile, Windfile):
+            return windfile
+        return None
 
     def read_actionfile(self, path: TextIOWrapper) -> Optional[Actionfile]:
         """
@@ -126,7 +130,11 @@ class Validator(Subcommand):
         :param path: path to input
         :return: Actionfile or None
         """
-        return self.read_file(filetype=Actionfile, path=path)
+        # this shuts mypy up about the type
+        action_file: type[Actionfile] | None = self.read_file(filetype=Actionfile, path=path)
+        if isinstance(action_file, Actionfile):
+            return action_file
+        return None
 
     def validate(self) -> Actionfile | Windfile | None:
         """
