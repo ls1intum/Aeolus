@@ -1,0 +1,8 @@
+api: v0.0.1
+metadata:
+  name: windfile-with-internal-action
+  description: This is a windfile with an internal action
+  author: Andreas Resch
+jobs:
+  external-action:
+    use: ../actions/external-action.yml

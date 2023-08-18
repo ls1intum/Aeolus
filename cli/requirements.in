@@ -1,2 +1,8 @@
 pip-tools
 datamodel-code-generator
+ruamel-yaml
+ruamel-yaml-clib
+argparse
+mypy
+pyyaml
+types-pyyaml

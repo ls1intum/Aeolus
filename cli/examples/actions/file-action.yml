@@ -1,0 +1,10 @@
+api: v0.0.1
+metadata:
+  name: simple action
+  description: This is an action with a simple script
+  author:
+    name: Andreas Resch
+    email: andreas@resch.io
+steps:
+  hello-world:
+    file: ./file-action.py

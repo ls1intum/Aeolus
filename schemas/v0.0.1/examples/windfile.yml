@@ -8,8 +8,6 @@ metadata:
 jobs:
   clone:
     use: clone-default
-    description: |
-      This job clones a git repository.
   run:
     script: |
       echo "Hello World"

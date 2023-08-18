@@ -8,9 +8,7 @@ metadata:
     email: aeolus@resch.io
 steps:
   clone:
-    use: clone-default
-    description: |
-      This job clones a git repository.
+    file: clone-default.py
   build:
     script: |
       cargo build
