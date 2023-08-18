@@ -16,6 +16,9 @@
     "metadata": {
       "$ref": "definitions.schema.json#/metadata"
     },
+    "environment": {
+      "$ref": "definitions.schema.json#/environment"
+    },
     "steps": {
       "title": "Steps",
       "description": "The actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the action.",

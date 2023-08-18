@@ -1,5 +1,7 @@
 import argparse
 import sys
+
+from commands.merger import Merger
 from commands.validator import Validator
 
 
@@ -31,7 +33,10 @@ def add_argparse() -> argparse.ArgumentParser:
     )
 
     validate_parser = subparsers.add_parser(name="validate")
-    Validator.add_arg_parser(validate_parser)
+    Validator.add_arg_parser(parser=validate_parser)
+
+    merger_parser = subparsers.add_parser(name="merge")
+    Merger.add_arg_parser(parser=merger_parser)
     return arg_parser
 
 

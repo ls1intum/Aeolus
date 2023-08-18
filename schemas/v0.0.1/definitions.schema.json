@@ -104,30 +104,6 @@
       }
     ]
   },
-  "external-action-without-parameters": {
-    "title": "External Action without parameters",
-    "description": "The name of the external action.",
-    "type": "object",
-    "additionalProperties": false,
-    "properties": {
-      "use": {
-        "description": "The name of the external action.",
-        "title": "Name of the external action.",
-        "type": "string"
-      },
-      "exclude-during": {
-        "type": "array",
-        "title": "Exclude during",
-        "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
-        "items": {
-          "$ref": "#/lifecycle"
-        }
-      }
-    },
-    "required": [
-      "use"
-    ]
-  },
   "platform-action": {
     "title": "Platform Action",
     "description": "Action that is defined for a specific platform.",
@@ -149,6 +125,10 @@
         "items": {
           "$ref": "#/lifecycle"
         }
+      },
+      "environment": {
+        "description": "Environment variables for this platform action.",
+        "$ref": "#/environment"
       }
     },
     "required": [
@@ -173,6 +153,10 @@
         "items": {
           "$ref": "#/lifecycle"
         }
+      },
+      "environment": {
+        "description": "Environment variables for this file action.",
+        "$ref": "#/environment"
       }
     }
   },
@@ -193,6 +177,10 @@
         "items": {
           "$ref": "#/lifecycle"
         }
+      },
+      "environment": {
+        "description": "Environment variables for this internal action.",
+        "$ref": "#/environment"
       }
     },
     "required": [
@@ -201,19 +189,7 @@
   },
   "external-action": {
     "title": "External Action",
-    "description": "External action that can be executed without parameters or with parameters.",
-    "oneOf": [
-      {
-        "$ref": "#/external-action-without-parameters"
-      },
-      {
-        "$ref": "#/external-action-with-parameters"
-      }
-    ]
-  },
-  "external-action-with-parameters": {
-    "title": "External Action with parameters",
-    "description": "External action that needs parameters to be executed.",
+    "description": "External action that can be executed with or without parameters.",
     "type": "object",
     "additionalProperties": false,
     "properties": {
@@ -234,11 +210,14 @@
         "items": {
           "$ref": "#/lifecycle"
         }
+      },
+      "environment": {
+        "description": "Environment variables for this external action.",
+        "$ref": "#/environment"
       }
     },
     "required": [
-      "use",
-      "parameters"
+      "use"
     ]
   },
   "list_or_dict": {
@@ -285,5 +264,10 @@
     "examples": [
       "jenkins"
     ]
+  },
+  "environment": {
+    "title": "Environment",
+    "description": "Environment variables for actions.",
+    "$ref": "#/list_or_dict"
   }
 }

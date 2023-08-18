@@ -12,11 +12,11 @@ from classes.generated.windfile import (
     Action as WindAction,
     ExternalAction,
     InternalAction,
-    ExternalActionWithoutParameters,
-    ExternalActionWithParameters,
 )
 
 from typing import TypeVar
+
+from commands.subcommand import Subcommand
 
 
 def contains_external_actions(windfile: Windfile) -> bool:
@@ -47,13 +47,9 @@ def get_external_actions(windfile: Windfile) -> typing.List[ExternalAction]:
 
 
 def get_actions(
-        windfile: Windfile,
-) -> typing.List[
-    InternalAction | ExternalActionWithParameters | ExternalActionWithoutParameters
-    ]:
-    actions: typing.List[
-        InternalAction | ExternalActionWithParameters | ExternalActionWithoutParameters
-        ] = []
+    windfile: Windfile,
+) -> typing.List[InternalAction | ExternalAction]:
+    actions: typing.List[InternalAction | ExternalAction] = []
     """
     Returns a list of all actions in the given windfile.
     :param windfile: Windfile to analyze
@@ -64,7 +60,7 @@ def get_actions(
         if isinstance(action.root, InternalAction):
             actions.append(action.root)
         elif isinstance(action.root, ExternalAction):
-            actions.append(action.root.root)
+            actions.append(action.root)
     return actions
 
 
@@ -82,14 +78,10 @@ def get_internal_actions(windfile: Windfile) -> typing.List[InternalAction]:
     return actions
 
 
-class Validator:
+class Validator(Subcommand):
     T = TypeVar("T")
 
-    args: typing.Any
-
-    def __init__(self, args: typing.Any):
-        self.args = args
-
+    @staticmethod
     def add_arg_parser(parser: argparse.ArgumentParser):
         parser.add_argument(
             "--wind", "-w", help="Validate windfile.", action="store_true"
