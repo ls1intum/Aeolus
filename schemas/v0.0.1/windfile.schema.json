@@ -1,7 +1,7 @@
 {
   "$id": "windfile.schema.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Windfile",
+  "title": "WindFile",
   "description": "Defines the actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the windfile.",
   "type": "object",
   "required": [

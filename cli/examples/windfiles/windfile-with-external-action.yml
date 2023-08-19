@@ -1,8 +1,14 @@
 api: v0.0.1
 metadata:
   name: windfile-with-internal-action
-  description: This is a windfile with an internal action
+  description: This is a windfile with an external action
   author: Andreas Resch
 jobs:
+  first-job:
+    file: ../actions/file-action.py
+    parameters:
+      FILE: "file1.txt"
   external-action:
-    use: ../actions/external-action.yml
+    use: ../actions/simple-action.yml
+    parameters:
+      WHO: "me"

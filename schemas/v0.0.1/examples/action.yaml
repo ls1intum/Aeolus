@@ -6,9 +6,13 @@ metadata:
   author:
     name: Andreas Resch
     email: aeolus@resch.io
+  environment:
+    - RUST_BACKTRACE: 1
 steps:
   clone:
     file: clone-default.py
+    parameters:
+      - name: url
   build:
     script: |
       cargo build

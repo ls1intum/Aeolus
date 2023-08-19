@@ -118,7 +118,10 @@
         "description": "The file of the platform action. Written in Python",
         "type": "string"
       },
-      "exclude-during": {
+      "parameters": {
+        "$ref": "#/parameters"
+      },
+      "exclude_during": {
         "type": "array",
         "title": "Exclude during",
         "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
@@ -146,7 +149,10 @@
         "description": "The file that contains the action.",
         "type": "string"
       },
-      "exclude-during": {
+      "parameters": {
+        "$ref": "#/parameters"
+      },
+      "exclude_during": {
         "type": "array",
         "title": "Exclude during",
         "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
@@ -170,13 +176,16 @@
         "description": "The script of the internal action. Written in aeolus DSL",
         "type": "string"
       },
-      "exclude-during": {
+      "exclude_during": {
         "type": "array",
         "title": "Exclude during",
         "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
         "items": {
           "$ref": "#/lifecycle"
         }
+      },
+      "parameters": {
+        "$ref": "#/parameters"
       },
       "environment": {
         "description": "Environment variables for this internal action.",
@@ -199,11 +208,9 @@
         "type": "string"
       },
       "parameters": {
-        "description": "The parameters of the external action.",
-        "title": "Parameters of the external action.",
-        "$ref": "#/list_or_dict"
+        "$ref": "#/parameters"
       },
-      "exclude-during": {
+      "exclude_during": {
         "type": "array",
         "title": "Exclude during",
         "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
@@ -220,16 +227,41 @@
       "use"
     ]
   },
+  "parameters": {
+    "description": "The parameters of an action.",
+    "title": "Parameters of an action.",
+    "$ref": "#/list_or_dict"
+  },
+  "list": {
+    "type": "object",
+    "patternProperties": {
+      ".+": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
+      }
+    },
+    "additionalProperties": false
+  },
   "list_or_dict": {
-    "title": "List or Dictionary",
     "oneOf": [
       {
         "type": "object",
-        "title": "Dictionary"
+        "patternProperties": {
+          ".+": {
+            "type": [
+              "string",
+              "number",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       {
         "type": "array",
-        "title": "List",
         "items": {
           "type": "string"
         },

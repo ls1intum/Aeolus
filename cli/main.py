@@ -46,3 +46,6 @@ if __name__ == "__main__":
     if args.command == "validate":
         validator: Validator = Validator(args=args)
         validator.validate()
+    if args.command == "merge":
+        merger: Merger = Merger(args=args)
+        merger.merge()

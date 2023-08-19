@@ -9,3 +9,6 @@ steps:
   hello-world:
     script: |
       echo "Hello from a simple action"
+  second-step:
+    script: |
+      echo "Hello from the second step"
