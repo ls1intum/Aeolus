@@ -1,6 +1,7 @@
 name: JSON schema Generation Check
 
 on:
+  pull_request:
   push:
     paths:
       - 'schemas/**'
