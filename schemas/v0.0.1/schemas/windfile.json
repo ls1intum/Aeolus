@@ -1,5 +1,5 @@
 {
-  "$id": "windfile.schema.json",
+  "$id": "windfile.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "WindFile",
   "description": "Defines the actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the windfile.",
@@ -11,13 +11,13 @@
   ],
   "properties": {
     "api": {
-      "$ref": "definitions.schema.json#/api"
+      "$ref": "definitions.json#/api"
     },
     "metadata": {
-      "$ref": "definitions.schema.json#/metadata"
+      "$ref": "definitions.json#/metadata"
     },
     "environment": {
-      "$ref": "definitions.schema.json#/environment"
+      "$ref": "definitions.json#/environment"
     },
     "jobs": {
       "title": "Jobs",
@@ -25,7 +25,7 @@
       "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9._-]+$": {
-          "$ref": "definitions.schema.json#/action"
+          "$ref": "definitions.json#/action"
         }
       }
     }

@@ -6,18 +6,17 @@ import pydantic
 import yaml
 from io import TextIOWrapper
 
-from classes.generated.action import ActionFile
-from classes.generated.windfile import (
-    WindFile,
-    Action as WindAction,
-    ExternalAction,
-    InternalAction,
-    FileAction,
-    PlatformAction,
-)
-
 from typing import TypeVar
 
+from classes.generated.actionfile import ActionFile
+from classes.generated.definitions import (
+    Action,
+    ExternalAction,
+    FileAction,
+    InternalAction,
+    PlatformAction,
+)
+from classes.generated.windfile import WindFile
 from commands.subcommand import Subcommand
 
 
@@ -31,7 +30,7 @@ def has_external_actions(windfile: WindFile) -> bool:
     :return: True if the windfile contains external actions, False otherwise
     """
     for name in windfile.jobs:
-        action: WindAction = windfile.jobs[name]
+        action: Action = windfile.jobs[name]
         if isinstance(action.root, ExternalAction):
             return True
     return False
@@ -39,44 +38,47 @@ def has_external_actions(windfile: WindFile) -> bool:
 
 def get_external_actions(
     windfile: Optional[WindFile],
-) -> typing.List[typing.Tuple[str, ExternalAction]]:
+) -> typing.List[typing.Tuple[str, Action]]:
     """
     Returns a list of all external actions in the given windfile.
     :param windfile: WindFile to analyze
     :return: List of external actions in the given windfile
     """
+    return get_actions_of_type(actiontype=ExternalAction, windfile=windfile)
+
+
+def get_actions_of_type(
+    actiontype: T,
+    windfile: Optional[WindFile],
+) -> typing.List[typing.Tuple[str, Action]]:
+    """
+    Returns a list of all file actions in the given windfile.
+    :param actiontype: Type of action to return
+    :param windfile: Windfile to analyze
+    :return: List of file actions in the given windfile
+    """
     if not windfile:
         return []
-    actions: typing.List[typing.Tuple[str, ExternalAction]] = []
+    actions: typing.List[typing.Tuple[str, Action]] = []
     for name in windfile.jobs:
         action: typing.Any = windfile.jobs[name]
-        if "root" in windfile.jobs[name].__dict__:
+        if "root" in action.__dict__:
             # this allows handling of manually created actions during merging
             action = action.root
-        if isinstance(action, ExternalAction):
+        if isinstance(action, actiontype):  # type: ignore
             actions.append((name, action))
     return actions
 
 
 def get_file_actions(
     windfile: Optional[WindFile],
-) -> typing.List[typing.Tuple[str, FileAction]]:
+) -> typing.List[typing.Tuple[str, Action]]:
     """
     Returns a list of all file actions in the given windfile.
     :param windfile: Windfile to analyze
     :return: List of file actions in the given windfile
     """
-    if not windfile:
-        return []
-    actions: typing.List[typing.Tuple[str, FileAction]] = []
-    for name in windfile.jobs:
-        action: typing.Any = windfile.jobs[name]
-        if "root" in action.__dict__:
-            # this allows handling of manually created actions during merging
-            action = action.root
-        if isinstance(action, FileAction):
-            actions.append((name, action))
-    return actions
+    return get_actions_of_type(actiontype=FileAction, windfile=windfile)
 
 
 def get_actions(
@@ -91,7 +93,7 @@ def get_actions(
     :return: List of actions
     """
     for name in windfile.jobs:
-        action: WindAction = windfile.jobs[name]
+        action: Action = windfile.jobs[name]
         if isinstance(action.root, InternalAction):
             actions.append(action.root)
         elif isinstance(action.root, ExternalAction):
@@ -111,7 +113,7 @@ def get_internal_actions(windfile: WindFile) -> typing.List[InternalAction]:
     """
     actions: typing.List[InternalAction] = []
     for name in windfile.jobs:
-        action: WindAction = windfile.jobs[name]
+        action: Action = windfile.jobs[name]
         if isinstance(action.root, InternalAction):
             actions.append(action.root)
     return actions

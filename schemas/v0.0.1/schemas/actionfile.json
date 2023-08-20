@@ -1,5 +1,5 @@
 {
-  "$id": "action.schema.json",
+  "$id": "actionfile.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ActionFile",
   "description": "Defines an action that can be used in a windfile",
@@ -11,13 +11,13 @@
   ],
   "properties": {
     "api": {
-      "$ref": "definitions.schema.json#/api"
+      "$ref": "definitions.json#/api"
     },
     "metadata": {
-      "$ref": "definitions.schema.json#/metadata"
+      "$ref": "definitions.json#/metadata"
     },
     "environment": {
-      "$ref": "definitions.schema.json#/environment"
+      "$ref": "definitions.json#/environment"
     },
     "steps": {
       "title": "Steps",
@@ -25,24 +25,24 @@
       "type": "object",
       "patternProperties": {
         "^[a-zA-Z0-9._-]+$": {
-          "$ref": "#/$defs/action"
+          "$ref": "#/$defs/step"
         }
       }
     }
   },
   "$defs": {
-    "action": {
-      "title": "Action",
+    "step": {
+      "title": "Step",
       "description": "Action that can be executed.",
       "oneOf": [
         {
-          "$ref": "definitions.schema.json#/file-action"
+          "$ref": "definitions.json#/file-action"
         },
         {
-          "$ref": "definitions.schema.json#/internal-action"
+          "$ref": "definitions.json#/internal-action"
         },
         {
-          "$ref": "definitions.schema.json#/platform-action"
+          "$ref": "definitions.json#/platform-action"
         }
       ]
     }

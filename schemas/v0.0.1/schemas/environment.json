@@ -1,5 +1,5 @@
 {
-  "$id": "environment.schema.json",
+  "$id": "environment.json",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Environment Schema",
   "description": "Defines the available environment variables that can be used in an aeolus job. To be compliant with aeolus, all environment variables need to be mapped to the corresponding environment variables of the CI system.",

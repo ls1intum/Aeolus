@@ -10,5 +10,7 @@ jobs:
       FILE: "file1.txt"
   external-action:
     use: ../actions/simple-action.yml
+    excludeDuring:
+      - working_time
     parameters:
       WHO: "me"

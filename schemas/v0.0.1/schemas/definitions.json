@@ -121,7 +121,7 @@
       "parameters": {
         "$ref": "#/parameters"
       },
-      "exclude_during": {
+      "excludeDuring": {
         "type": "array",
         "title": "Exclude during",
         "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
@@ -152,7 +152,7 @@
       "parameters": {
         "$ref": "#/parameters"
       },
-      "exclude_during": {
+      "excludeDuring": {
         "type": "array",
         "title": "Exclude during",
         "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
@@ -176,7 +176,7 @@
         "description": "The script of the internal action. Written in aeolus DSL",
         "type": "string"
       },
-      "exclude_during": {
+      "excludeDuring": {
         "type": "array",
         "title": "Exclude during",
         "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
@@ -210,7 +210,7 @@
       "parameters": {
         "$ref": "#/parameters"
       },
-      "exclude_during": {
+      "excludeDuring": {
         "type": "array",
         "title": "Exclude during",
         "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
@@ -230,7 +230,7 @@
   "parameters": {
     "description": "The parameters of an action.",
     "title": "Parameters of an action.",
-    "$ref": "#/list_or_dict"
+    "$ref": "#/dictionary"
   },
   "list": {
     "type": "object",
@@ -245,29 +245,19 @@
     },
     "additionalProperties": false
   },
-  "list_or_dict": {
-    "oneOf": [
-      {
-        "type": "object",
-        "patternProperties": {
-          ".+": {
-            "type": [
-              "string",
-              "number",
-              "null"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
-      {
-        "type": "array",
-        "items": {
-          "type": "string"
-        },
-        "uniqueItems": true
+  "dictionary": {
+    "type": "object",
+    "patternProperties": {
+      ".+": {
+        "type": [
+          "string",
+          "number",
+          "null"
+        ]
       }
-    ]
+    },
+    "additionalProperties": false,
+    "uniqueItems": true
   },
   "lifecycle": {
     "title": "Lifecycle",
@@ -300,6 +290,6 @@
   "environment": {
     "title": "Environment",
     "description": "Environment variables for actions.",
-    "$ref": "#/list_or_dict"
+    "$ref": "#/dictionary"
   }
 }
