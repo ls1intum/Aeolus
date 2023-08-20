@@ -1,10 +1,11 @@
-name: json-schema-generation
+name: JSON schema Generation Check
 
 on:
   push:
     paths:
       - 'schemas/**'
       - '.github/workflows/json-schema-generation.yaml'
+      - 'cli/classes/generated/**'
 
 jobs:
   json-schema-generation:

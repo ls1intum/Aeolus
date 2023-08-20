@@ -65,13 +65,17 @@ class ContactData(BaseModel):
         ..., description='The name of the author.', examples=['Andreas Resch']
     )
     email: Optional[str] = Field(
-        None, description='The email of the author.', examples=['aeolus@resch.io']
+        None,
+        description='The email of the author.',
+        examples=['aeolus@resch.io'],
     )
 
 
 class Environment(RootModel):
     root: Dictionary = Field(
-        ..., description='Environment variables for actions.', title='Environment'
+        ...,
+        description='Environment variables for actions.',
+        title='Environment',
     )
 
 
@@ -83,7 +87,9 @@ class FileAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    file: Optional[str] = Field(None, description='The file that contains the action.')
+    file: Optional[str] = Field(
+        None, description='The file that contains the action.'
+    )
     parameters: Optional[Parameters] = None
     excludeDuring: Optional[List[Lifecycle]] = Field(
         None,
@@ -104,7 +110,8 @@ class InternalAction(BaseModel):
         extra='forbid',
     )
     script: str = Field(
-        ..., description='The script of the internal action. Written in aeolus DSL'
+        ...,
+        description='The script of the internal action. Written in aeolus DSL',
     )
     excludeDuring: Optional[List[Lifecycle]] = Field(
         None,
@@ -178,7 +185,9 @@ class Metadata(BaseModel):
     """
 
     name: str = Field(
-        ..., description='The name of the windfile.', examples=['rust-exercise-jobs']
+        ...,
+        description='The name of the windfile.',
+        examples=['rust-exercise-jobs'],
     )
     description: str = Field(
         ...,
@@ -194,6 +203,6 @@ class Metadata(BaseModel):
 
 
 class Action(RootModel):
-    root: Union[FileAction, InternalAction, PlatformAction, ExternalAction] = Field(
-        ..., description='Action that can be executed.', title='Action'
-    )
+    root: Union[
+        FileAction, InternalAction, PlatformAction, ExternalAction
+    ] = Field(..., description='Action that can be executed.', title='Action')
