@@ -26,6 +26,7 @@ jobs:
       - name: Run linters
         uses: wearerequired/lint-action@v2
         with:
+          auto_fix: true
           continue_on_error: false
           mypy: true
           flake8: true
