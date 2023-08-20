@@ -1,0 +1,35 @@
+name: Lint
+
+on:
+  push:
+    paths:
+      - '*.py'
+      - '.github/workflows/python-lint.yaml'
+      - 'setup.cfg'
+      - 'pyproject.toml'
+
+jobs:
+  python-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.5.3
+      - name: Setup Python
+        uses: actions/setup-python@v4.7.0
+        with:
+          python-version: 3.11
+      - name: Install Python dependencies
+        run: pip install -r cli/requirements.txt
+      - name: Install Python linting dependencies
+        run: pip install black flake8 mypy pylint
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          continue_on_error: false
+          mypy: true
+          flake8: true
+          black: true
+          black_args: --config pyproject.toml
+          pylint: true
+          pylint_args: --rcfile pyproject.toml
+          black_auto_fix: true

@@ -9,5 +9,5 @@ class Subcommand:
         self.args = args
 
     @staticmethod
-    def add_arg_parser(parser: argparse.ArgumentParser):
+    def add_arg_parser(parser: argparse.ArgumentParser) -> None:
         pass
