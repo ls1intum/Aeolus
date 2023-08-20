@@ -195,7 +195,9 @@ class Merger(Subcommand):
         if self.args.verbose:
             print(f"🌍adding {len(actions)} actions")
         for action in actions:
-            merge_environment(self.windfile.jobs[name].root.environment, action)
+            merge_environment(
+                self.windfile.jobs[name].root.environment, action
+            )
             merge_parameters(
                 self.windfile.jobs[name].root.parameters,
                 action,
