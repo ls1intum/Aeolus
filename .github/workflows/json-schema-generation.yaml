@@ -29,3 +29,9 @@ jobs:
       - name: List all changed files tracked and untracked files
         run: |
           echo "Changed files: ${{ steps.verify-changed-files.outputs.changed_files }}"
+          if [ -n "${{ steps.verify-changed-files.outputs.changed_files }}" ]; then
+            echo "❌ Definitions have changed. Please regenerate the models and push again."
+            exit 1
+          else
+            echo "✅ No changes to definitions. Looks good!"
+          fi
