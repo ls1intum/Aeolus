@@ -7,3 +7,6 @@ mypy
 pyyaml
 types-pyyaml
 docker
+pytest
+pydantic
+coverage

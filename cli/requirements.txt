@@ -26,6 +26,8 @@ click==8.1.6
     # via
     #   black
     #   pip-tools
+coverage==7.3.0
+    # via -r requirements.in
 datamodel-code-generator==0.21.4
     # via -r requirements.in
 dnspython==2.4.2
@@ -42,6 +44,8 @@ idna==3.4
     #   requests
 inflect==5.6.2
     # via datamodel-code-generator
+iniconfig==2.0.0
+    # via pytest
 isort==5.12.0
     # via datamodel-code-generator
 jinja2==3.1.2
@@ -74,6 +78,7 @@ packaging==23.1
     #   datamodel-code-generator
     #   docker
     #   prance
+    #   pytest
 pathable==0.4.3
     # via jsonschema-spec
 pathspec==0.11.2
@@ -82,10 +87,14 @@ pip-tools==7.3.0
     # via -r requirements.in
 platformdirs==3.10.0
     # via black
+pluggy==1.2.0
+    # via pytest
 prance==23.6.21.0
     # via datamodel-code-generator
 pydantic[email]==2.1.1
-    # via datamodel-code-generator
+    # via
+    #   -r requirements.in
+    #   datamodel-code-generator
 pydantic-core==2.4.0
     # via pydantic
 pyproject-hooks==1.0.0
@@ -94,6 +103,8 @@ pyrsistent==0.19.3
     # via jsonschema
 pysnooper==1.2.0
     # via datamodel-code-generator
+pytest==7.4.0
+    # via -r requirements.in
 pyyaml==6.0.1
     # via
     #   -r requirements.in
