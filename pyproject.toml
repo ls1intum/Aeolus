@@ -1,0 +1,28 @@
+[tool.mypy]
+python_version = "3.11"
+check_untyped_defs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+# ignore generated classes
+module = "classes.generated.*,generated.*"
+ignore_errors = true
+
+[tool.black]
+force-exclude = '''
+    cli/classes/generated
+    | cli/venv
+    | docs/lib
+    | docs/bin
+    | docs/source
+    '''
+line-length = 79
+
+[tool.pylint.'MAIN']
+
+py-version = 3.11
+ignore = ['venv', 'generated', 'examples', 'docs']
+
+[tool.pylint.'MESSAGES CONTROL']
+max-line-length = 120
+disable = "missing-module-docstring,missing-class-docstring,missing-function-docstring,too-few-public-methods"

@@ -1,12 +1,12 @@
+import traceback
 import typing
 from typing import Optional
 
 import argparse
+from io import TextIOWrapper
 import pydantic
 import yaml
-from io import TextIOWrapper
 
-from typing import TypeVar
 
 from classes.generated.actionfile import ActionFile
 from classes.generated.definitions import (
@@ -20,7 +20,7 @@ from classes.generated.windfile import WindFile
 from commands.subcommand import Subcommand
 
 
-T = TypeVar("T")
+T = typing.TypeVar("T")
 
 
 def has_external_actions(windfile: WindFile) -> bool:
@@ -83,15 +83,17 @@ def get_file_actions(
 
 def get_actions(
     windfile: WindFile,
-) -> typing.List[InternalAction | ExternalAction | FileAction | PlatformAction]:
-    actions: typing.List[
-        InternalAction | ExternalAction | FileAction | PlatformAction
-    ] = []
+) -> typing.List[
+    InternalAction | ExternalAction | FileAction | PlatformAction
+]:
     """
     Returns a list of all actions in the given windfile.
     :param windfile: Windfile to analyze
     :return: List of actions
     """
+    actions: typing.List[
+        InternalAction | ExternalAction | FileAction | PlatformAction
+    ] = []
     for name in windfile.jobs:
         action: Action = windfile.jobs[name]
         if isinstance(action.root, InternalAction):
@@ -120,10 +122,14 @@ def get_internal_actions(windfile: WindFile) -> typing.List[InternalAction]:
 
 
 def read_file(
-    filetype: T, path: TextIOWrapper, verbose: bool = False, debug: bool = False
+    filetype: T,
+    path: TextIOWrapper,
+    verbose: bool = False,
+    debug: bool = False,
 ) -> Optional[T]:
     """
-    Validates the given file. If the file is valid, the read object is returned.
+    Validates the given file. If the file is valid,
+    the read object is returned.
     :param filetype: Filetype to validate
     :param path: Path to input
     :param verbose: Print more output
@@ -141,6 +147,8 @@ def read_file(
         if verbose:
             print(f"❌ {path.name} is invalid")
         print(validation_error)
+        if debug:
+            traceback.print_exc()
         return None
 
 
@@ -184,7 +192,7 @@ def read_action_file(
 
 class Validator(Subcommand):
     @staticmethod
-    def add_arg_parser(parser: argparse.ArgumentParser):
+    def add_arg_parser(parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "--wind", "-w", help="Validate windfile.", action="store_true"
         )
@@ -198,11 +206,12 @@ class Validator(Subcommand):
             default="windfile.yaml",
             required=True,
             type=open,
-        )
+        )  # pylint: disable=duplicate-code
 
     def validate(self) -> ActionFile | WindFile | None:
         """
-        Validates the given file. If the file is valid, the read object is returned.
+        Validates the given file. If the file is valid,
+        the read object is returned.
         If the file is invalid, None is returned.
         :return: ActionFile or WindFile or None
         """
@@ -210,17 +219,21 @@ class Validator(Subcommand):
             if self.args.verbose:
                 print("🌬️ Validating windfile")
             windfile: Optional[WindFile] = read_windfile(
-                path=self.args.input, verbose=self.args.verbose, debug=self.args.debug
+                path=self.args.input,
+                verbose=self.args.verbose,
+                debug=self.args.debug,
             )
             if self.args.verbose:
                 if windfile and has_external_actions(windfile):
                     print("🌍This windfile contains external actions.")
             return windfile
-        elif self.args.action:
+        if self.args.action:
             if self.args.verbose:
                 print("🌬️ Validating action")
             action: Optional[ActionFile] = read_action_file(
-                path=self.args.input, verbose=self.args.verbose, debug=self.args.debug
+                path=self.args.input,
+                verbose=self.args.verbose,
+                debug=self.args.debug,
             )
             return action
         return None

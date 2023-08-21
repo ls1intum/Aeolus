@@ -8,7 +8,8 @@ from commands.validator import Validator
 def add_argparse() -> argparse.ArgumentParser:
     arg_parser: argparse.ArgumentParser = argparse.ArgumentParser(
         prog="aeolus",
-        description="Aeolus is a tool to manage your CI jobs. It allows you to define your jobs in a simple "
+        description="Aeolus is a tool to manage your CI jobs. "
+        "It allows you to define your jobs in a simple "
         "manner and execute them on multiple CI systems.",
     )
     subparsers = arg_parser.add_subparsers(dest="command")

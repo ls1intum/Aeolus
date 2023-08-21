@@ -12,7 +12,9 @@ from . import definitions
 
 class Step(RootModel):
     root: Union[
-        definitions.FileAction, definitions.InternalAction, definitions.PlatformAction
+        definitions.FileAction,
+        definitions.InternalAction,
+        definitions.PlatformAction,
     ] = Field(..., description='Action that can be executed.', title='Step')
 
 
