@@ -1,16 +1,15 @@
 import os
 import typing
-
 import unittest
 
-from classes.generated.actionfile import ActionFile
-from commands.validator import Validator, has_external_actions
 from main import parse_args
+from commands.validator import Validator, has_external_actions
+from classes.generated.actionfile import ActionFile
 from classes.generated.windfile import WindFile
 
 
 class ValidatorTest(unittest.TestCase):
-    def test_valid_windfile(self):
+    def test_valid_windfile(self) -> None:
         path: str = os.path.dirname(os.path.realpath(__file__))
         parsed_arguments: typing.Any = parse_args(
             arguments=[
