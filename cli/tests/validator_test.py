@@ -10,7 +10,7 @@ from classes.generated.windfile import WindFile
 
 
 class ValidatorTest(unittest.TestCase):
-    def test_valid_windfile(self) -> None:
+    def test_valid_windfile(self):
         path: str = os.path.dirname(os.path.realpath(__file__))
         parsed_arguments: typing.Any = parse_args(
             arguments=[
@@ -22,7 +22,6 @@ class ValidatorTest(unittest.TestCase):
         )
         validator: Validator = Validator(args=parsed_arguments)
         self.assertTrue(validator.validate())
-        return None
 
     def test_valid_windfile_verbose(self) -> None:
         path: str = os.path.dirname(os.path.realpath(__file__))
