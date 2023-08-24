@@ -19,6 +19,14 @@ permissions:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./docker/cli/Dockerfile
+            image: ghcr.io/${{ github.repository }}/cli
+          - dockerfile: ./docker/worker/Dockerfile
+            image: ghcr.io/${{ github.repository }}/worker
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -41,7 +49,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ matrix.image }}
           tags: |
             # set latest tag for default branch
             type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Europe/Berlin'}}
@@ -52,6 +60,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
+          context: .
           platforms: linux/amd64,linux/arm64
           push: ${{ github.ref_name == 'develop' }}
           tags: ${{ steps.meta.outputs.tags }}

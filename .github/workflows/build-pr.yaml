@@ -8,6 +8,14 @@ on:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./docker/cli/Dockerfile
+            image: ghcr.io/${{ github.repository }}/cli
+          - dockerfile: ./docker/worker/Dockerfile
+            image: ghcr.io/${{ github.repository }}/worker
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -20,6 +28,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
+          context: .
+          file: ${{ matrix.dockerfile }}
           push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
