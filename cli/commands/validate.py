@@ -18,7 +18,7 @@ class Validate(Subcommand):
     def __init__(self, args: typing.Any):
         super().__init__(args)
         output_settings: OutputSettings = OutputSettings(
-            verbose=args.verbose, debug=args.debug, emoji=True
+            verbose=args.verbose, debug=args.debug, emoji=args.emoji
         )
         input_settings: InputSettings = InputSettings(
             file_path=args.input.name, file=args.input

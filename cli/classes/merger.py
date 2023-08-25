@@ -28,7 +28,8 @@ from classes.validator import (
     get_file_actions,
     Validator,
 )
-from utils.utils import get_content_of
+from utils import logger
+from utils.utils import get_content_of, get_path_to_file
 
 
 def merge_parameters(parameters: Parameters | None, action: Action) -> None:
@@ -84,7 +85,11 @@ class Merger(PassSettings):
         input_settings: InputSettings,
         output_settings: OutputSettings,
     ):
-        super().__init__(input_settings=input_settings, output_settings=output_settings, windfile=windfile)
+        super().__init__(
+            input_settings=input_settings,
+            output_settings=output_settings,
+            windfile=windfile,
+        )
         if not windfile:
             validator: Validator = Validator(
                 output_settings=output_settings, input_settings=input_settings
@@ -100,11 +105,13 @@ class Merger(PassSettings):
         Merges the file actions into the windfile.
         :return: True if the file actions could be merged, False otherwise
         """
-        if self.output_settings.verbose:
-            print("📄 Merging file actions")
+        logger.info("📄", "Merging file actions", self.output_settings.emoji)
         actions: List[tuple[str, Action]] = get_file_actions(self.windfile)
-        if self.output_settings.verbose:
-            print(f"📄 found {len(actions)} file actions")
+        logger.info(
+            "📄",
+            f"found {len(actions)} file actions",
+            self.output_settings.emoji,
+        )
         return self.traverse_external_actions(external_actions=actions)
 
     def merge_external_actions(self) -> bool:
@@ -112,11 +119,15 @@ class Merger(PassSettings):
         Merges the external actions into the windfile.
         :return: True if the external actions could be merged, False otherwise
         """
-        if self.output_settings.verbose:
-            print("🌍 Merging external actions")
+        logger.info(
+            "🌍", "Merging external actions", self.output_settings.emoji
+        )
         actions: list[tuple[str, Action]] = get_external_actions(self.windfile)
-        if self.output_settings.verbose:
-            print(f"🌍 found {len(actions)} external actions")
+        logger.info(
+            "🌍",
+            f"found {len(actions)} external actions",
+            self.output_settings.emoji,
+        )
         return self.traverse_external_actions(external_actions=actions)
 
     def merge_platform_actions(self) -> bool:
@@ -124,11 +135,15 @@ class Merger(PassSettings):
         Merges the platform actions into the windfile.
         :return: True if the platform actions could be merged, False otherwise
         """
-        if self.output_settings.verbose:
-            print("🚉 Merging platform actions")
+        logger.info(
+            "🚉", "Merging platform actions", self.output_settings.emoji
+        )
         actions: list[tuple[str, Action]] = get_platform_actions(self.windfile)
-        if self.output_settings.verbose:
-            print(f"🚉 found {len(actions)} platform actions")
+        logger.info(
+            "🚉",
+            f"found {len(actions)} platform actions",
+            self.output_settings.emoji,
+        )
         return self.traverse_external_actions(external_actions=actions)
 
     def inline_external_actions(
@@ -140,8 +155,11 @@ class Merger(PassSettings):
         :return: True if the external actions could be inlined, False otherwise
         """
         if not self.windfile:
-            if self.output_settings.verbose:
-                print("❌ No windfile found. Aborting.")
+            logger.error(
+                "❌",
+                "No windfile found. Aborting.",
+                self.output_settings.emoji,
+            )
             return False
         for external_action_tuple in external_actions:
             external_action_name: str = external_action_tuple[0]
@@ -160,11 +178,16 @@ class Merger(PassSettings):
                 if not isinstance(
                     internals.root, InternalAction
                 ) and not isinstance(internals.root, PlatformAction):
-                    print(
-                        "❌ external actions in an "
-                        "external action are not supported yet"
+                    logger.info(
+                        "❌",
+                        f"Unsupported action type {type(internals.root)}",
+                        self.output_settings.emoji,
                     )
-                    print("❌ Only internal and platform actions are supported")
+                    logger.error(
+                        "❌",
+                        "Only internal and platform actions are supported",
+                        self.output_settings.emoji,
+                    )
                     return False
                 script: str | None = None
                 if isinstance(internals.root, InternalAction):
@@ -173,7 +196,11 @@ class Merger(PassSettings):
                     script = get_content_of(internals.root.file)
 
                 if not script:
-                    print(f"❌ could not read script of {name}")
+                    logger.error(
+                        "❌",
+                        f"could not read script of {name}",
+                        self.output_settings.emoji,
+                    )
                     return False
 
                 internal: Action = Action(
@@ -195,11 +222,14 @@ class Merger(PassSettings):
         :return: ActionFile object or None if the file could not be read
         """
         if not os.path.exists(path):
-            if self.output_settings.verbose:
-                print(f"❌ {path} does not exist")
+            logger.error(
+                "❌", f"{path} does not exist", self.output_settings.emoji
+            )
             return None
         with open(path, encoding="utf-8") as file:
-            return read_action_file(path=file)
+            return read_action_file(
+                file=file, output_settings=self.output_settings
+            )
 
     def traverse_external_actions(
         self,
@@ -211,10 +241,12 @@ class Merger(PassSettings):
         :return:
         """
         if not self.windfile:
-            if self.output_settings.verbose:
-                print("❌ No windfile found. Aborting.")
+            logger.error(
+                "❌",
+                "No windfile found. Aborting.",
+                self.output_settings.emoji,
+            )
             return False
-        current_directory: str = self.pwd()
         for entry in external_actions:
             try:
                 name: str = entry[0]
@@ -227,9 +259,10 @@ class Merger(PassSettings):
                 elif isinstance(action, ExternalAction):
                     path = action.use
                 if not path:
-                    print(f"❌ {path} could not be found")
+                    logger.error(
+                        "❌", f"{path} not found", self.output_settings.emoji
+                    )
                     return False
-                print(path)
                 converted: Optional[Action] | Optional[
                     typing.List[Action]
                 ] = self.convert_external_action_to_internal(
@@ -237,10 +270,15 @@ class Merger(PassSettings):
                     action=action,
                 )
                 if not converted:
-                    print(f"❌ {path} could not be converted")
+                    logger.error(
+                        "❌",
+                        f"{path} could not be converted",
+                        self.output_settings.emoji,
+                    )
                     return False
-                if self.output_settings.verbose:
-                    print(f"📄 {path} converted")
+                logger.info(
+                    "📄 ", f"{path} converted", self.output_settings.emoji
+                )
                 if not isinstance(converted, list):
                     # found no other way to do this
                     self.windfile.jobs[name] = converted  # type: ignore
@@ -248,7 +286,7 @@ class Merger(PassSettings):
                     self.inline_actions(name=name, actions=converted)
             # ignore pylint: disable=broad-except
             except Exception as exception:
-                print(f"❌ {exception}")
+                logger.error("❌", f"{exception}", self.output_settings.emoji)
                 if self.output_settings.debug:
                     traceback.print_exc()
         return True
@@ -262,8 +300,11 @@ class Merger(PassSettings):
         """
         if not self.windfile:
             return
-        if self.output_settings.verbose:
-            print(f"🌍adding {len(actions)} actions")
+        logger.info(
+            "🌍",
+            f"adding {len(actions)} actions",
+            self.output_settings.emoji,
+        )
         for action in actions:
             merge_environment(
                 self.windfile.jobs[name].root.environment, action
@@ -276,8 +317,9 @@ class Merger(PassSettings):
                 self.windfile.jobs[name].root.excludeDuring,
                 action,
             )
-            if self.output_settings.verbose:
-                print(f"➕ adding action {action}")
+            logger.info(
+                "➕", f"adding action {action}", self.output_settings.emoji
+            )
             self.windfile.jobs[f"{name}_{actions.index(action)}"] = action
         self.windfile.jobs.pop(name)
 
@@ -286,14 +328,21 @@ class Merger(PassSettings):
         external_file: str,
         action: ExternalAction | FileAction | PlatformAction | Action,
     ) -> Optional[Action] | Optional[typing.List[Action]]:
-        absolute_path: str = os.path.join(self.pwd(), external_file)
+        absolute_path: str = get_path_to_file(
+            absolute_path=self.pwd(), relative_path=external_file
+        )
         if not os.path.exists(absolute_path):
-            print(f"❌ {absolute_path} does not exist")
+            logger.error(
+                "❌",
+                f"{absolute_path} does not exist",
+                self.output_settings.emoji,
+            )
             return None
         if self.output_settings.debug:
-            print(
-                f"✍️ rewriting {os.path.normpath(external_file)} "
-                f"to absolute path {os.path.normpath(absolute_path)}"
+            logger.info(
+                "✍️ ",
+                f"rewriting {os.path.normpath(external_file)} to {absolute_path}",
+                self.output_settings.emoji,
             )
         with open(absolute_path, encoding="utf-8") as file:
             if isinstance(action, FileAction):
@@ -310,8 +359,14 @@ class Merger(PassSettings):
 
             if isinstance(action, ExternalAction):
                 actions: typing.List[Action] = []
-                print(f"📄 reading external action {absolute_path}")
-                external: Optional[ActionFile] = read_action_file(file=file, output_settings=self.output_settings)
+                logger.info(
+                    "📄 ",
+                    f"reading external action {absolute_path}",
+                    self.output_settings.emoji,
+                )
+                external: Optional[ActionFile] = read_action_file(
+                    file=file, output_settings=self.output_settings
+                )
                 if not external:
                     return None
                 for name in external.steps:
@@ -319,9 +374,10 @@ class Merger(PassSettings):
                     internal: Optional[Action] = None
                     content: Optional[str] = None
                     if isinstance(internals.root, ExternalAction):
-                        print(
-                            "❌ external actions in an external "
-                            "action are not supported yet"
+                        logger.error(
+                            "❌",
+                            "external actions in an external action are not supported yet",
+                            self.output_settings.emoji,
                         )
                         return None
                     if isinstance(internals.root, InternalAction):
@@ -343,27 +399,32 @@ class Merger(PassSettings):
                             )
                         )
                         if not content:
-                            if self.args.verbose:
-                                print(
-                                    f"❌ could not read file {internals.root.file}"
-                                )
+                            logger.error(
+                                "❌",
+                                f"could not read file {internals.root.file}",
+                                self.output_settings.emoji,
+                            )
                             return None
                     elif isinstance(internals.root, FileAction):
                         content = get_content_of(
-                            file=os.path.normpath(
-                                os.path.join(
-                                    os.path.dirname(absolute_path),
-                                    internals.root.file,
-                                )
+                            file=get_path_to_file(
+                                os.path.dirname(absolute_path),
+                                internals.root.file,
                             )
                         )
                     else:
-                        print(
-                            f"❌ unsupported action type {type(internals.root)}"
+                        logger.error(
+                            "❌",
+                            f"unsupported action type {type(internals.root)}",
+                            self.output_settings.emoji,
                         )
                         return None
                     if not content:
-                        print(f"❌ could not read script of {name}")
+                        logger.error(
+                            "❌",
+                            f"could not read script of {name}",
+                            self.output_settings.emoji,
+                        )
                         return None
                     internal = Action(
                         root=InternalAction(
@@ -399,5 +460,6 @@ class Merger(PassSettings):
         if self.output_settings.verbose:
             # work-around as enums do not get cleanly printed with model_dump
             json: str = self.windfile.model_dump_json(exclude_none=True)
+            logger.info("🪄", "Merged windfile", self.output_settings.emoji)
             print(yaml.dump(yaml.safe_load(json), sort_keys=False))
         return self.windfile

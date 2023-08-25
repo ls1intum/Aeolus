@@ -26,7 +26,7 @@ class Merge(Subcommand):
     def __init__(self, args: typing.Any):
         super().__init__(args)
         output_settings: OutputSettings = OutputSettings(
-            verbose=args.verbose, debug=args.debug, emoji=True
+            verbose=args.verbose, debug=args.debug, emoji=args.emoji
         )
         input_settings: InputSettings = InputSettings(
             file_path=args.input.name, file=args.input
@@ -44,8 +44,9 @@ class Merge(Subcommand):
             )
         else:
             if output_settings.verbose:
-                logger.error("❌", "Validation failed. Aborting.", output_settings.emoji)
-                print("❌ Validation failed. Aborting.")
+                logger.error(
+                    "❌", "Validation failed. Aborting.", output_settings.emoji
+                )
 
     @staticmethod
     def add_arg_parser(parser: argparse.ArgumentParser) -> None:

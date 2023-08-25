@@ -30,3 +30,12 @@ def execute_arbitrary_code(
     function = get_attr(module, method)
     exec(compiled, module.__dict__)
     function()
+
+
+def get_path_to_file(absolute_path: str, relative_path: str) -> str:
+    """
+    Returns the path of the given file.
+    :param absolute_path: Absolute path of our point of view
+    :param relative_path: Relative path of the file we need
+    """
+    return os.path.normpath(os.path.join(absolute_path, relative_path))

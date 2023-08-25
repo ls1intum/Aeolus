@@ -149,12 +149,10 @@ def read_file(
         typevalidator: pydantic.TypeAdapter = pydantic.TypeAdapter(filetype)
         content: str = file.read()
         validated: T = typevalidator.validate_python(yaml.safe_load(content))
-        if validated and output_settings.verbose:
-            logger.info("✅", f"{file.name} is valid", output_settings.emoji)
+        logger.info("✅", f"{file.name} is valid", output_settings.emoji)
         return validated
     except pydantic.ValidationError as validation_error:
-        if output_settings.verbose:
-            logger.info("❌", f"{file.name} is invalid", output_settings.emoji)
+        logger.info("❌", f"{file.name} is invalid", output_settings.emoji)
         logger.error("❌", validation_error, output_settings.emoji)
         if output_settings.debug:
             traceback.print_exc()
@@ -203,12 +201,9 @@ class Validator(PassSettings):
         Validates the given actionfile. If the file is valid, the actionfile is returned.
         :return:
         """
-        if self.output_settings.verbose:
-            logger.info("🌬️", "Validating action", self.output_settings.emoji)
+        logger.info("🌬️", "Validating action", self.output_settings.emoji)
         action: Optional[ActionFile] = read_action_file(
-            file=self.input_settings.file,
-            verbose=self.output_settings.verbose,
-            debug=self.output_settings.debug,
+            file=self.input_settings.file, output_settings=self.output_settings
         )
         return action
 
@@ -217,19 +212,15 @@ class Validator(PassSettings):
         Validates the given windfile. If the file is valid, the windfile is returned.
         :return: Windfile or None
         """
-        if self.output_settings.verbose:
-            logger.info(
-                "🌬️", "Validating windfile", self.output_settings.emoji
-            )
+        logger.info("🌬️", "Validating windfile", self.output_settings.emoji)
         windfile: Optional[WindFile] = read_windfile(
             file=self.input_settings.file,
             output_settings=self.output_settings,
         )
-        if self.output_settings.verbose:
-            if windfile and has_external_actions(windfile):
-                logger.info(
-                    "🌍",
-                    "This windfile contains external actions.",
-                    self.output_settings.emoji,
-                )
+        if windfile and has_external_actions(windfile):
+            logger.info(
+                "🌍",
+                "This windfile contains external actions.",
+                self.output_settings.emoji,
+            )
         return windfile

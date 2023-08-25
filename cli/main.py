@@ -1,3 +1,5 @@
+import logging
+
 import argparse
 import sys
 
@@ -33,6 +35,12 @@ def add_argparse() -> argparse.ArgumentParser:
         help="Enable debug mode",
         action="store_true",
     )
+    arg_parser.add_argument(
+        "--emoji",
+        "-e",
+        help="Enable emoji mode",
+        action="store_true",
+    )
 
     validate_parser = subparsers.add_parser(name="validate")
     Validate.add_arg_parser(parser=validate_parser)
@@ -46,8 +54,18 @@ def add_argparse() -> argparse.ArgumentParser:
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger("aeolus")
     parser: argparse.ArgumentParser = add_argparse()
     args = parser.parse_args(sys.argv[1:])
+    if args.verbose:
+        logging.basicConfig(
+            encoding="utf-8", level=logging.INFO, format="%(message)s"
+        )
+    if args.debug:
+        logging.basicConfig(
+            encoding="utf-8", level=logging.DEBUG, format="%(message)s"
+        )
+
     if args.command == "validate":
         validator: Validate = Validate(args=args)
         validator.validate()
