@@ -7,5 +7,5 @@ metadata:
     email: andreas@resch.io
 steps:
   hello-world:
-    platform: cli
+    for: cli
     file: hello-world.py

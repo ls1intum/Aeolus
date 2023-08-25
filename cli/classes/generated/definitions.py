@@ -138,8 +138,10 @@ class PlatformAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    platform: Target = Field(
-        ..., description='The platform that this action is defined for.'
+    for_: Target = Field(
+        ...,
+        alias='for',
+        description='The platform that this action is defined for.',
     )
     file: str = Field(
         ..., description='The file of the platform action. Written in Python'
@@ -152,6 +154,9 @@ class PlatformAction(BaseModel):
     )
     environment: Optional[Environment] = Field(
         None, description='Environment variables for this platform action.'
+    )
+    platform: Optional[Target] = Field(
+        None, description='Ignored for this action.'
     )
 
 

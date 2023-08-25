@@ -110,7 +110,7 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "platform": {
+      "for": {
         "description": "The platform that this action is defined for.",
         "$ref": "#/target"
       },
@@ -132,10 +132,14 @@
       "environment": {
         "description": "Environment variables for this platform action.",
         "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "Ignored for this action.",
+        "$ref": "#/target"
       }
     },
     "required": [
-      "platform",
+      "for",
       "file"
     ]
   },

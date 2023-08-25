@@ -2,8 +2,8 @@ import argparse
 import sys
 
 from commands.generator import Generator
-from commands.merger import Merger
-from commands.validator import Validator
+from commands.merge import Merge
+from commands.validate import Validate
 
 
 def add_argparse() -> argparse.ArgumentParser:
@@ -35,10 +35,13 @@ def add_argparse() -> argparse.ArgumentParser:
     )
 
     validate_parser = subparsers.add_parser(name="validate")
-    Validator.add_arg_parser(parser=validate_parser)
+    Validate.add_arg_parser(parser=validate_parser)
 
     merger_parser = subparsers.add_parser(name="merge")
-    Merger.add_arg_parser(parser=merger_parser)
+    Merge.add_arg_parser(parser=merger_parser)
+
+    generator_parser = subparsers.add_parser(name="generate")
+    Generator.add_arg_parser(parser=generator_parser)
     return arg_parser
 
 
@@ -46,11 +49,13 @@ if __name__ == "__main__":
     parser: argparse.ArgumentParser = add_argparse()
     args = parser.parse_args(sys.argv[1:])
     if args.command == "validate":
-        validator: Validator = Validator(args=args)
+        validator: Validate = Validate(args=args)
         validator.validate()
     if args.command == "merge":
-        merger: Merger = Merger(args=args)
+        merger: Merge = Merge(args=args)
         merger.merge()
     if args.command == "generate":
         generator: Generator = Generator(args=args)
         generator.generate()
+    if args.command is None:
+        parser.print_help()
