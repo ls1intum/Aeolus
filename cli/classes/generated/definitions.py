@@ -87,9 +87,7 @@ class FileAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    file: Optional[str] = Field(
-        None, description='The file that contains the action.'
-    )
+    file: str = Field(..., description='The file that contains the action.')
     parameters: Optional[Parameters] = None
     excludeDuring: Optional[List[Lifecycle]] = Field(
         None,
@@ -98,6 +96,10 @@ class FileAction(BaseModel):
     )
     environment: Optional[Environment] = Field(
         None, description='Environment variables for this file action.'
+    )
+    platform: Optional[Target] = Field(
+        None,
+        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
 
 
@@ -121,6 +123,10 @@ class InternalAction(BaseModel):
     parameters: Optional[Parameters] = None
     environment: Optional[Environment] = Field(
         None, description='Environment variables for this internal action.'
+    )
+    platform: Optional[Target] = Field(
+        None,
+        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
 
 
@@ -176,6 +182,10 @@ class ExternalAction(BaseModel):
     )
     environment: Optional[Environment] = Field(
         None, description='Environment variables for this external action.'
+    )
+    platform: Optional[Target] = Field(
+        None,
+        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
 
 

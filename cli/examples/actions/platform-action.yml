@@ -1,0 +1,11 @@
+api: v0.0.1
+metadata:
+  name: simple action
+  description: This is an action with a simple as a platform action
+  author:
+    name: Andreas Resch
+    email: andreas@resch.io
+steps:
+  hello-world:
+    platform: cli
+    file: hello-world.py

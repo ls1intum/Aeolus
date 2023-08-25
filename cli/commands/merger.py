@@ -2,6 +2,7 @@ import os
 import traceback
 import typing
 from typing import Optional, Tuple, List
+from types import ModuleType
 
 import argparse
 import yaml
@@ -25,7 +26,9 @@ from commands.validator import (
     get_file_actions,
     get_external_actions,
     read_action_file,
+    get_platform_actions,
 )
+from utils.utils import get_content_of
 
 
 def merge_parameters(parameters: Parameters | None, action: Action) -> None:
@@ -76,27 +79,36 @@ class Merger(Subcommand):
             type=open,
         )
 
+    def pwd(self) -> str:
+        """
+        Returns the current working directory of the windfile.
+        :return: Current working directory of the windfile
+        """
+        return os.path.dirname(os.path.abspath(self.args.input.name))
+
     def merge_file_actions(self) -> bool:
         if self.args.verbose:
             print("📄 Merging file actions")
-        directory: str = os.path.dirname(os.path.abspath(self.args.input.name))
         actions: List[tuple[str, Action]] = get_file_actions(self.windfile)
         if self.args.verbose:
             print(f"📄 found {len(actions)} file actions")
-        return self.traverse_external_actions(
-            current_directory=directory, external_actions=actions
-        )
+        return self.traverse_external_actions(external_actions=actions)
 
     def merge_external_actions(self) -> bool:
         if self.args.verbose:
             print("🌍 Merging external actions")
-        directory: str = os.path.dirname(os.path.abspath(self.args.input.name))
         actions: list[tuple[str, Action]] = get_external_actions(self.windfile)
         if self.args.verbose:
             print(f"🌍 found {len(actions)} external actions")
-        return self.traverse_external_actions(
-            current_directory=directory, external_actions=actions
-        )
+        return self.traverse_external_actions(external_actions=actions)
+
+    def merge_platform_actions(self) -> bool:
+        if self.args.verbose:
+            print("🚉 Merging platform actions")
+        actions: list[tuple[str, Action]] = get_platform_actions(self.windfile)
+        if self.args.verbose:
+            print(f"🚉 found {len(actions)} platform actions")
+        return self.traverse_external_actions(external_actions=actions)
 
     def inline_external_actions(
         self, external_actions: List[Tuple[str, ExternalAction]]
@@ -119,24 +131,43 @@ class Merger(Subcommand):
                 continue
             for name in action_file.steps:
                 internals: Step = action_file.steps[name]
-                if not isinstance(internals.root, InternalAction):
+                if not isinstance(
+                    internals.root, InternalAction
+                ) and not isinstance(internals.root, PlatformAction):
                     print(
                         "❌ external actions in an "
                         "external action are not supported yet"
                     )
+                    print("❌ Only internal and platform actions are supported")
                     return False
+                script: str | None = None
+                if isinstance(internals.root, InternalAction):
+                    script = internals.root.script
+                if isinstance(internals.root, PlatformAction):
+                    script = get_content_of(internals.root.file)
+
+                if not script:
+                    print(f"❌ could not read script of {name}")
+                    return False
+
                 internal: Action = Action(
                     root=InternalAction(
-                        script=internals.root.script,
+                        script=script,
                         excludeDuring=internals.root.excludeDuring,
                         environment=internals.root.environment,
                         parameters=internals.root.parameters,
+                        platform=internals.root.platform,
                     )
                 )
                 self.windfile.jobs[f"{external_action_name}_{name}"] = internal
         return True
 
     def read_external_actionfile(self, path: str) -> Optional[ActionFile]:
+        """
+        Reads the given file and returns an ActionFile object.
+        :param path: Path to the file to read
+        :return: ActionFile object or None if the file could not be read
+        """
         if not os.path.exists(path):
             if self.args.verbose:
                 print(f"❌ {path} does not exist")
@@ -146,29 +177,36 @@ class Merger(Subcommand):
 
     def traverse_external_actions(
         self,
-        current_directory: str,
         external_actions: List[Tuple[str, Action]],
     ) -> bool:
+        """
+           Traverses the given list of external actions and inlines them into the windfile.
+        :param external_actions: list of external actions
+        :return:
+        """
         if not self.windfile:
             if self.args.verbose:
                 print("❌ No windfile found. Aborting.")
             return False
+        current_directory: str = self.pwd()
         for entry in external_actions:
             try:
                 name: str = entry[0]
                 action: Action = entry[1]
                 path: Optional[str] = None
-                if isinstance(action, FileAction):
+                if isinstance(action, FileAction) or isinstance(
+                    action, PlatformAction
+                ):
                     path = action.file
                 elif isinstance(action, ExternalAction):
                     path = action.use
                 if not path:
                     print(f"❌ {path} could not be found")
                     return False
+                print(path)
                 converted: Optional[Action] | Optional[
                     typing.List[Action]
                 ] = self.convert_external_action_to_internal(
-                    windfile_directory=current_directory,
                     external_file=path,
                     action=action,
                 )
@@ -190,6 +228,12 @@ class Merger(Subcommand):
         return True
 
     def inline_actions(self, name: str, actions: List[Action]) -> None:
+        """
+        Inlines the given actions into the windfile.
+        :param name: Name of the action
+        :param actions: Actions to inline
+        :return: None
+        """
         if not self.windfile:
             return
         if self.args.verbose:
@@ -213,18 +257,17 @@ class Merger(Subcommand):
 
     def convert_external_action_to_internal(
         self,
-        windfile_directory: str,
         external_file: str,
         action: ExternalAction | FileAction | PlatformAction | Action,
     ) -> Optional[Action] | Optional[typing.List[Action]]:
-        absolute_path: str = os.path.join(windfile_directory, external_file)
+        absolute_path: str = os.path.join(self.pwd(), external_file)
         if not os.path.exists(absolute_path):
             print(f"❌ {absolute_path} does not exist")
             return None
         if self.args.debug:
             print(
-                f"✍️ rewriting {external_file} "
-                f"to absolute path {absolute_path}"
+                f"✍️ rewriting {os.path.normpath(external_file)} "
+                f"to absolute path {os.path.normpath(absolute_path)}"
             )
         with open(absolute_path, encoding="utf-8") as file:
             if isinstance(action, FileAction):
@@ -234,9 +277,11 @@ class Merger(Subcommand):
                         excludeDuring=action.excludeDuring,
                         environment=action.environment,
                         parameters=action.parameters,
+                        platform=action.platform,
                     )
                 )
                 return internal_action
+
             if isinstance(action, ExternalAction):
                 actions: typing.List[Action] = []
                 print(f"📄 reading external action {absolute_path}")
@@ -245,25 +290,75 @@ class Merger(Subcommand):
                     return None
                 for name in external.steps:
                     internals: Step = external.steps[name]
-                    if not isinstance(internals.root, InternalAction):
+                    internal: Optional[Action] = None
+                    content: Optional[str] = None
+                    if isinstance(internals.root, ExternalAction):
                         print(
                             "❌ external actions in an external "
                             "action are not supported yet"
                         )
                         return None
-                    internal: Action = Action(
+                    if isinstance(internals.root, InternalAction):
+                        content = internals.root.script
+                        internal = Action(
+                            root=InternalAction(
+                                script=internals.root.script,
+                                excludeDuring=internals.root.excludeDuring,
+                                environment=internals.root.environment,
+                                parameters=internals.root.parameters,
+                                platform=internals.root.platform,
+                            )
+                        )
+                    elif isinstance(internals.root, PlatformAction):
+                        content = get_content_of(
+                            file=os.path.join(
+                                os.path.dirname(absolute_path),
+                                internals.root.file,
+                            )
+                        )
+                        if not content:
+                            if self.args.verbose:
+                                print(
+                                    f"❌ could not read file {internals.root.file}"
+                                )
+                            return None
+                    elif isinstance(internals.root, FileAction):
+                        content = get_content_of(
+                            file=os.path.normpath(
+                                os.path.join(
+                                    os.path.dirname(absolute_path),
+                                    internals.root.file,
+                                )
+                            )
+                        )
+                    else:
+                        print(
+                            f"❌ unsupported action type {type(internals.root)}"
+                        )
+                        return None
+                    if not content:
+                        print(f"❌ could not read script of {name}")
+                        return None
+                    internal = Action(
                         root=InternalAction(
-                            script=internals.root.script,
+                            script=content,
                             excludeDuring=internals.root.excludeDuring,
                             environment=internals.root.environment,
                             parameters=internals.root.parameters,
+                            platform=internals.root.platform,
                         )
                     )
-                    actions.append(internal)
+                    if internal:
+                        actions.append(internal)
                 return actions
         return None
 
-    def merge(self) -> bool:
+    def merge(self) -> Optional[WindFile]:
+        """
+        Merges the given windfile by inlining the external actions. So that the windfile can be
+        used without other dependencies.
+        :return: Merged windfile or none if the windfile could not be merged
+        """
         if self.args.debug:
             print("🔍setting mode to wind")
         self.args.wind = True
@@ -274,10 +369,12 @@ class Merger(Subcommand):
         if not self.windfile:
             if self.args.verbose:
                 print("❌ Validation failed. Aborting.")
-            return False
+            return None
         self.merge_file_actions()
         self.merge_external_actions()
-        # work-around as enums do not get cleanly printed with model_dump
-        json: str = self.windfile.model_dump_json(exclude_none=True)
-        print(yaml.dump(yaml.safe_load(json), sort_keys=False))
-        return True
+        self.merge_platform_actions()
+        if self.args.verbose:
+            # work-around as enums do not get cleanly printed with model_dump
+            json: str = self.windfile.model_dump_json(exclude_none=True)
+            print(yaml.dump(yaml.safe_load(json), sort_keys=False))
+        return self.windfile

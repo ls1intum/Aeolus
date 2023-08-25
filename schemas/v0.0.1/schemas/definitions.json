@@ -163,8 +163,15 @@
       "environment": {
         "description": "Environment variables for this file action.",
         "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+        "$ref": "#/target"
       }
-    }
+    },
+    "required": [
+      "file"
+    ]
   },
   "internal-action": {
     "title": "Internal Action",
@@ -190,6 +197,10 @@
       "environment": {
         "description": "Environment variables for this internal action.",
         "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+        "$ref": "#/target"
       }
     },
     "required": [
@@ -221,6 +232,10 @@
       "environment": {
         "description": "Environment variables for this external action.",
         "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+        "$ref": "#/target"
       }
     },
     "required": [

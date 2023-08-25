@@ -47,6 +47,17 @@ def get_external_actions(
     return get_actions_of_type(actiontype=ExternalAction, windfile=windfile)
 
 
+def get_platform_actions(
+    windfile: Optional[WindFile],
+) -> typing.List[typing.Tuple[str, Action]]:
+    """
+    Returns a list of all external actions in the given windfile.
+    :param windfile: WindFile to analyze
+    :return: List of external actions in the given windfile
+    """
+    return get_actions_of_type(actiontype=PlatformAction, windfile=windfile)
+
+
 def get_actions_of_type(
     actiontype: T,
     windfile: Optional[WindFile],

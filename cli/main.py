@@ -1,6 +1,7 @@
 import argparse
 import sys
 
+from commands.generator import Generator
 from commands.merger import Merger
 from commands.validator import Validator
 
@@ -50,3 +51,6 @@ if __name__ == "__main__":
     if args.command == "merge":
         merger: Merger = Merger(args=args)
         merger.merge()
+    if args.command == "generate":
+        generator: Generator = Generator(args=args)
+        generator.generate()
