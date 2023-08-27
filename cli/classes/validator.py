@@ -149,11 +149,11 @@ def read_file(
         typevalidator: pydantic.TypeAdapter = pydantic.TypeAdapter(filetype)
         content: str = file.read()
         validated: T = typevalidator.validate_python(yaml.safe_load(content))
-        logger.info("✅", f"{file.name} is valid", output_settings.emoji)
+        logger.info("✅ ", f"{file.name} is valid", output_settings.emoji)
         return validated
     except pydantic.ValidationError as validation_error:
         logger.info("❌", f"{file.name} is invalid", output_settings.emoji)
-        logger.error("❌", validation_error, output_settings.emoji)
+        logger.error("❌", str(validation_error), output_settings.emoji)
         if output_settings.debug:
             traceback.print_exc()
         return None
@@ -181,7 +181,8 @@ def read_action_file(
     file: TextIOWrapper, output_settings: OutputSettings
 ) -> Optional[ActionFile]:
     """
-    Validates the given file. If the file is valid, the ActionFile is returned.
+    Validates the given file. If the file is valid,
+    the ActionFile is returned.
     :param file: file to validate
     :param output_settings: OutputSettings
     :return: ActionFile or None
@@ -196,7 +197,7 @@ def read_action_file(
 
 
 class Validator(PassSettings):
-    def validate_action_file(self):
+    def validate_action_file(self) -> Optional[ActionFile]:
         """
         Validates the given actionfile. If the file is valid, the actionfile is returned.
         :return:
@@ -209,7 +210,8 @@ class Validator(PassSettings):
 
     def validate_wind_file(self) -> Optional[WindFile]:
         """
-        Validates the given windfile. If the file is valid, the windfile is returned.
+        Validates the given windfile. If the file is valid,
+        the windfile is returned.
         :return: Windfile or None
         """
         logger.info("🌬️", "Validating windfile", self.output_settings.emoji)

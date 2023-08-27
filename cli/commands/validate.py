@@ -1,5 +1,4 @@
 import typing
-from typing import Optional
 
 import argparse
 
@@ -12,18 +11,18 @@ from commands.subcommand import Subcommand
 
 
 class Validate(Subcommand):
-
     validator: Validator
 
-    def __init__(self, args: typing.Any):
+    def __init__(
+        self,
+        input_settings: InputSettings,
+        output_settings: OutputSettings,
+        args: typing.Any,
+    ):
         super().__init__(args)
-        output_settings: OutputSettings = OutputSettings(
-            verbose=args.verbose, debug=args.debug, emoji=args.emoji
+        self.validator: Validator = Validator(
+            input_settings=input_settings, output_settings=output_settings
         )
-        input_settings: InputSettings = InputSettings(
-            file_path=args.input.name, file=args.input
-        )
-        self.validator: Validator = Validator(input_settings=input_settings, output_settings=output_settings)
 
     @staticmethod
     def add_arg_parser(parser: argparse.ArgumentParser) -> None:

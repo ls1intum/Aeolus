@@ -121,6 +121,15 @@
       "parameters": {
         "$ref": "#/parameters"
       },
+      "function": {
+        "description": "The function of the platform action.",
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9._-]+$",
+        "default": "run",
+        "examples": [
+          "run"
+        ]
+      },
       "excludeDuring": {
         "type": "array",
         "title": "Exclude during",

@@ -6,3 +6,4 @@ argparse
 mypy
 pyyaml
 types-pyyaml
+docker

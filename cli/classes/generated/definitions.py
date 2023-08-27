@@ -147,6 +147,11 @@ class PlatformAction(BaseModel):
         ..., description='The file of the platform action. Written in Python'
     )
     parameters: Optional[Parameters] = None
+    function: Optional[constr(pattern=r'^[a-zA-Z0-9._-]+$')] = Field(
+        'run',
+        description='The function of the platform action.',
+        examples=['run'],
+    )
     excludeDuring: Optional[List[Lifecycle]] = Field(
         None,
         description='Exclude this action during the specified parts of the lifetime of an exercise.',

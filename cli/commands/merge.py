@@ -1,36 +1,35 @@
-import os
-import traceback
+
 import typing
-from typing import Optional, Tuple, List
+from typing import Optional
 
 import argparse
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
 from classes.output_settings import OutputSettings
-from commands.subcommand import Subcommand
 from classes.validator import (
     Validator,
 )
+from commands.subcommand import Subcommand
 from utils import logger
 
 
 class Merge(Subcommand):
     """
-    Merges the given windfile by inlining the external actions. So that the windfile can be
+    Merges the given windfile by inlining the external actions.
+    So that the windfile can be
     used without dependencies and all files are in the same format and file.
     """
 
     merger: Merger
 
-    def __init__(self, args: typing.Any):
+    def __init__(
+        self,
+        input_settings: InputSettings,
+        output_settings: OutputSettings,
+        args: typing.Any,
+    ):
         super().__init__(args)
-        output_settings: OutputSettings = OutputSettings(
-            verbose=args.verbose, debug=args.debug, emoji=args.emoji
-        )
-        input_settings: InputSettings = InputSettings(
-            file_path=args.input.name, file=args.input
-        )
         validator: Validator = Validator(
             output_settings=output_settings, input_settings=input_settings
         )
@@ -41,6 +40,7 @@ class Merge(Subcommand):
                 windfile=validated,
                 input_settings=input_settings,
                 output_settings=output_settings,
+                metadata=validator.metadata,
             )
         else:
             if output_settings.verbose:

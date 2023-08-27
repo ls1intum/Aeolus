@@ -1,2 +1,3 @@
-def hello_world():
+def build(envs: dict):
+    print(envs)
     print("Hello world!")

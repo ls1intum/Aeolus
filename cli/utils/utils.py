@@ -1,6 +1,11 @@
 import os
+import typing
 from types import ModuleType
 from typing import Optional
+import inspect
+
+from classes.output_settings import OutputSettings
+from utils import logger
 
 
 def get_content_of(file: str) -> Optional[str]:
@@ -11,8 +16,8 @@ def get_content_of(file: str) -> Optional[str]:
     """
     if not os.path.isfile(file):
         return None
-    with open(file, "r", encoding="utf-8") as f:
-        return f.read()
+    with open(file, "r", encoding="utf-8") as file_pointer:
+        return file_pointer.read()
 
 
 def execute_arbitrary_code(
@@ -27,9 +32,34 @@ def execute_arbitrary_code(
     # https://stackoverflow.com/a/19850183
     compiled = compile(code, "", "exec")
     module = ModuleType(module_name)
-    function = get_attr(module, method)
-    exec(compiled, module.__dict__)
-    function()
+    # function = get_attr(module, method)
+    exec(compiled, module.__dict__) # pylint: disable=exec-used
+    if hasattr(module, method):
+        build(getattr(module, method))
+
+
+def build(func: typing.Any) -> None:
+    envs: dict = {
+        "PYTHONPATH": "/home/runner/work/aeolus/aeolus",
+    }
+    possible_args: dict = {"envs": envs}
+
+    function_parameters = inspect.signature(func).parameters
+    defined_args: typing.List[str] = [key for key in function_parameters]
+
+    kwargs: dict[str, typing.Any] = possible_args.copy()
+
+    for arg in possible_args:
+        if arg not in defined_args:
+            kwargs.pop(arg)
+    return None
+
+    def inner():
+        print("This is aeolus speaking.")
+
+        func(**kwargs)
+
+    return inner()
 
 
 def get_path_to_file(absolute_path: str, relative_path: str) -> str:
@@ -39,3 +69,20 @@ def get_path_to_file(absolute_path: str, relative_path: str) -> str:
     :param relative_path: Relative path of the file we need
     """
     return os.path.normpath(os.path.join(absolute_path, relative_path))
+
+
+def file_exists(path: str, output_settings: OutputSettings) -> bool:
+    """
+    Checks if the given file exists.
+    :param path: Path to the file
+    :param output_settings: Output settings
+    :return: True if the file exists, False otherwise
+    """
+    if not os.path.exists(path):
+        logger.error(
+            "❌",
+            f"{logger} does not exist",
+            output_settings.emoji,
+        )
+        return False
+    return True

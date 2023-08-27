@@ -3,7 +3,9 @@ import logging
 import argparse
 import sys
 
-from commands.generator import Generator
+from classes.input_settings import InputSettings
+from classes.output_settings import OutputSettings
+from commands.generate import Generate
 from commands.merge import Merge
 from commands.validate import Validate
 
@@ -49,7 +51,7 @@ def add_argparse() -> argparse.ArgumentParser:
     Merge.add_arg_parser(parser=merger_parser)
 
     generator_parser = subparsers.add_parser(name="generate")
-    Generator.add_arg_parser(parser=generator_parser)
+    Generate.add_arg_parser(parser=generator_parser)
     return arg_parser
 
 
@@ -57,23 +59,40 @@ if __name__ == "__main__":
     logger = logging.getLogger("aeolus")
     parser: argparse.ArgumentParser = add_argparse()
     args = parser.parse_args(sys.argv[1:])
-    if args.verbose:
-        logging.basicConfig(
-            encoding="utf-8", level=logging.INFO, format="%(message)s"
-        )
     if args.debug:
         logging.basicConfig(
             encoding="utf-8", level=logging.DEBUG, format="%(message)s"
         )
-
+    if args.verbose:
+        logging.basicConfig(
+            encoding="utf-8", level=logging.INFO, format="%(message)s"
+        )
+    output_settings: OutputSettings = OutputSettings(
+        verbose=args.verbose, debug=args.debug, emoji=args.emoji
+    )
+    input_settings: InputSettings = InputSettings(
+        file_path=args.input.name, file=args.input
+    )
     if args.command == "validate":
-        validator: Validate = Validate(args=args)
+        validator: Validate = Validate(
+            input_settings=input_settings,
+            output_settings=output_settings,
+            args=args,
+        )
         validator.validate()
     if args.command == "merge":
-        merger: Merge = Merge(args=args)
+        merger: Merge = Merge(
+            input_settings=input_settings,
+            output_settings=output_settings,
+            args=args,
+        )
         merger.merge()
     if args.command == "generate":
-        generator: Generator = Generator(args=args)
+        generator: Generate = Generate(
+            input_settings=input_settings,
+            output_settings=output_settings,
+            args=args,
+        )
         generator.generate()
     if args.command is None:
         parser.print_help()
