@@ -52,7 +52,7 @@ class Generate(Subcommand):
             "-t",
             help="Target CI system",
             required=True,
-            choices=["cli"],
+            choices=["cli", "jenkins"],
         )
 
     def generate(self) -> None:

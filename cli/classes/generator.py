@@ -9,7 +9,8 @@ from classes.merger import Merger
 from classes.output_settings import OutputSettings
 from classes.pass_settings import PassSettings
 from classes.validator import Validator
-from generators.cli_generator import CliGenerator
+from generators.cli import CliGenerator
+from generators.jenkins import JenkinsGenerator
 from utils import logger
 
 
@@ -71,12 +72,22 @@ class Generator(PassSettings):
         # print(code)
         # print("calling:")
         # execute_arbitrary_code(code, "build", "hello-world_0")
+        actual_generator: Optional[Generator] = None
         if self.target == Target.cli.name:
-            actual_generator: Generator = CliGenerator(
+            actual_generator = CliGenerator(
                 windfile=self.windfile,
                 input_settings=self.input_settings,
                 output_settings=self.output_settings,
                 metadata=self.metadata,
             )
-            print(actual_generator.generate())
+        if self.target == Target.jenkins.name:
+            actual_generator = JenkinsGenerator(
+                windfile=self.windfile,
+                input_settings=self.input_settings,
+                output_settings=self.output_settings,
+                metadata=self.metadata,
+            )
+        if actual_generator:
+            result: str = actual_generator.generate()
+            print(result)
         return None

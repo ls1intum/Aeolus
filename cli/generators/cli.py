@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from classes.generated.definitions import InternalAction, Action
-from generators.base_generator import BaseGenerator
+from generators.base import BaseGenerator
 from utils import logger
 
 
@@ -23,11 +23,11 @@ class CliGenerator(BaseGenerator):
 
     def add_postfix(self) -> None:
         """
-        Add the postfix to the bash script. E.g. some output settings, etc.
+        Add the postfix to the bash script. E.g. some output settings, the callable functions etc.
         """
         self.result.append("\n")
         for function in self.functions:
-            self.result.append(f"echo 'Executing {function}'")
+            self.result.append(f"echo '⚙️ executing {function}'")
             self.result.append(f"{function}")
 
     def handle_step(self, name: str, step: InternalAction) -> None:
