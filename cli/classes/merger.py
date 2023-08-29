@@ -87,8 +87,6 @@ class Merger(PassSettings):
         output_settings: OutputSettings,
         metadata: PassMetadata,
     ):
-        if not windfile:
-            return
         super().__init__(
             windfile=windfile,
             input_settings=input_settings,
@@ -539,9 +537,12 @@ class Merger(PassSettings):
         :return: Merged windfile or none if the windfile could not be merged
         """
 
-        self.merge_file_actions()
-        self.merge_external_actions()
-        self.merge_platform_actions()
+        if not self.merge_file_actions():
+            return None
+        if not self.merge_external_actions():
+            return None
+        if not self.merge_platform_actions():
+            return None
         if not self.windfile:
             logger.error(
                 "❌", "Merging failed. Aborting.", self.output_settings.emoji
