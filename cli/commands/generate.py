@@ -30,6 +30,7 @@ class Generate(Subcommand):
             input_settings=input_settings,
             output_settings=output_settings,
             target=self.args.target,
+            check_syntax=self.args.check,
         )
 
     @staticmethod
@@ -53,6 +54,13 @@ class Generate(Subcommand):
             help="Target CI system",
             required=True,
             choices=["cli", "jenkins"],
+        )
+
+        parser.add_argument(
+            "--check",
+            "-c",
+            help="Check the generated file for syntax errors",
+            action="store_true",
         )
 
     def generate(self) -> None:

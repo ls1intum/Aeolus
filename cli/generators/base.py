@@ -41,6 +41,13 @@ class BaseGenerator:
         raise NotImplementedError("handle_step() not implemented")
         return None
 
+    def check_syntax(self, content: str) -> bool:
+        """
+        Check the generated CI file for syntax errors.
+        """
+        raise NotImplementedError("check_syntax() not implemented")
+        return False
+
     def generate(self) -> str:
         """
         Generate the CI file.

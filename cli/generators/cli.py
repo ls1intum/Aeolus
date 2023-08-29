@@ -1,3 +1,5 @@
+import subprocess
+import tempfile
 from typing import List, Optional
 
 from classes.generated.definitions import InternalAction, Action
@@ -53,12 +55,32 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"# original type was {original_type}")
         self.functions.append(name)
         self.result.append(f"{name} () " + "{")
-
+        for parameter in step.parameters.root.root:
+            self.result.append(f"  {parameter}=\"{step.parameters.root.root[parameter]}\"")
         for line in step.script.split("\n"):
             if line:
                 self.result.append(f"  {line}")
         self.result.append("}")
         return None
+
+    def check(self, content: str) -> bool:
+        """
+        Check the generated bash file for syntax errors.
+        """
+        with tempfile.NamedTemporaryFile() as temp:
+            temp.write(content.encode())
+            temp.flush()
+            child: subprocess.CompletedProcess = subprocess.run(
+                f"bash -n {temp.name}",
+                text=True,
+                shell=True,
+                capture_output=True,
+            )
+            has_passed: bool = child.returncode == 0
+            if not has_passed:
+                logger.error("❌", child.stdout, self.output_settings.emoji)
+                logger.error("❌", child.stderr, self.output_settings.emoji)
+            return has_passed
 
     def generate(self) -> str:
         """

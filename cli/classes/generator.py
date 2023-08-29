@@ -15,6 +15,7 @@ from utils import logger
 
 
 class Generator(PassSettings):
+    check_syntax: bool
     target: Target
 
     def __init__(
@@ -22,6 +23,7 @@ class Generator(PassSettings):
         input_settings: InputSettings,
         output_settings: OutputSettings,
         target: Target,
+        check_syntax: bool,
     ):
         validator: Validator = Validator(
             output_settings=output_settings, input_settings=input_settings
@@ -49,6 +51,7 @@ class Generator(PassSettings):
             metadata=merger.metadata,
         )
         self.target = target
+        self.check_syntax = check_syntax
 
     def generate(self) -> None:
         if not self.windfile:
@@ -90,4 +93,17 @@ class Generator(PassSettings):
         if actual_generator:
             result: str = actual_generator.generate()
             print(result)
+            if self.check_syntax:
+                if actual_generator.check(result):
+                    logger.info(
+                        "✅",
+                        "Syntax check passed",
+                        self.output_settings.emoji,
+                    )
+                else:
+                    logger.error(
+                        "❌ ",
+                        "Syntax check failed",
+                        self.output_settings.emoji,
+                    )
         return None
