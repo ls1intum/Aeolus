@@ -25,10 +25,7 @@ class CliGenerator(BaseGenerator):
             self.result.append("set -x")
         if self.windfile.environment:
             for env_var in self.windfile.environment.root.root:
-                self.result.append(
-                    f'export {env_var}="'
-                    f'{self.windfile.environment.root.root[env_var]}"'
-                )
+                self.result.append(f'export {env_var}="' f'{self.windfile.environment.root.root[env_var]}"')
 
     def add_postfix(self) -> None:
         """
@@ -48,9 +45,7 @@ class CliGenerator(BaseGenerator):
         :return: CI action
         """
         original_name: Optional[str] = self.metadata.get_original_name_of(name)
-        original_type: Optional[str] = self.metadata.get_meta_for_action(
-            name
-        ).get("original_type")
+        original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
         if original_type == "platform":
             logger.info(
                 "🔨",
@@ -65,15 +60,10 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"{name} () " + "{")
         if step.environment:
             for env_var in step.environment.root.root:
-                self.result.append(
-                    f'  export {env_var}="'
-                    f'{step.environment.root.root[env_var]}"'
-                )
+                self.result.append(f'  export {env_var}="' f'{step.environment.root.root[env_var]}"')
         if step.parameters:
             for parameter in step.parameters.root.root:
-                self.result.append(
-                    f'  {parameter}="{step.parameters.root.root[parameter]}"'
-                )
+                self.result.append(f'  {parameter}="{step.parameters.root.root[parameter]}"')
         for line in step.script.split("\n"):
             if line:
                 self.result.append(f"  {line}")

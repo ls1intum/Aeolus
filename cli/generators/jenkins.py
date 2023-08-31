@@ -21,10 +21,7 @@ class JenkinsGenerator(BaseGenerator):
         if self.windfile.environment:
             self.result.append("  environment {")
             for env_var in self.windfile.environment.root.root:
-                self.result.append(
-                    f'    {env_var} = "'
-                    f'{self.windfile.environment.root.root[env_var]}"'
-                )
+                self.result.append(f'    {env_var} = "' f'{self.windfile.environment.root.root[env_var]}"')
             self.result.append("  }")
 
         self.result.append("  stages {")
@@ -49,9 +46,7 @@ class JenkinsGenerator(BaseGenerator):
         :return: CI action
         """
         original_name: Optional[str] = self.metadata.get_original_name_of(name)
-        original_type: Optional[str] = self.metadata.get_meta_for_action(
-            name
-        ).get("original_type")
+        original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
         if original_type == "platform":
             if step.platform == Target.jenkins.name:
                 logger.info(

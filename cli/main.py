@@ -60,19 +60,11 @@ if __name__ == "__main__":
     parser: argparse.ArgumentParser = add_argparse()
     args = parser.parse_args(sys.argv[1:])
     if args.debug:
-        logging.basicConfig(
-            encoding="utf-8", level=logging.DEBUG, format="%(message)s"
-        )
+        logging.basicConfig(encoding="utf-8", level=logging.DEBUG, format="%(message)s")
     if args.verbose:
-        logging.basicConfig(
-            encoding="utf-8", level=logging.INFO, format="%(message)s"
-        )
-    output_settings: OutputSettings = OutputSettings(
-        verbose=args.verbose, debug=args.debug, emoji=args.emoji
-    )
-    input_settings: InputSettings = InputSettings(
-        file_path=args.input.name, file=args.input
-    )
+        logging.basicConfig(encoding="utf-8", level=logging.INFO, format="%(message)s")
+    output_settings: OutputSettings = OutputSettings(verbose=args.verbose, debug=args.debug, emoji=args.emoji)
+    input_settings: InputSettings = InputSettings(file_path=args.input.name, file=args.input)
     if args.command == "validate":
         validator: Validate = Validate(
             input_settings=input_settings,

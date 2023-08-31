@@ -29,9 +29,7 @@ class Merge(Subcommand):
         args: typing.Any,
     ):
         super().__init__(args)
-        validator: Validator = Validator(
-            output_settings=output_settings, input_settings=input_settings
-        )
+        validator: Validator = Validator(output_settings=output_settings, input_settings=input_settings)
         validated: Optional[WindFile] = validator.validate_wind_file()
         if validated:
             self.windfile = validated
@@ -43,9 +41,7 @@ class Merge(Subcommand):
             )
         else:
             if output_settings.verbose:
-                logger.error(
-                    "❌", "Validation failed. Aborting.", output_settings.emoji
-                )
+                logger.error("❌", "Validation failed. Aborting.", output_settings.emoji)
 
     @staticmethod
     def add_arg_parser(parser: argparse.ArgumentParser) -> None:

@@ -94,17 +94,13 @@ def get_file_actions(
 
 def get_actions(
     windfile: WindFile,
-) -> typing.List[
-    InternalAction | ExternalAction | FileAction | PlatformAction
-]:
+) -> typing.List[InternalAction | ExternalAction | FileAction | PlatformAction]:
     """
     Returns a list of all actions in the given windfile.
     :param windfile: Windfile to analyze
     :return: List of actions
     """
-    actions: typing.List[
-        InternalAction | ExternalAction | FileAction | PlatformAction
-    ] = []
+    actions: typing.List[InternalAction | ExternalAction | FileAction | PlatformAction] = []
     for name in windfile.jobs:
         action: Action = windfile.jobs[name]
         if isinstance(action.root, InternalAction):
@@ -159,9 +155,7 @@ def read_file(
         return None
 
 
-def read_windfile(
-    file: TextIOWrapper, output_settings: OutputSettings
-) -> Optional[WindFile]:
+def read_windfile(file: TextIOWrapper, output_settings: OutputSettings) -> Optional[WindFile]:
     """
     Validates the given file. If the file is valid, the windfile is returned.
     :param file: file to read
@@ -169,17 +163,13 @@ def read_windfile(
     :return: Windfile or None
     """
     # this shuts mypy up about the type
-    windfile: type[WindFile] | None = read_file(
-        filetype=WindFile, file=file, output_settings=output_settings
-    )
+    windfile: type[WindFile] | None = read_file(filetype=WindFile, file=file, output_settings=output_settings)
     if isinstance(windfile, WindFile):
         return windfile
     return None
 
 
-def read_action_file(
-    file: TextIOWrapper, output_settings: OutputSettings
-) -> Optional[ActionFile]:
+def read_action_file(file: TextIOWrapper, output_settings: OutputSettings) -> Optional[ActionFile]:
     """
     Validates the given file. If the file is valid,
     the ActionFile is returned.
@@ -188,9 +178,7 @@ def read_action_file(
     :return: ActionFile or None
     """
     # this shuts mypy up about the type
-    action_file: type[ActionFile] | None = read_file(
-        filetype=ActionFile, file=file, output_settings=output_settings
-    )
+    action_file: type[ActionFile] | None = read_file(filetype=ActionFile, file=file, output_settings=output_settings)
     if isinstance(action_file, ActionFile):
         return action_file
     return None

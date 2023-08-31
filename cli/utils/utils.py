@@ -20,9 +20,7 @@ def get_content_of(file: str) -> Optional[str]:
         return file_pointer.read()
 
 
-def execute_arbitrary_code(
-    code: str, method: str, module_name: str = "module"
-) -> None:
+def execute_arbitrary_code(code: str, method: str, module_name: str = "module") -> None:
     """
     Executes the given code. This is a security risk, so use with caution.
     :param code: Code to execute
@@ -45,18 +43,16 @@ def build(func: typing.Any) -> None:
     possible_args: dict = {"envs": envs}
 
     function_parameters = inspect.signature(func).parameters
-    defined_args: typing.List[str] = [key for key in function_parameters]
+    defined_args: typing.List[str] = list(function_parameters)
 
     kwargs: dict[str, typing.Any] = possible_args.copy()
 
     for arg in possible_args:
         if arg not in defined_args:
             kwargs.pop(arg)
-    return None
 
-    def inner():
+    def inner() -> None:
         print("This is aeolus speaking.")
-
         func(**kwargs)
 
     return inner()

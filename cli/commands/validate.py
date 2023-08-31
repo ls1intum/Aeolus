@@ -20,18 +20,12 @@ class Validate(Subcommand):
         args: typing.Any,
     ):
         super().__init__(args)
-        self.validator: Validator = Validator(
-            input_settings=input_settings, output_settings=output_settings
-        )
+        self.validator: Validator = Validator(input_settings=input_settings, output_settings=output_settings)
 
     @staticmethod
     def add_arg_parser(parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
-            "--wind", "-w", help="Validate windfile.", action="store_true"
-        )
-        parser.add_argument(
-            "--action", "-a", help="Validate action.", action="store_true"
-        )
+        parser.add_argument("--wind", "-w", help="Validate windfile.", action="store_true")
+        parser.add_argument("--action", "-a", help="Validate action.", action="store_true")
         parser.add_argument(
             "--input",
             "-i",

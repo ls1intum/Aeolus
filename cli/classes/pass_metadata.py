@@ -10,9 +10,7 @@ class PassMetadata:
 
     metadata: dict[str, typing.Any] = {}
 
-    def __init__(
-        self, metadata: typing.Optional[dict[str, typing.Any]] = None
-    ) -> None:
+    def __init__(self, metadata: typing.Optional[dict[str, typing.Any]] = None) -> None:
         if not metadata:
             metadata = {}
         self.metadata = metadata
@@ -55,9 +53,7 @@ class PassMetadata:
         """
         self.metadata[scope] = value
 
-    def append(
-        self, scope: str, key: str, subkey: str, value: typing.Any
-    ) -> None:
+    def append(self, scope: str, key: str, subkey: str, value: typing.Any) -> None:
         """
         Append a value to a metadata key.
         :param scope: metadata scope
