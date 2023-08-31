@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long
 VALID_ACTIONFILE_WITH_TWO_ACTIONS: str = """
         api: v0.0.1
         metadata:

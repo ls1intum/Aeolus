@@ -1,8 +1,11 @@
 import logging
 import unittest
+from typing import Optional
+
+from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
-from classes.metadata import PassMetadata
+from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
@@ -16,6 +19,9 @@ class GenerateTests(unittest.TestCase):
     output_settings: OutputSettings
 
     def setUp(self) -> None:
+        """
+        Set up the test cases
+        """
         logging.basicConfig(
             encoding="utf-8", level=logging.DEBUG, format="%(message)s"
         )
@@ -38,7 +44,13 @@ class GenerateTests(unittest.TestCase):
                 windfile=merger.merge(),
                 metadata=metadata,
             )
-            result = cli.generate()
+            result: str = cli.generate()
+            self.assertTrue(result.count("#!/usr/bin/env bash") == 1)
+            self.assertTrue("set -e" in result)
+            self.assertTrue("set -x" in result)
+            # two comments, one definition and one call
+            self.assertTrue(result.count("internal-action") == 4)
+            self.assertTrue(result.count("{") == result.count("}"))
             self.assertTrue(cli.check(content=result))
 
     def test_generate_jenkinsfile(self) -> None:
@@ -50,15 +62,16 @@ class GenerateTests(unittest.TestCase):
                 output_settings=self.output_settings,
                 metadata=metadata,
             )
+            windfile: Optional[WindFile] = merger.merge()
+            self.assertIsNotNone(windfile)
             jenkins: JenkinsGenerator = JenkinsGenerator(
                 input_settings=InputSettings(file=file, file_path=file.name),
                 output_settings=self.output_settings,
-                windfile=merger.merge(),
+                windfile=windfile,
                 metadata=metadata,
             )
             result: str = jenkins.generate()
             self.assertTrue(result.count("pipeline {") == 1)
-            print(result)
             self.assertTrue(result.count("{") == result.count("}"))
 
 

@@ -33,7 +33,7 @@ def execute_arbitrary_code(
     compiled = compile(code, "", "exec")
     module = ModuleType(module_name)
     # function = get_attr(module, method)
-    exec(compiled, module.__dict__) # pylint: disable=exec-used
+    exec(compiled, module.__dict__)  # pylint: disable=exec-used
     if hasattr(module, method):
         build(getattr(module, method))
 

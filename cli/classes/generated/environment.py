@@ -17,9 +17,7 @@ class EnvironmentSchema(BaseModel):
         examples=['JOB_NAME', 'bamboo.buildPlanName'],
     )
     JOB_ID: str = Field(
-        ...,
-        description='The id of the job that is currently executed.',
-        examples=['BUILD_ID', 'bamboo.buildNumber'],
+        ..., description='The id of the job that is currently executed.', examples=['BUILD_ID', 'bamboo.buildNumber']
     )
     JOB_URI: str = Field(
         ...,
@@ -32,9 +30,7 @@ class EnvironmentSchema(BaseModel):
         examples=['BUILD_URL', 'bamboo.buildResultsUrl'],
     )
     RUNNER_NAME: str = Field(
-        ...,
-        description='The name of the runner that is executing the job.',
-        examples=['NODE_NAME', 'bamboo.agentId'],
+        ..., description='The name of the runner that is executing the job.', examples=['NODE_NAME', 'bamboo.agentId']
     )
     BRANCH_NAME: str = Field(
         ...,

@@ -5,14 +5,14 @@ from typing import Optional
 from classes.generated.actionfile import ActionFile
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
-from classes.metadata import PassMetadata
+from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
+from test.testutils import TemporaryFileWithContent
 from classes.validator import Validator, read_action_file
 from test.actionfile_definitions import (
     VALID_ACTIONFILE_WITH_TWO_ACTIONS,
     INVALID_ACTIONFILE_WITH_ONE_ACTION,
 )
-from test.testutils import TemporaryFileWithContent
 from test.windfile_definitions import (
     INVALID_WINDFILE_INTERNAL_ACTION,
     VALID_WINDFILE_INTERNAL_ACTION,
@@ -34,7 +34,9 @@ class ValidateTests(unittest.TestCase):
         )
 
     def test_validate_no_external_actions(self):
-        with TemporaryFileWithContent(content=VALID_WINDFILE_INTERNAL_ACTION) as file:
+        with TemporaryFileWithContent(
+            content=VALID_WINDFILE_INTERNAL_ACTION
+        ) as file:
             validator: Validator = Validator(
                 windfile=None,
                 input_settings=InputSettings(file=file, file_path=file.name),
@@ -45,7 +47,9 @@ class ValidateTests(unittest.TestCase):
             self.assertIsNotNone(windfile)
 
     def test_validating_invalid_file(self):
-        with TemporaryFileWithContent(content=INVALID_WINDFILE_INTERNAL_ACTION) as file:
+        with TemporaryFileWithContent(
+            content=INVALID_WINDFILE_INTERNAL_ACTION
+        ) as file:
             valid: Validator = Validator(
                 windfile=None,
                 input_settings=InputSettings(file=file, file_path=file.name),

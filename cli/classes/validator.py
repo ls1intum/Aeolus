@@ -199,7 +199,8 @@ def read_action_file(
 class Validator(PassSettings):
     def validate_action_file(self) -> Optional[ActionFile]:
         """
-        Validates the given actionfile. If the file is valid, the actionfile is returned.
+        Validates the given actionfile. If the file is valid, the
+        actionfile is returned.
         :return:
         """
         logger.info("🌬️", "Validating action", self.output_settings.emoji)

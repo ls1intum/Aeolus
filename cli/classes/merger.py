@@ -19,7 +19,7 @@ from classes.generated.definitions import (
 )
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
-from classes.metadata import PassMetadata
+from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
 from classes.pass_settings import PassSettings
 from classes.validator import (
@@ -49,7 +49,8 @@ def merge_parameters(parameters: Parameters | None, action: Action) -> None:
 
 def merge_environment(environment: Environment | None, action: Action) -> None:
     """
-    Merges the given environment variables into the environment variables of the action.
+    Merges the given environment variables into the
+    environment variables of the action.
     :param environment: environment to merge
     :param action: action to merge the environment variables into
     """
@@ -63,7 +64,8 @@ def merge_environment(environment: Environment | None, action: Action) -> None:
 
 def merge_lifecycle(lifecycle: List[Lifecycle] | None, action: Action) -> None:
     """
-    Creates a superset of the given lifecycle items and the lifecycle of the action and adds it to the action.
+    Creates a superset of the given lifecycle items and
+    the lifecycle of the action and adds it to the action.
     :param lifecycle: lifecycle items to add
     :param action: action to add the lifecycle items to
     """
@@ -77,7 +79,8 @@ def merge_lifecycle(lifecycle: List[Lifecycle] | None, action: Action) -> None:
 
 class Merger(PassSettings):
     """
-    Merger class. Merges external actions into the windfile to simplify the generation process.
+    Merger class. Merges external actions into the
+     windfile to simplify the generation process.
     """
 
     def __init__(
@@ -384,8 +387,11 @@ class Merger(PassSettings):
                 subkey="original_type",
                 value=types[index],
             )
-            
-            merge_environment(self.windfile.jobs[name].root.environment, external_actions[index])
+
+            merge_environment(
+                self.windfile.jobs[name].root.environment,
+                external_actions[index],
+            )
             merge_parameters(
                 self.windfile.jobs[name].root.parameters,
                 external_actions[index],
@@ -394,14 +400,18 @@ class Merger(PassSettings):
                 self.windfile.jobs[name].root.excludeDuring,
                 external_actions[index],
             )
-            logger.info("➕", f"adding action {external_actions[index]}", self.output_settings.emoji)
+            logger.info(
+                "➕",
+                f"adding action {external_actions[index]}",
+                self.output_settings.emoji,
+            )
             self.metadata.append(
                 scope="actions",
                 key=new_name,
                 subkey="original_name",
                 value=name,
             )
-            
+
             self.windfile.jobs[new_name] = external_actions[index]
         self.windfile.jobs.pop(name)
 

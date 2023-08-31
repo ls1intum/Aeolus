@@ -75,7 +75,7 @@ class Generator(PassSettings):
         # print(code)
         # print("calling:")
         # execute_arbitrary_code(code, "build", "hello-world_0")
-        actual_generator: CliGenerator | JenkinsGenerator = None
+        actual_generator: Optional[CliGenerator | JenkinsGenerator] = None
         if self.target == Target.cli.name:
             actual_generator = CliGenerator(
                 windfile=self.windfile,
@@ -101,7 +101,7 @@ class Generator(PassSettings):
             if self.check_syntax:
                 if actual_generator.check(result):
                     logger.info(
-                        "✅",
+                        "✅ ",
                         "Syntax check passed",
                         self.output_settings.emoji,
                     )

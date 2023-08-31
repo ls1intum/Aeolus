@@ -3,7 +3,7 @@ import typing
 from classes.generated.definitions import InternalAction
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
-from classes.metadata import PassMetadata
+from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
 
 
@@ -39,14 +39,12 @@ class BaseGenerator:
         :return: CI action
         """
         raise NotImplementedError("handle_step() not implemented")
-        return None
 
     def check(self, content: str) -> bool:
         """
         Check the generated CI file for syntax errors.
         """
         raise NotImplementedError("check_syntax() not implemented")
-        return False
 
     def generate(self) -> str:
         """

@@ -14,12 +14,7 @@ class Model(RootModel):
 
 
 class Api(RootModel):
-    root: str = Field(
-        ...,
-        description='The API version of the windfile.',
-        examples=['v0.0.1'],
-        title='API Version',
-    )
+    root: str = Field(..., description='The API version of the windfile.', examples=['v0.0.1'], title='API Version')
 
 
 class Dictionary(RootModel):
@@ -39,11 +34,7 @@ class Lifecycle(Enum):
 
 
 class Parameters(RootModel):
-    root: Dictionary = Field(
-        ...,
-        description='The parameters of an action.',
-        title='Parameters of an action.',
-    )
+    root: Dictionary = Field(..., description='The parameters of an action.', title='Parameters of an action.')
 
 
 class Target(Enum):
@@ -61,22 +52,12 @@ class ContactData(BaseModel):
     Contact data of the author.
     """
 
-    name: str = Field(
-        ..., description='The name of the author.', examples=['Andreas Resch']
-    )
-    email: Optional[str] = Field(
-        None,
-        description='The email of the author.',
-        examples=['aeolus@resch.io'],
-    )
+    name: str = Field(..., description='The name of the author.', examples=['Andreas Resch'])
+    email: Optional[str] = Field(None, description='The email of the author.', examples=['aeolus@resch.io'])
 
 
 class Environment(RootModel):
-    root: Dictionary = Field(
-        ...,
-        description='Environment variables for actions.',
-        title='Environment',
-    )
+    root: Dictionary = Field(..., description='Environment variables for actions.', title='Environment')
 
 
 class FileAction(BaseModel):
@@ -94,9 +75,7 @@ class FileAction(BaseModel):
         description='Exclude this action during the specified parts of the lifetime of an exercise.',
         title='Exclude during',
     )
-    environment: Optional[Environment] = Field(
-        None, description='Environment variables for this file action.'
-    )
+    environment: Optional[Environment] = Field(None, description='Environment variables for this file action.')
     platform: Optional[Target] = Field(
         None,
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
@@ -111,19 +90,14 @@ class InternalAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    script: str = Field(
-        ...,
-        description='The script of the internal action. Written in aeolus DSL',
-    )
+    script: str = Field(..., description='The script of the internal action. Written in aeolus DSL')
     excludeDuring: Optional[List[Lifecycle]] = Field(
         None,
         description='Exclude this action during the specified parts of the lifetime of an exercise.',
         title='Exclude during',
     )
     parameters: Optional[Parameters] = None
-    environment: Optional[Environment] = Field(
-        None, description='Environment variables for this internal action.'
-    )
+    environment: Optional[Environment] = Field(None, description='Environment variables for this internal action.')
     platform: Optional[Target] = Field(
         None,
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
@@ -138,37 +112,23 @@ class PlatformAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    for_: Target = Field(
-        ...,
-        alias='for',
-        description='The platform that this action is defined for.',
-    )
-    file: str = Field(
-        ..., description='The file of the platform action. Written in Python'
-    )
+    for_: Target = Field(..., alias='for', description='The platform that this action is defined for.')
+    file: str = Field(..., description='The file of the platform action. Written in Python')
     parameters: Optional[Parameters] = None
     function: Optional[constr(pattern=r'^[a-zA-Z0-9._-]+$')] = Field(
-        'run',
-        description='The function of the platform action.',
-        examples=['run'],
+        'run', description='The function of the platform action.', examples=['run']
     )
     excludeDuring: Optional[List[Lifecycle]] = Field(
         None,
         description='Exclude this action during the specified parts of the lifetime of an exercise.',
         title='Exclude during',
     )
-    environment: Optional[Environment] = Field(
-        None, description='Environment variables for this platform action.'
-    )
-    platform: Optional[Target] = Field(
-        None, description='Ignored for this action.'
-    )
+    environment: Optional[Environment] = Field(None, description='Environment variables for this platform action.')
+    platform: Optional[Target] = Field(None, description='Ignored for this action.')
 
 
 class Author(RootModel):
-    root: Union[str, ContactData] = Field(
-        ..., description='The author of the windfile.', title='Author'
-    )
+    root: Union[str, ContactData] = Field(..., description='The author of the windfile.', title='Author')
 
 
 class ExternalAction(BaseModel):
@@ -179,20 +139,14 @@ class ExternalAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    use: str = Field(
-        ...,
-        description='The name of the external action.',
-        title='Name of the external action.',
-    )
+    use: str = Field(..., description='The name of the external action.', title='Name of the external action.')
     parameters: Optional[Parameters] = None
     excludeDuring: Optional[List[Lifecycle]] = Field(
         None,
         description='Exclude this action during the specified parts of the lifetime of an exercise.',
         title='Exclude during',
     )
-    environment: Optional[Environment] = Field(
-        None, description='Environment variables for this external action.'
-    )
+    environment: Optional[Environment] = Field(None, description='Environment variables for this external action.')
     platform: Optional[Target] = Field(
         None,
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
@@ -204,25 +158,17 @@ class Metadata(BaseModel):
     Metadata of the windfile.
     """
 
-    name: str = Field(
-        ...,
-        description='The name of the windfile.',
-        examples=['rust-exercise-jobs'],
-    )
+    name: str = Field(..., description='The name of the windfile.', examples=['rust-exercise-jobs'])
     description: str = Field(
         ...,
         description='Description of what this list of actions is supposed to achieve',
-        examples=[
-            'This windfile contains the jobs that are executed during the CI of the rust-exercise.'
-        ],
+        examples=['This windfile contains the jobs that are executed during the CI of the rust-exercise.'],
     )
     author: Author = Field(..., description='The author of the windfile.')
-    targets: Optional[List[Target]] = Field(
-        None, description='The targets of the windfile.'
-    )
+    targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')
 
 
 class Action(RootModel):
-    root: Union[
-        FileAction, InternalAction, PlatformAction, ExternalAction
-    ] = Field(..., description='Action that can be executed.', title='Action')
+    root: Union[FileAction, InternalAction, PlatformAction, ExternalAction] = Field(
+        ..., description='Action that can be executed.', title='Action'
+    )

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 
 from classes.generated.definitions import InternalAction, Action, Target
 from generators.base import BaseGenerator
@@ -7,17 +7,23 @@ from utils import logger
 
 class JenkinsGenerator(BaseGenerator):
     """
-    Jenkins generator. Generates a jenkins pipeline to be used in the Jenkins CI system.
+    Jenkins generator. Generates a jenkins pipeline
+    to be used in the Jenkins CI system.
     """
 
     def add_prefix(self) -> None:
+        """
+        Add the prefix to the pipeline, e.g. the agent,
+        the environment, etc.
+        """
         self.result.append("pipeline {")
         self.result.append("  agent any")
         if self.windfile.environment:
             self.result.append("  environment {")
             for env_var in self.windfile.environment.root.root:
                 self.result.append(
-                    f'    {env_var} = "{self.windfile.environment.root.root[env_var]}"'
+                    f'    {env_var} = "'
+                    f'{self.windfile.environment.root.root[env_var]}"'
                 )
             self.result.append("  }")
 
@@ -53,20 +59,19 @@ class JenkinsGenerator(BaseGenerator):
                     "Platform action detected. Should be executed now...",
                     self.output_settings.emoji,
                 )
-                # TODO implement
+                # TODO implement # pylint: disable=fixme
                 return None
-            else:
-                logger.info(
-                    "🔨",
-                    "Unfitting platform action detected. Skipping...",
-                    self.output_settings.emoji,
-                )
-                return None
+            logger.info(
+                "🔨",
+                "Unfitting platform action detected. Skipping...",
+                self.output_settings.emoji,
+            )
+            return None
         self.result.append(f"    # step {name}")
         self.result.append(f"    # generated from step {original_name}")
         self.result.append(f"    # original type was {original_type}")
         self.result.append(f"    stage('{name}') " + "{")
-        self.result.append(f"      steps " + "{")
+        self.result.append("      steps " + "{")
 
         for line in step.script.split("\n"):
             if line:
@@ -88,3 +93,6 @@ class JenkinsGenerator(BaseGenerator):
 
         self.add_postfix()
         return super().generate()
+
+    def check(self, content: str) -> bool:
+        raise NotImplementedError("check_syntax() not implemented")

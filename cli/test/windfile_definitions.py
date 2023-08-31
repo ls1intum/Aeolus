@@ -1,3 +1,4 @@
+# pylint: disable=line-too-long
 VALID_WINDFILE_INTERNAL_ACTION: str = """
         api: v0.0.1
         metadata:

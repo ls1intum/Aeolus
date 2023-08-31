@@ -3,7 +3,7 @@ from typing import Optional
 from classes.generated.actionfile import ActionFile
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
-from classes.metadata import PassMetadata
+from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
 
 
@@ -25,7 +25,7 @@ class PassSettings:
         metadata: PassMetadata = PassMetadata(),
         windfile: Optional[WindFile] = None,
         actionfile: Optional[ActionFile] = None,
-    ):
+    ):  # ignore pylint: disable=too-many-arguments
         self.windfile = windfile
         self.actionfile = actionfile
         self.metadata = metadata

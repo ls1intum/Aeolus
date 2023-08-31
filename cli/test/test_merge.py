@@ -2,14 +2,14 @@ import logging
 import unittest
 from typing import Optional
 
+from test.testutils import TemporaryFileWithContent
 from classes.generated.definitions import InternalAction
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
-from classes.metadata import PassMetadata
+from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
 from test.actionfile_definitions import VALID_ACTIONFILE_WITH_TWO_ACTIONS
-from test.testutils import TemporaryFileWithContent
 from test.windfile_definitions import (
     VALID_WINDFILE_INTERNAL_ACTION,
     INVALID_WINDFILE_INTERNAL_ACTION,
@@ -21,6 +21,9 @@ class MergeTests(unittest.TestCase):
     output_settings: OutputSettings
 
     def setUp(self) -> None:
+        """
+        Set up the test cases
+        """
         logging.basicConfig(
             encoding="utf-8", level=logging.DEBUG, format="%(message)s"
         )

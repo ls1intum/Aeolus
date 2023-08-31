@@ -16,7 +16,8 @@ class CliGenerator(BaseGenerator):
 
     def add_prefix(self) -> None:
         """
-        Add the prefix to the bash script. E.g. the shebang, some output settings, etc.
+        Add the prefix to the bash script.
+        E.g. the shebang, some output settings, etc.
         """
         self.result.append("#!/usr/bin/env bash")
         self.result.append("set -e")
@@ -25,12 +26,14 @@ class CliGenerator(BaseGenerator):
         if self.windfile.environment:
             for env_var in self.windfile.environment.root.root:
                 self.result.append(
-                    f'export {env_var}="{self.windfile.environment.root.root[env_var]}"'
+                    f'export {env_var}="'
+                    f'{self.windfile.environment.root.root[env_var]}"'
                 )
 
     def add_postfix(self) -> None:
         """
-        Add the postfix to the bash script. E.g. some output settings, the callable functions etc.
+        Add the postfix to the bash script.
+        E.g. some output settings, the callable functions etc.
         """
         self.result.append("\n")
         for function in self.functions:
@@ -63,7 +66,8 @@ class CliGenerator(BaseGenerator):
         if step.environment:
             for env_var in step.environment.root.root:
                 self.result.append(
-                    f'  export {env_var}="{step.environment.root.root[env_var]}"'
+                    f'  export {env_var}="'
+                    f'{step.environment.root.root[env_var]}"'
                 )
         if step.parameters:
             for parameter in step.parameters.root.root:
@@ -84,10 +88,11 @@ class CliGenerator(BaseGenerator):
             temp.write(content.encode())
             temp.flush()
             child: subprocess.CompletedProcess = subprocess.run(
-                ["bash", "-n", temp.name],
+                f"bash -n {temp.name}",
                 text=True,
                 shell=True,
                 capture_output=True,
+                check=True,
             )
             has_passed: bool = child.returncode == 0
             if not has_passed:

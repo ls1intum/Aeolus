@@ -10,7 +10,9 @@ class PassMetadata:
 
     metadata: dict[str, typing.Any] = {}
 
-    def __init__(self, metadata: typing.Optional[dict[str, typing.Any]] = None) -> None:
+    def __init__(
+        self, metadata: typing.Optional[dict[str, typing.Any]] = None
+    ) -> None:
         if not metadata:
             metadata = {}
         self.metadata = metadata

@@ -16,7 +16,7 @@ force-exclude = '''
     | docs/bin
     | docs/source
     '''
-line-length = 79
+line-length = 120
 
 [tool.pylint.'MAIN']
 
