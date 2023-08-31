@@ -13,6 +13,14 @@ class JenkinsGenerator(BaseGenerator):
     def add_prefix(self) -> None:
         self.result.append("pipeline {")
         self.result.append("  agent any")
+        if self.windfile.environment:
+            self.result.append("  environment {")
+            for env_var in self.windfile.environment.root.root:
+                self.result.append(
+                    f'    {env_var} = "{self.windfile.environment.root.root[env_var]}"'
+                )
+            self.result.append("  }")
+
         self.result.append("  stages {")
         self.result.append("    stage('Checkout code') {")
         self.result.append("      steps {")
@@ -38,13 +46,22 @@ class JenkinsGenerator(BaseGenerator):
         original_type: Optional[str] = self.metadata.get_meta_for_action(
             name
         ).get("original_type")
-        if original_type == "platform" and step.platform != Target.jenkins.name:
-            logger.info(
-                "🔨",
-                "Platform action detected. Skipping...",
-                self.output_settings.emoji,
-            )
-            return None
+        if original_type == "platform":
+            if step.platform == Target.jenkins.name:
+                logger.info(
+                    "🔨",
+                    "Platform action detected. Should be executed now...",
+                    self.output_settings.emoji,
+                )
+                # TODO implement
+                return None
+            else:
+                logger.info(
+                    "🔨",
+                    "Unfitting platform action detected. Skipping...",
+                    self.output_settings.emoji,
+                )
+                return None
         self.result.append(f"    # step {name}")
         self.result.append(f"    # generated from step {original_name}")
         self.result.append(f"    # original type was {original_type}")
@@ -55,6 +72,7 @@ class JenkinsGenerator(BaseGenerator):
             if line:
                 self.result.append(f"         {line}")
         self.result.append("      }")
+        self.result.append("    }")
         return None
 
     def generate(self) -> str:

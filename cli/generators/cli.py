@@ -22,6 +22,11 @@ class CliGenerator(BaseGenerator):
         self.result.append("set -e")
         if self.output_settings.debug:
             self.result.append("set -x")
+        if self.windfile.environment:
+            for env_var in self.windfile.environment.root.root:
+                self.result.append(
+                    f'export {env_var}="{self.windfile.environment.root.root[env_var]}"'
+                )
 
     def add_postfix(self) -> None:
         """
@@ -55,8 +60,16 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"# original type was {original_type}")
         self.functions.append(name)
         self.result.append(f"{name} () " + "{")
-        for parameter in step.parameters.root.root:
-            self.result.append(f"  {parameter}=\"{step.parameters.root.root[parameter]}\"")
+        if step.environment:
+            for env_var in step.environment.root.root:
+                self.result.append(
+                    f'  export {env_var}="{step.environment.root.root[env_var]}"'
+                )
+        if step.parameters:
+            for parameter in step.parameters.root.root:
+                self.result.append(
+                    f'  {parameter}="{step.parameters.root.root[parameter]}"'
+                )
         for line in step.script.split("\n"):
             if line:
                 self.result.append(f"  {line}")
@@ -71,7 +84,7 @@ class CliGenerator(BaseGenerator):
             temp.write(content.encode())
             temp.flush()
             child: subprocess.CompletedProcess = subprocess.run(
-                f"bash -n {temp.name}",
+                ["bash", "-n", temp.name],
                 text=True,
                 shell=True,
                 capture_output=True,

@@ -1,5 +1,4 @@
 import logging
-import tempfile
 import unittest
 from typing import Optional
 
@@ -9,6 +8,13 @@ from classes.input_settings import InputSettings
 from classes.merger import Merger
 from classes.metadata import PassMetadata
 from classes.output_settings import OutputSettings
+from test.actionfile_definitions import VALID_ACTIONFILE_WITH_TWO_ACTIONS
+from test.testutils import TemporaryFileWithContent
+from test.windfile_definitions import (
+    VALID_WINDFILE_INTERNAL_ACTION,
+    INVALID_WINDFILE_INTERNAL_ACTION,
+    VALID_WINDFILE_WITH_NON_EXISTING_ACTIONFILE,
+)
 
 
 class MergeTests(unittest.TestCase):
@@ -23,20 +29,9 @@ class MergeTests(unittest.TestCase):
         )
 
     def test_merge_no_external_actions(self):
-        content: str = """
-        api: v0.0.1
-        metadata:
-          name: test windfile
-          description: This is a windfile with no external actions
-          author: Test Author
-        jobs:
-          internal-action:
-            script: echo "This is an internal action"
-        """
-        with tempfile.NamedTemporaryFile(mode="w+") as file:
-            file.write(content)
-            file.seek(0)
-            print(file.name)
+        with TemporaryFileWithContent(
+            content=VALID_WINDFILE_INTERNAL_ACTION
+        ) as file:
             merger: Merger = Merger(
                 windfile=None,
                 input_settings=InputSettings(file=file, file_path=file.name),
@@ -56,22 +51,10 @@ class MergeTests(unittest.TestCase):
                 action.script, 'echo "This is an internal action"'
             )
 
-
-
     def test_merging_invalid_file(self):
-        content: str = """
-        api: v0.0.1
-        metadata:
-          name: test windfile
-          description: This is a windfile with no external actions
-          author: Test Author
-        jobs:
-          internal-action:
-        script: echo "This is an internal action"
-        """
-        with tempfile.NamedTemporaryFile(mode="w+") as file:
-            file.write(content)
-            file.seek(0)
+        with TemporaryFileWithContent(
+            content=INVALID_WINDFILE_INTERNAL_ACTION
+        ) as file:
             merger: Merger = Merger(
                 windfile=None,
                 input_settings=InputSettings(file=file, file_path=file.name),
@@ -80,22 +63,11 @@ class MergeTests(unittest.TestCase):
             )
             windfile = merger.merge()
             self.assertIsNone(windfile)
-
 
     def test_merging_nonexisting_file(self):
-        content: str = """
-        api: v0.0.1
-        metadata:
-          name: test windfile
-          description: This is a windfile with no external actions
-          author: Test Author
-        jobs:
-          invalid-action:
-            use: ./this-file-does-not-exist.yaml
-        """
-        with tempfile.NamedTemporaryFile(mode="w+") as file:
-            file.write(content)
-            file.seek(0)
+        with TemporaryFileWithContent(
+            content=VALID_WINDFILE_WITH_NON_EXISTING_ACTIONFILE
+        ) as file:
             merger: Merger = Merger(
                 windfile=None,
                 input_settings=InputSettings(file=file, file_path=file.name),
@@ -105,27 +77,10 @@ class MergeTests(unittest.TestCase):
             windfile = merger.merge()
             self.assertIsNone(windfile)
 
-
     def test_merge_with_external_actions(self):
-        action_file_content: str = """
-        api: v0.0.1
-        metadata:
-          name: simple action
-          description: This is an action with a simple script
-          author:
-            name: Action Author
-            email: action@author.com
-        steps:
-          hello-world:
-            script: echo "Hello from a simple action"
-          second-step:
-            script: |
-              echo "Hello from the second step"
-        """
-        with tempfile.NamedTemporaryFile(mode="w+") as action_file:
-            action_file.write(action_file_content)
-            action_file.seek(0)
-
+        with TemporaryFileWithContent(
+            content=VALID_ACTIONFILE_WITH_TWO_ACTIONS
+        ) as action_file:
             content: str = f"""
             api: v0.0.1
             metadata:
@@ -136,10 +91,7 @@ class MergeTests(unittest.TestCase):
                 external-action:
                     use: {action_file.name}
             """
-
-            with tempfile.NamedTemporaryFile(mode="w+") as file:
-                file.write(content)
-                file.seek(0)
+            with TemporaryFileWithContent(content=content) as file:
                 merger: Merger = Merger(
                     windfile=None,
                     input_settings=InputSettings(
