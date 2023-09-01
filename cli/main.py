@@ -1,4 +1,5 @@
 import logging
+import typing
 
 import argparse
 import sys
@@ -53,6 +54,11 @@ def add_argparse() -> argparse.ArgumentParser:
     generator_parser = subparsers.add_parser(name="generate")
     Generate.add_arg_parser(parser=generator_parser)
     return arg_parser
+
+
+def parse_args(arguments: list[str]) -> typing.Any:
+    argument_parser: argparse.ArgumentParser = add_argparse()
+    return argument_parser.parse_args(arguments)
 
 
 if __name__ == "__main__":
