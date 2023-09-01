@@ -2,7 +2,6 @@ import traceback
 import typing
 from typing import Optional
 
-import argparse
 from io import TextIOWrapper
 import pydantic
 import yaml
@@ -17,8 +16,9 @@ from classes.generated.definitions import (
     PlatformAction,
 )
 from classes.generated.windfile import WindFile
-from commands.subcommand import Subcommand
-
+from classes.output_settings import OutputSettings
+from classes.pass_settings import PassSettings
+from utils import logger
 
 T = typing.TypeVar("T")
 
@@ -37,7 +37,7 @@ def has_external_actions(windfile: WindFile) -> bool:
 
 
 def get_external_actions(
-    windfile: Optional[WindFile],
+    windfile: typing.Optional[WindFile],
 ) -> typing.List[typing.Tuple[str, Action]]:
     """
     Returns a list of all external actions in the given windfile.
@@ -47,9 +47,20 @@ def get_external_actions(
     return get_actions_of_type(actiontype=ExternalAction, windfile=windfile)
 
 
+def get_platform_actions(
+    windfile: Optional[WindFile],
+) -> typing.List[typing.Tuple[str, Action]]:
+    """
+    Returns a list of all external actions in the given windfile.
+    :param windfile: WindFile to analyze
+    :return: List of external actions in the given windfile
+    """
+    return get_actions_of_type(actiontype=PlatformAction, windfile=windfile)
+
+
 def get_actions_of_type(
     actiontype: T,
-    windfile: Optional[WindFile],
+    windfile: typing.Optional[WindFile],
 ) -> typing.List[typing.Tuple[str, Action]]:
     """
     Returns a list of all file actions in the given windfile.
@@ -71,7 +82,7 @@ def get_actions_of_type(
 
 
 def get_file_actions(
-    windfile: Optional[WindFile],
+    windfile: typing.Optional[WindFile],
 ) -> typing.List[typing.Tuple[str, Action]]:
     """
     Returns a list of all file actions in the given windfile.
@@ -83,17 +94,13 @@ def get_file_actions(
 
 def get_actions(
     windfile: WindFile,
-) -> typing.List[
-    InternalAction | ExternalAction | FileAction | PlatformAction
-]:
+) -> typing.List[InternalAction | ExternalAction | FileAction | PlatformAction]:
     """
     Returns a list of all actions in the given windfile.
     :param windfile: Windfile to analyze
     :return: List of actions
     """
-    actions: typing.List[
-        InternalAction | ExternalAction | FileAction | PlatformAction
-    ] = []
+    actions: typing.List[InternalAction | ExternalAction | FileAction | PlatformAction] = []
     for name in windfile.jobs:
         action: Action = windfile.jobs[name]
         if isinstance(action.root, InternalAction):
@@ -123,117 +130,88 @@ def get_internal_actions(windfile: WindFile) -> typing.List[InternalAction]:
 
 def read_file(
     filetype: T,
-    path: TextIOWrapper,
-    verbose: bool = False,
-    debug: bool = False,
+    file: TextIOWrapper,
+    output_settings: OutputSettings,
 ) -> Optional[T]:
     """
     Validates the given file. If the file is valid,
     the read object is returned.
     :param filetype: Filetype to validate
-    :param path: Path to input
-    :param verbose: Print more output
-    :param debug: Print debug output
+    :param file: File to read
+    :param output_settings: OutputSettings
     :return:
     """
     try:
         typevalidator: pydantic.TypeAdapter = pydantic.TypeAdapter(filetype)
-        content: str = path.read()
-        file: T = typevalidator.validate_python(yaml.safe_load(content))
-        if file and verbose:
-            print(f"✅ {path.name} is valid")
-        return file
+        content: str = file.read()
+        validated: T = typevalidator.validate_python(yaml.safe_load(content))
+        logger.info("✅ ", f"{file.name} is valid", output_settings.emoji)
+        return validated
     except pydantic.ValidationError as validation_error:
-        if verbose:
-            print(f"❌ {path.name} is invalid")
-        print(validation_error)
-        if debug:
+        logger.info("❌", f"{file.name} is invalid", output_settings.emoji)
+        logger.error("❌", str(validation_error), output_settings.emoji)
+        if output_settings.debug:
             traceback.print_exc()
         return None
 
 
-def read_windfile(
-    path: TextIOWrapper, verbose: bool = False, debug: bool = False
-) -> Optional[WindFile]:
+def read_windfile(file: TextIOWrapper, output_settings: OutputSettings) -> Optional[WindFile]:
     """
     Validates the given file. If the file is valid, the windfile is returned.
-    :param debug:  debug mode
-    :param verbose: more output
-    :param path: path to input
+    :param file: file to read
+    :param output_settings: OutputSettings
     :return: Windfile or None
     """
     # this shuts mypy up about the type
-    windfile: type[WindFile] | None = read_file(
-        filetype=WindFile, path=path, verbose=verbose, debug=debug
-    )
+    windfile: type[WindFile] | None = read_file(filetype=WindFile, file=file, output_settings=output_settings)
     if isinstance(windfile, WindFile):
         return windfile
     return None
 
 
-def read_action_file(
-    path: TextIOWrapper, verbose: bool = False, debug: bool = False
-) -> Optional[ActionFile]:
+def read_action_file(file: TextIOWrapper, output_settings: OutputSettings) -> Optional[ActionFile]:
     """
-    Validates the given file. If the file is valid, the ActionFile is returned.
-    :param path: path to input
-    :param verbose: more output
-    :param debug: debug mode
+    Validates the given file. If the file is valid,
+    the ActionFile is returned.
+    :param file: file to validate
+    :param output_settings: OutputSettings
     :return: ActionFile or None
     """
     # this shuts mypy up about the type
-    action_file: type[ActionFile] | None = read_file(
-        filetype=ActionFile, path=path, verbose=verbose, debug=debug
-    )
+    action_file: type[ActionFile] | None = read_file(filetype=ActionFile, file=file, output_settings=output_settings)
     if isinstance(action_file, ActionFile):
         return action_file
     return None
 
 
-class Validator(Subcommand):
-    @staticmethod
-    def add_arg_parser(parser: argparse.ArgumentParser) -> None:
-        parser.add_argument(
-            "--wind", "-w", help="Validate windfile.", action="store_true"
+class Validator(PassSettings):
+    def validate_action_file(self) -> Optional[ActionFile]:
+        """
+        Validates the given actionfile. If the file is valid, the
+        actionfile is returned.
+        :return:
+        """
+        logger.info("🌬️", "Validating action", self.output_settings.emoji)
+        action: Optional[ActionFile] = read_action_file(
+            file=self.input_settings.file, output_settings=self.output_settings
         )
-        parser.add_argument(
-            "--action", "-a", help="Validate action.", action="store_true"
-        )
-        parser.add_argument(
-            "--input",
-            "-i",
-            help="Input file to read from",
-            default="windfile.yaml",
-            required=True,
-            type=open,
-        )  # pylint: disable=duplicate-code
+        return action
 
-    def validate(self) -> ActionFile | WindFile | None:
+    def validate_wind_file(self) -> Optional[WindFile]:
         """
-        Validates the given file. If the file is valid,
-        the read object is returned.
-        If the file is invalid, None is returned.
-        :return: ActionFile or WindFile or None
+        Validates the given windfile. If the file is valid,
+        the windfile is returned.
+        :return: Windfile or None
         """
-        if self.args.wind:
-            if self.args.verbose:
-                print("🌬️ Validating windfile")
-            windfile: Optional[WindFile] = read_windfile(
-                path=self.args.input,
-                verbose=self.args.verbose,
-                debug=self.args.debug,
+        logger.info("🌬️", "Validating windfile", self.output_settings.emoji)
+        windfile: Optional[WindFile] = read_windfile(
+            file=self.input_settings.file,
+            output_settings=self.output_settings,
+        )
+        if windfile and has_external_actions(windfile):
+            logger.info(
+                "🌍",
+                "This windfile contains external actions.",
+                self.output_settings.emoji,
             )
-            if self.args.verbose:
-                if windfile and has_external_actions(windfile):
-                    print("🌍This windfile contains external actions.")
-            return windfile
-        if self.args.action:
-            if self.args.verbose:
-                print("🌬️ Validating action")
-            action: Optional[ActionFile] = read_action_file(
-                path=self.args.input,
-                verbose=self.args.verbose,
-                debug=self.args.debug,
-            )
-            return action
-        return None
+        return windfile

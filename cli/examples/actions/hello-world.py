@@ -1,4 +1,5 @@
 # pylint: skip-file
 # type: ignore
-if __name__ == "__main__":
+def build(envs: dict):
+    print(envs)
     print("Hello world!")

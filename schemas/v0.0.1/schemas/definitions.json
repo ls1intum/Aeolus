@@ -110,7 +110,7 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "platform": {
+      "for": {
         "description": "The platform that this action is defined for.",
         "$ref": "#/target"
       },
@@ -120,6 +120,15 @@
       },
       "parameters": {
         "$ref": "#/parameters"
+      },
+      "function": {
+        "description": "The function of the platform action.",
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9._-]+$",
+        "default": "run",
+        "examples": [
+          "run"
+        ]
       },
       "excludeDuring": {
         "type": "array",
@@ -132,10 +141,14 @@
       "environment": {
         "description": "Environment variables for this platform action.",
         "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "Ignored for this action.",
+        "$ref": "#/target"
       }
     },
     "required": [
-      "platform",
+      "for",
       "file"
     ]
   },
@@ -163,8 +176,15 @@
       "environment": {
         "description": "Environment variables for this file action.",
         "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+        "$ref": "#/target"
       }
-    }
+    },
+    "required": [
+      "file"
+    ]
   },
   "internal-action": {
     "title": "Internal Action",
@@ -190,6 +210,10 @@
       "environment": {
         "description": "Environment variables for this internal action.",
         "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+        "$ref": "#/target"
       }
     },
     "required": [
@@ -221,6 +245,10 @@
       "environment": {
         "description": "Environment variables for this external action.",
         "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+        "$ref": "#/target"
       }
     },
     "required": [

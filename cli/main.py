@@ -1,8 +1,13 @@
+import logging
+
 import argparse
 import sys
 
-from commands.merger import Merger
-from commands.validator import Validator
+from classes.input_settings import InputSettings
+from classes.output_settings import OutputSettings
+from commands.generate import Generate
+from commands.merge import Merge
+from commands.validate import Validate
 
 
 def add_argparse() -> argparse.ArgumentParser:
@@ -32,21 +37,54 @@ def add_argparse() -> argparse.ArgumentParser:
         help="Enable debug mode",
         action="store_true",
     )
+    arg_parser.add_argument(
+        "--emoji",
+        "-e",
+        help="Enable emoji mode",
+        action="store_true",
+    )
 
     validate_parser = subparsers.add_parser(name="validate")
-    Validator.add_arg_parser(parser=validate_parser)
+    Validate.add_arg_parser(parser=validate_parser)
 
     merger_parser = subparsers.add_parser(name="merge")
-    Merger.add_arg_parser(parser=merger_parser)
+    Merge.add_arg_parser(parser=merger_parser)
+
+    generator_parser = subparsers.add_parser(name="generate")
+    Generate.add_arg_parser(parser=generator_parser)
     return arg_parser
 
 
 if __name__ == "__main__":
+    logger = logging.getLogger("aeolus")
     parser: argparse.ArgumentParser = add_argparse()
     args = parser.parse_args(sys.argv[1:])
+    if args.debug:
+        logging.basicConfig(encoding="utf-8", level=logging.DEBUG, format="%(message)s")
+    if args.verbose:
+        logging.basicConfig(encoding="utf-8", level=logging.INFO, format="%(message)s")
+    output_settings: OutputSettings = OutputSettings(verbose=args.verbose, debug=args.debug, emoji=args.emoji)
+    input_settings: InputSettings = InputSettings(file_path=args.input.name, file=args.input)
     if args.command == "validate":
-        validator: Validator = Validator(args=args)
+        validator: Validate = Validate(
+            input_settings=input_settings,
+            output_settings=output_settings,
+            args=args,
+        )
         validator.validate()
     if args.command == "merge":
-        merger: Merger = Merger(args=args)
+        merger: Merge = Merge(
+            input_settings=input_settings,
+            output_settings=output_settings,
+            args=args,
+        )
         merger.merge()
+    if args.command == "generate":
+        generator: Generate = Generate(
+            input_settings=input_settings,
+            output_settings=output_settings,
+            args=args,
+        )
+        generator.generate()
+    if args.command is None:
+        parser.print_help()

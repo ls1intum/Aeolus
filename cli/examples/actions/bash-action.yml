@@ -1,0 +1,10 @@
+api: v0.0.1
+metadata:
+  name: bash action
+  description: This is an action with a simple script that is defined in another file
+  author:
+    name: Andreas Resch
+    email: andreas@resch.io
+steps:
+  hello-world:
+    file: ./bash-loop.sh

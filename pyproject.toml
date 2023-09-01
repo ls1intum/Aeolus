@@ -16,7 +16,7 @@ force-exclude = '''
     | docs/bin
     | docs/source
     '''
-line-length = 79
+line-length = 120
 
 [tool.pylint.'MAIN']
 
@@ -25,4 +25,5 @@ ignore = ['venv', 'generated', 'examples', 'docs']
 
 [tool.pylint.'MESSAGES CONTROL']
 max-line-length = 120
+min-similarity-lines=10
 disable = "missing-module-docstring,missing-class-docstring,missing-function-docstring,too-few-public-methods"

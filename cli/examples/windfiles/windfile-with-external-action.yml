@@ -5,7 +5,7 @@ metadata:
   author: Andreas Resch
 jobs:
   first-job:
-    file: ../actions/file-action.py
+    file: ../actions/bash-loop.sh
     parameters:
       FILE: "file1.txt"
   external-action:
