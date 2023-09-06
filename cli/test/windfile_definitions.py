@@ -29,3 +29,17 @@ VALID_WINDFILE_WITH_NON_EXISTING_ACTIONFILE: str = """
           invalid-action:
             use: ./this-file-does-not-exist.yaml
         """
+VALID_WINDFILE_WITH_FILEACTION: str = """
+        api: v0.0.1
+        metadata:
+          name: test windfile
+          description: This is a windfile with no external actions
+          author: Test Author
+        jobs:
+          file-action:
+            file: [FILE_ACTION_FILE]
+            excludeDuring:
+              - working_time
+            parameters:
+              SORTING_ALGORITHM: quicksort
+        """

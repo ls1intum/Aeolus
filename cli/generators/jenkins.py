@@ -18,6 +18,15 @@ class JenkinsGenerator(BaseGenerator):
         """
         self.result.append("pipeline {")
         self.result.append("  agent any")
+        # to respect the exclusion during different parts of the lifecycle
+        # we need a parameter that holds the current lifecycle
+        self.result.append("  parameters {")
+        # we set it to working_time by default, as this is the most common case and we want to avoid
+        # that the job does not execute stages only meant to be executed during evaluation (e.g. hidden tests)
+        self.result.append(
+            "    string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current lifecycle')"
+        )
+        self.result.append("  }")
         if self.windfile.environment:
             self.result.append("  environment {")
             for env_var in self.windfile.environment.root.root:
@@ -62,15 +71,27 @@ class JenkinsGenerator(BaseGenerator):
                 self.output_settings.emoji,
             )
             return None
-        self.result.append(f"    # step {name}")
-        self.result.append(f"    # generated from step {original_name}")
-        self.result.append(f"    # original type was {original_type}")
+        self.result.append(f"    // step {name}")
+        self.result.append(f"    // generated from step {original_name}")
+        self.result.append(f"    // original type was {original_type}")
         self.result.append(f"    stage('{name}') " + "{")
+        if step.excludeDuring is not None:
+            self.result.append("      when {")
+            self.result.append("        anyOf {")
+            for exclusion in step.excludeDuring:
+                self.result.append(f"          expression {{" f"params.current_lifecycle != '{exclusion.name}'" "}")
+            self.result.append("        }")
+            self.result.append("      }")
         self.result.append("      steps " + "{")
 
+        # for now, we assume that all file actions are shell scripts
+        if original_type == "file":
+            self.result.append(f"        sh '''")
         for line in step.script.split("\n"):
             if line:
                 self.result.append(f"         {line}")
+        if original_type == "file":
+            self.result.append(f"        '''")
         self.result.append("      }")
         self.result.append("    }")
         return None

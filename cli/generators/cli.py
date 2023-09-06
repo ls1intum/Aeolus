@@ -33,9 +33,13 @@ class CliGenerator(BaseGenerator):
         E.g. some output settings, the callable functions etc.
         """
         self.result.append("\n")
+        self.result.append("# main function")
+        self.result.append("main () " + "{")
+        self.result.append("  local _current_lifecycle=\"${1}\"")
         for function in self.functions:
-            self.result.append(f"echo '⚙️ executing {function}'")
-            self.result.append(f"{function}")
+            self.result.append(f"  {function} $_current_lifecycle")
+        self.result.append("}\n")
+        self.result.append("main $@")
 
     def handle_step(self, name: str, step: InternalAction) -> None:
         """
@@ -58,10 +62,21 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"# original type was {original_type}")
         self.functions.append(name)
         self.result.append(f"{name} () " + "{")
+        if step.excludeDuring is not None:
+            # we don't need the local variable if there are no exclusions
+            self.result.append("  local _current_lifecycle=\"${1}\"")
+
+            for exclusion in step.excludeDuring:
+                self.result.append(f"  if [[ \"${{_current_lifecycle}}\" == \"{exclusion.name}\" ]]; then")
+                self.result.append(f"    echo '⚠️  {name} is excluded during {exclusion.name}'")
+                self.result.append("    return 0")
+                self.result.append("  fi")
+
+        self.result.append(f"  echo '⚙️  executing {name}'")
         if step.environment:
             for env_var in step.environment.root.root:
                 self.result.append(f'  export {env_var}="' f'{step.environment.root.root[env_var]}"')
-        if step.parameters:
+        if step.parameters is not None:
             for parameter in step.parameters.root.root:
                 self.result.append(f'  {parameter}="{step.parameters.root.root[parameter]}"')
         for line in step.script.split("\n"):

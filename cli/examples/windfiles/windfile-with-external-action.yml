@@ -5,9 +5,11 @@ metadata:
   author: Andreas Resch
 jobs:
   first-job:
-    file: ../actions/bash-loop.sh
+    file: ../actions/file-action.py
     parameters:
       FILE: "file1.txt"
+    excludeDuring:
+      - evaluation
   external-action:
     use: ../actions/simple-action.yml
     excludeDuring:

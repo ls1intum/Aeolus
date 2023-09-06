@@ -8,6 +8,8 @@ jobs:
     file: ../actions/file-action.py
     parameters:
       FILE: "file1.txt"
+    excludeDuring:
+      - evaluation
   external-action:
     use: ../actions/simple-action.yml
     excludeDuring:

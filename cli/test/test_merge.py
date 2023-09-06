@@ -1,5 +1,7 @@
 import logging
+import os
 import unittest
+from tempfile import NamedTemporaryFile
 from typing import Optional
 
 from test.testutils import TemporaryFileWithContent
@@ -8,6 +10,7 @@ from test.windfile_definitions import (
     VALID_WINDFILE_INTERNAL_ACTION,
     INVALID_WINDFILE_INTERNAL_ACTION,
     VALID_WINDFILE_WITH_NON_EXISTING_ACTIONFILE,
+    VALID_WINDFILE_WITH_FILEACTION,
 )
 from classes.generated.definitions import InternalAction, FileAction, PlatformAction, ExternalAction
 from classes.generated.windfile import WindFile
@@ -109,6 +112,44 @@ class MergeTests(unittest.TestCase):
                         self.assertEqual(action.script, action_content)
                     else:
                         self.fail("Action is not an instance of InternalAction, but should be")
+
+    def test_merge_with_file_action(self) -> None:
+        with NamedTemporaryFile(delete=False) as bash_file:
+            content: str = """
+            #!/usr/bin/env bash
+            for i in $(seq 1 10); do
+                echo "Hello $i"
+            done
+            """
+            bash_file.write(content.encode())
+            bash_file.flush()
+            bash_file.seek(0)
+            with TemporaryFileWithContent(
+                content=VALID_WINDFILE_WITH_FILEACTION.replace("[FILE_ACTION_FILE]", bash_file.name)
+            ) as windfile_file:
+                windfile_file.seek(0)
+                merger: Merger = Merger(
+                    windfile=None,
+                    input_settings=InputSettings(file=windfile_file, file_path=windfile_file.name),
+                    output_settings=self.output_settings,
+                    metadata=PassMetadata(),
+                )
+                windfile: Optional[WindFile] = merger.merge()
+                if windfile is None:
+                    os.unlink(bash_file.name)
+                    self.fail("Windfile is None")
+                self.assertIsNotNone(windfile)
+                self.assertEqual(len(windfile.jobs), 1)
+                self.assertTrue("file-action" in windfile.jobs)
+                self.assertTrue(isinstance(windfile.jobs["file-action"].root, InternalAction))
+                action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.jobs["file-action"].root
+                if isinstance(action, InternalAction):
+                    self.assertEqual(action.script, content)
+                    self.assertTrue("working_time" in [e.name for e in action.excludeDuring])
+                    self.assertTrue("SORTING_ALGORITHM" in action.parameters.root.root)
+                else:
+                    self.fail("Action is not an instance of InternalAction, but should be")
+        os.unlink(bash_file.name)
 
 
 if __name__ == "__main__":
