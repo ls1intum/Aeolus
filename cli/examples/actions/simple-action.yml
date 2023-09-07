@@ -8,12 +8,8 @@ metadata:
 steps:
   hello-world:
     parameters:
-      WHO: "hello world"
-      DEFAULT: "default"
+      WHO_TO_GREET: "world"
     excludeDuring:
       - preparation
     script: |
-      echo "Hello from a simple action"
-  second-step:
-    script: |
-      echo "Hello from the second step"
+      echo "Hello ${WHO_TO_GREET}"

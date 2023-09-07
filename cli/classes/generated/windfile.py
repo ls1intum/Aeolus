@@ -16,7 +16,7 @@ class WindFile(BaseModel):
     """
 
     api: definitions.Api
-    metadata: definitions.Metadata
+    metadata: definitions.WindfileMetadata
     environment: Optional[definitions.Environment] = None
     jobs: Dict[constr(pattern=r'^[a-zA-Z0-9._-]+$'), definitions.Action] = Field(
         ...,

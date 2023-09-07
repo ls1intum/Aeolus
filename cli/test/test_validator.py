@@ -106,7 +106,7 @@ class ValidatorTest(unittest.TestCase):
                 "validate",
                 "-w",
                 "-i",
-                os.path.join(path, "files", "windfile-with-external-action.yml"),
+                os.path.join(path, "files", "windfile-with-file-action.yml"),
             ]
         )
         input_settings: InputSettings = InputSettings(

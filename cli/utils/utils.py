@@ -76,8 +76,8 @@ def file_exists(path: str, output_settings: OutputSettings) -> bool:
     """
     if not os.path.exists(path):
         logger.error(
-            "❌",
-            f"{logger} does not exist",
+            "❌ ",
+            f"{path} does not exist",
             output_settings.emoji,
         )
         return False

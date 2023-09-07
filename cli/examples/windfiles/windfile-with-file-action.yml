@@ -14,8 +14,3 @@ jobs:
     use: ../actions/simple-action.yml
     excludeDuring:
       - working_time
-    environment:
-      ENV_VAR1: VALUE1
-      ENV_VAR2: VALUE2
-    parameters:
-      WHO: "me"

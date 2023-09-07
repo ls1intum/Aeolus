@@ -5,6 +5,7 @@ metadata:
     This is a simple example of a windfile that passes validation.
   author:
     name: Andreas Resch
+  gitCredentials: artemis_gitlab_admin_credentials
 jobs:
   clone:
     use: clone-default

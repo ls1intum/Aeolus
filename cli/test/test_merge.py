@@ -142,10 +142,19 @@ class MergeTests(unittest.TestCase):
                 self.assertEqual(len(windfile.jobs), 1)
                 self.assertTrue("file-action" in windfile.jobs)
                 self.assertTrue(isinstance(windfile.jobs["file-action"].root, InternalAction))
-                action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.jobs["file-action"].root
+                action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.jobs[
+                    "file-action"
+                ].root
                 if isinstance(action, InternalAction):
                     self.assertEqual(action.script, content)
+                    if action.excludeDuring is None:
+                        self.fail("Action excludeDuring is None, but should not be")
                     self.assertTrue("working_time" in [e.name for e in action.excludeDuring])
+                    if action.parameters is None:
+                        self.fail("Action parameters are None, but should not be")
+                    self.assertIsNotNone(action.parameters)
+                    self.assertIsNotNone(action.parameters.root)
+                    self.assertIsNotNone(action.parameters.root.root)
                     self.assertTrue("SORTING_ALGORITHM" in action.parameters.root.root)
                 else:
                     self.fail("Action is not an instance of InternalAction, but should be")

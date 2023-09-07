@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 import typing
 
 from classes.generated.definitions import InternalAction
