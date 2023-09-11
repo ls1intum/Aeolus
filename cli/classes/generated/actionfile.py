@@ -22,7 +22,7 @@ class ActionFile(BaseModel):
     """
 
     api: definitions.Api
-    metadata: definitions.Metadata
+    metadata: definitions.ActionMetadata
     environment: Optional[definitions.Environment] = None
     steps: Dict[constr(pattern=r'^[a-zA-Z0-9._-]+$'), Step] = Field(
         ...,

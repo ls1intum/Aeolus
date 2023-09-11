@@ -7,8 +7,8 @@
       "v0.0.1"
     ]
   },
-  "metadata": {
-    "title": "Metadata",
+  "windfile-metadata": {
+    "title": "Windfile Metadata",
     "description": "Metadata of the windfile.",
     "type": "object",
     "allowAdditionalProperties": false,
@@ -29,6 +29,58 @@
       },
       "author": {
         "description": "The author of the windfile.",
+        "$ref": "#/author"
+      },
+      "targets": {
+        "description": "The targets of the windfile.",
+        "type": "array",
+        "items": {
+          "$ref": "#/target"
+        }
+      },
+      "gitCredentials": {
+        "description": "The git credentials that are used to clone the repositories",
+        "oneOf": [
+          {
+            "type": "string",
+            "examples": [
+              "git-credentials-id"
+            ]
+          },
+          {
+            "$ref": "#/git-credentials"
+          }
+        ]
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "author"
+    ]
+  },
+  "action-metadata": {
+    "title": "Metadata",
+    "description": "Metadata of the actionfile.",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "name": {
+        "description": "The name of the windfile.",
+        "type": "string",
+        "examples": [
+          "rust-exercise-jobs"
+        ]
+      },
+      "description": {
+        "description": "Description of what this list of actions is supposed to achieve",
+        "type": "string",
+        "examples": [
+          "This windfile contains the jobs that are executed during the CI of the rust-exercise."
+        ]
+      },
+      "author": {
+        "description": "The author of the actionfile.",
         "$ref": "#/author"
       },
       "targets": {
@@ -319,5 +371,31 @@
     "title": "Environment",
     "description": "Environment variables for actions.",
     "$ref": "#/dictionary"
+  },
+  "git-credentials": {
+    "title": "Git Credentials",
+    "description": "Git credentials that are used to clone the repositories.",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "username": {
+        "description": "The username of the git credentials.",
+        "type": "string",
+        "examples": [
+          "aeolus"
+        ]
+      },
+      "password": {
+        "description": "The password of the git credentials.",
+        "type": "string",
+        "examples": [
+          "aeolus"
+        ]
+      }
+    },
+    "required": [
+      "username",
+      "password"
+    ]
   }
 }

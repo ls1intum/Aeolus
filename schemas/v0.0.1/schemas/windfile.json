@@ -14,7 +14,7 @@
       "$ref": "definitions.json#/api"
     },
     "metadata": {
-      "$ref": "definitions.json#/metadata"
+      "$ref": "definitions.json#/windfile-metadata"
     },
     "environment": {
       "$ref": "definitions.json#/environment"

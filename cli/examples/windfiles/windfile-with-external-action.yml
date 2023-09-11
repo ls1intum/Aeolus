@@ -1,18 +1,29 @@
 api: v0.0.1
 metadata:
-  name: windfile-with-internal-action
-  description: This is a windfile with an external action
+  name: example windfile
+  description: This is a windfile with an internal action
   author: Andreas Resch
+  gitCredentials: artemis_gitlab_admin_credentials
 jobs:
-  first-job:
-    file: ../actions/file-action.py
+  clone:
+    use: clone-default
     parameters:
-      FILE: "file1.txt"
-    excludeDuring:
-      - evaluation
+      repository: http://docker.for.mac.host.internal:8081/JENREF/jenref-tests.git
+      branch: main
+      path: .
+  clone-tests:
+    use: clone-default
+    parameters:
+      repository: http://docker.for.mac.host.internal:8081/JENREF/jenref-exercise.git
+      branch: main
+      path: assignments
+  internal-action:
+    script: |
+      echo "This is an internal action"
+  second-action:
+    script: |
+        wget -qO- https://www.google.com
   external-action:
     use: ../actions/simple-action.yml
     excludeDuring:
       - working_time
-    parameters:
-      WHO: "me"

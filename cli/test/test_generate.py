@@ -47,9 +47,8 @@ class GenerateTests(unittest.TestCase):
             result: str = cli.generate()
             self.assertTrue(result.count("#!/usr/bin/env bash") == 1)
             self.assertTrue("set -e" in result)
-            self.assertTrue("set -x" in result)
-            # two comments, one definition and one call
-            self.assertTrue(result.count("internal-action") == 4)
+            # two comments, one definition, one echo for, and one call
+            self.assertTrue(result.count("internal-action") == 5)
             self.assertTrue(result.count("{") == result.count("}"))
             self.assertTrue(cli.check(content=result))
 

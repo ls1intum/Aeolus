@@ -1,6 +1,7 @@
+# pylint: disable=duplicate-code
 from typing import Optional
 
-from classes.generated.definitions import InternalAction, Action, Target
+from classes.generated.definitions import InternalAction, Action, Target, ExternalAction
 from generators.base import BaseGenerator
 from utils import logger
 
@@ -34,11 +35,6 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append("  }")
 
         self.result.append("  stages {")
-        self.result.append("    stage('Checkout code') {")
-        self.result.append("      steps {")
-        self.result.append("        checkout scm")
-        self.result.append("      }")
-        self.result.append("    }")
 
     def add_postfix(self) -> None:
         """
@@ -79,20 +75,74 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append("      when {")
             self.result.append("        anyOf {")
             for exclusion in step.excludeDuring:
-                self.result.append(f"          expression {{" f"params.current_lifecycle != '{exclusion.name}'" "}")
+                self.result.append(f"          expression {{ params.current_lifecycle != '{exclusion.name}' }}")
             self.result.append("        }")
             self.result.append("      }")
+        self.add_environment_variables(step=step)
         self.result.append("      steps " + "{")
 
         # for now, we assume that all file actions are shell scripts
-        if original_type == "file":
-            self.result.append(f"        sh '''")
+        if original_type in ("file", "internal"):
+            self.result.append("        sh '''")
         for line in step.script.split("\n"):
             if line:
                 self.result.append(f"         {line}")
-        if original_type == "file":
-            self.result.append(f"        '''")
+        if original_type in ("file", "internal"):
+            self.result.append("        '''")
         self.result.append("      }")
+        self.result.append("    }")
+        return None
+
+    def add_environment_variables(self, step: InternalAction) -> None:
+        """
+        Add environment variables and parameters to the step.
+        :param step: Step to add environment variables to
+        """
+        if step.environment is not None or step.parameters is not None:
+            self.result.append("      environment {")
+            if step.parameters is not None:
+                for param in step.parameters.root.root:
+                    self.result.append(f'        {param} = "{step.parameters.root.root[param]}"')
+            if step.environment is not None:
+                for env_var in step.environment.root.root:
+                    self.result.append(f'        {env_var} = "' f'{step.environment.root.root[env_var]}"')
+            self.result.append("      }")
+
+    def handle_clone(self, name: str, step: ExternalAction) -> None:
+        """
+        Handles the clone step.
+        :param name: Name of the step
+        :param step: Step to handle
+        """
+        if step.parameters is None or step.parameters.root is None or step.parameters.root.root is None:
+            logger.error(
+                "🔨",
+                f"Clone step {name} does not have any parameters. Skipping...",
+                self.output_settings.emoji,
+            )
+            return None
+        directory: str = str(step.parameters.root.root["path"]) if "path" in step.parameters.root.root else "."
+        prefix: str = ""
+        self.result.append(f"    stage('{name}') {{")
+        self.result.append(f"{prefix}      steps {{")
+        if directory != ".":
+            self.result.append(f"        dir('{directory}') {{")
+            prefix = "  "
+        self.result.append(f"{prefix}        checkout([$class: 'GitSCM',")
+        self.result.append(f"{prefix}          branches: [[name: '{step.parameters.root.root['branch']}']],")
+        self.result.append(f"{prefix}          doGenerateSubmoduleConfigurations: false,")
+        self.result.append(f"{prefix}          extensions: [],")
+        self.result.append(f"{prefix}          submoduleCfg: [],")
+        self.result.append(f"{prefix}          userRemoteConfigs: [[")
+        if self.windfile.metadata.gitCredentials:
+            self.result.append(f"{prefix}             credentialsId: '{self.windfile.metadata.gitCredentials}',")
+        self.result.append(f"{prefix}             name: '{name}',")
+        self.result.append(f"{prefix}             url: '{step.parameters.root.root['repository']}'")
+        self.result.append(f"{prefix}          ]]")
+        self.result.append(f"{prefix}        ])")
+        self.result.append(f"{prefix}      }}")
+        if directory != ".":
+            self.result.append(f"{prefix}    }}")
         self.result.append("    }")
         return None
 
@@ -104,6 +154,12 @@ class JenkinsGenerator(BaseGenerator):
         self.add_prefix()
         for name in self.windfile.jobs:
             step: Action = self.windfile.jobs[name]
+            if isinstance(step.root, ExternalAction):
+                # This is a workaround to be able to clone repositories before we
+                # have the ability to include them directly from actions defined
+                # in repositories. So clone-default is a special action, for now.
+                if step.root.use == "clone-default":
+                    self.handle_clone(name=name, step=step.root)
             if isinstance(step.root, InternalAction):
                 self.handle_step(name=name, step=step.root)
 

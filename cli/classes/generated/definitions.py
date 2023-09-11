@@ -56,6 +56,15 @@ class ContactData(BaseModel):
     email: Optional[str] = Field(None, description='The email of the author.', examples=['aeolus@resch.io'])
 
 
+class GitCredentials(BaseModel):
+    """
+    Git credentials that are used to clone the repositories.
+    """
+
+    username: str = Field(..., description='The username of the git credentials.', examples=['aeolus'])
+    password: str = Field(..., description='The password of the git credentials.', examples=['aeolus'])
+
+
 class Environment(RootModel):
     root: Dictionary = Field(..., description='Environment variables for actions.', title='Environment')
 
@@ -131,6 +140,24 @@ class Author(RootModel):
     root: Union[str, ContactData] = Field(..., description='The author of the windfile.', title='Author')
 
 
+class WindfileMetadata(BaseModel):
+    """
+    Metadata of the windfile.
+    """
+
+    name: str = Field(..., description='The name of the windfile.', examples=['rust-exercise-jobs'])
+    description: str = Field(
+        ...,
+        description='Description of what this list of actions is supposed to achieve',
+        examples=['This windfile contains the jobs that are executed during the CI of the rust-exercise.'],
+    )
+    author: Author = Field(..., description='The author of the windfile.')
+    targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')
+    gitCredentials: Optional[Union[str, GitCredentials]] = Field(
+        None, description='The git credentials that are used to clone the repositories'
+    )
+
+
 class ExternalAction(BaseModel):
     """
     External action that can be executed with or without parameters.
@@ -153,9 +180,9 @@ class ExternalAction(BaseModel):
     )
 
 
-class Metadata(BaseModel):
+class ActionMetadata(BaseModel):
     """
-    Metadata of the windfile.
+    Metadata of the actionfile.
     """
 
     name: str = Field(..., description='The name of the windfile.', examples=['rust-exercise-jobs'])
@@ -164,7 +191,7 @@ class Metadata(BaseModel):
         description='Description of what this list of actions is supposed to achieve',
         examples=['This windfile contains the jobs that are executed during the CI of the rust-exercise.'],
     )
-    author: Author = Field(..., description='The author of the windfile.')
+    author: Author = Field(..., description='The author of the actionfile.')
     targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')
 
 

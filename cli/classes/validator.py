@@ -92,6 +92,17 @@ def get_file_actions(
     return get_actions_of_type(actiontype=FileAction, windfile=windfile)
 
 
+def get_internal_actions_with_names(
+    windfile: typing.Optional[WindFile],
+) -> typing.List[typing.Tuple[str, Action]]:
+    """
+    Returns a list of all internal actions in the given windfile with their names.
+    :param windfile: Windfile to analyze
+    :return: List of actions in the given windfile
+    """
+    return get_actions_of_type(actiontype=InternalAction, windfile=windfile)
+
+
 def get_actions(
     windfile: WindFile,
 ) -> typing.List[InternalAction | ExternalAction | FileAction | PlatformAction]:
@@ -148,8 +159,8 @@ def read_file(
         logger.info("✅ ", f"{file.name} is valid", output_settings.emoji)
         return validated
     except pydantic.ValidationError as validation_error:
-        logger.info("❌", f"{file.name} is invalid", output_settings.emoji)
-        logger.error("❌", str(validation_error), output_settings.emoji)
+        logger.info("❌ ", f"{file.name} is invalid", output_settings.emoji)
+        logger.error("❌ ", str(validation_error), output_settings.emoji)
         if output_settings.debug:
             traceback.print_exc()
         return None

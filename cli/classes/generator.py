@@ -37,7 +37,7 @@ class Generator(PassSettings):
         )
         windfile: Optional[WindFile] = merger.merge()
         if not windfile:
-            logger.error("❌", "Merging failed. Aborting.", output_settings.emoji)
+            logger.error("❌ ", "Merging failed. Aborting.", output_settings.emoji)
             raise ValueError("Merging failed.")
 
         super().__init__(
@@ -51,7 +51,7 @@ class Generator(PassSettings):
 
     def generate(self) -> None:
         if not self.windfile:
-            logger.error("❌", "Merging failed. Aborting.", self.output_settings.emoji)
+            logger.error("❌ ", "Merging failed. Aborting.", self.output_settings.emoji)
             return None
         # current_action: FileAction | InternalAction | PlatformAction |
         # ExternalAction = self.windfile.jobs[
