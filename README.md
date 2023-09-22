@@ -3,11 +3,11 @@
 This repository will contain the work of [my](https://github.com/reschandreas) master's thesis. The goal of this thesis is to create a domain-specific language (DSL) for streamlining CI job configuration for programming exercises.
 
 ## Why?
-Currently, in Artemis, it is tiresome to configure CI jobs that deviate from the standard templates.
-Aeolus should help to make the configuration easier, more readable and most importantly more platform-independent.
+Currently, in Artemis, it is hard to create custom CI jobs. With Aeolus we provide a standard definition that 
+is able to generate code for several targets.
 
 ## How?
-The idea is to define an input grammar, parse and validate it and generate the CI configuration 
+The idea is to define an input language, parse and validate it and generate the CI configuration 
 for multiple platforms (e.g. CLI, Bamboo, Jenkins, ...). And therefore be able to 
 switch the CI platform without having to rewrite the configuration.
 
@@ -31,7 +31,7 @@ metadata:
   description: This is a windfile with an internal action
   author: Andreas Resch
   gitCredentials: artemis_gitlab_admin_credentials
-jobs:
+actions:
   clone:
     use: clone-default
     parameters:
@@ -73,12 +73,11 @@ The generated CLI script for the above example would look like this:
 ```bash
 #!/usr/bin/env bash
 set -e
-# step clone
-# generated from step clone
-# original type was clone-default
-clone () {
-  echo '🖨️ cloning clone'
-  git clone https://github.com/ls1intum/Aeolus.git .
+# step aeolus
+# generated from repository aeolus
+clone_aeolus () {
+  echo '🖨️ cloning aeolus'
+  git clone https://github.com/ls1intum/Aeolus.git --branch develop .
 }
 # step internal-action
 # generated from step internal-action
@@ -105,7 +104,7 @@ external-action () {
 # main function
 main () {
   local _current_lifecycle="${1}"
-  clone $_current_lifecycle
+  clone_aeolus $_current_lifecycle
   internal-action $_current_lifecycle
   external-action $_current_lifecycle
 }
@@ -124,7 +123,7 @@ pipeline {
     string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current lifecycle')
   }
   stages {
-    stage('clone') {
+    stage('aeolus') {
       steps {
         checkout([$class: 'GitSCM',
                   branches: [[name: 'develop']],
@@ -132,10 +131,10 @@ pipeline {
                   extensions: [],
                   submoduleCfg: [],
                   userRemoteConfigs: [[
-                    credentialsId: 'artemis_gitlab_admin_credentials',
-                    name: 'clone',
-                    url: 'https://github.com/ls1intum/Aeolus.git'
-                  ]]
+                                              credentialsId: 'artemis_gitlab_admin_credentials',
+                                              name: 'aeolus',
+                                              url: 'https://github.com/ls1intum/Aeolus.git'
+                                      ]]
         ])
       }
     }
@@ -144,6 +143,7 @@ pipeline {
     // original type was internal
     stage('internal-action') {
       steps {
+        echo '⚙️ executing internal-action'
         sh '''
          echo "This is an internal action"
         '''
@@ -162,6 +162,7 @@ pipeline {
         WHO_TO_GREET = "world"
       }
       steps {
+        echo '⚙️ executing external-action'
         sh '''
          echo "Hello ${WHO_TO_GREET}"
         '''

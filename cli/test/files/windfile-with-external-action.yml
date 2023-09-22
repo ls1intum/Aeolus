@@ -3,7 +3,7 @@ metadata:
   name: windfile-with-internal-action
   description: This is a windfile with an external action
   author: Andreas Resch
-jobs:
+actions:
   first-job:
     file: ../actions/file-action.py
     parameters:

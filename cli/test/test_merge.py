@@ -42,11 +42,11 @@ class MergeTests(unittest.TestCase):
             self.assertIsNotNone(windfile)
             if windfile is None:
                 self.fail("Windfile is None")
-            self.assertEqual(len(windfile.jobs), 1)
-            self.assertTrue("internal-action" in windfile.jobs)
-            self.assertTrue(isinstance(windfile.jobs["internal-action"].root, InternalAction))
-            if isinstance(windfile.jobs["internal-action"].root, InternalAction):
-                action: InternalAction = windfile.jobs["internal-action"].root
+            self.assertEqual(len(windfile.actions), 1)
+            self.assertTrue("internal-action" in windfile.actions)
+            self.assertTrue(isinstance(windfile.actions["internal-action"].root, InternalAction))
+            if isinstance(windfile.actions["internal-action"].root, InternalAction):
+                action: InternalAction = windfile.actions["internal-action"].root
                 self.assertEqual(action.script, 'echo "This is an internal action"')
             else:
                 self.fail("Action is not an instance of InternalAction, but should be")
@@ -81,7 +81,7 @@ class MergeTests(unittest.TestCase):
               name: test windfile
               description: This is a windfile with no external actions
               author: Test Author
-            jobs:
+            actions:
                 external-action:
                     use: {action_file.name}
             """
@@ -96,7 +96,7 @@ class MergeTests(unittest.TestCase):
                 if windfile is None:
                     self.fail("Windfile is None")
                 self.assertIsNotNone(windfile)
-                self.assertEqual(len(windfile.jobs), 2)
+                self.assertEqual(len(windfile.actions), 2)
 
                 for name, action_content in [
                     ("external-action_0", 'echo "Hello from a simple action"'),
@@ -105,9 +105,9 @@ class MergeTests(unittest.TestCase):
                         'echo "Hello from the second step"\n',
                     ),
                 ]:
-                    self.assertTrue(name in windfile.jobs)
-                    self.assertTrue(isinstance(windfile.jobs[name].root, InternalAction))
-                    action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.jobs[name].root
+                    self.assertTrue(name in windfile.actions)
+                    self.assertTrue(isinstance(windfile.actions[name].root, InternalAction))
+                    action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.actions[name].root
                     if isinstance(action, InternalAction):
                         self.assertEqual(action.script, action_content)
                     else:
@@ -139,10 +139,10 @@ class MergeTests(unittest.TestCase):
                     os.unlink(bash_file.name)
                     self.fail("Windfile is None")
                 self.assertIsNotNone(windfile)
-                self.assertEqual(len(windfile.jobs), 1)
-                self.assertTrue("file-action" in windfile.jobs)
-                self.assertTrue(isinstance(windfile.jobs["file-action"].root, InternalAction))
-                action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.jobs[
+                self.assertEqual(len(windfile.actions), 1)
+                self.assertTrue("file-action" in windfile.actions)
+                self.assertTrue(isinstance(windfile.actions["file-action"].root, InternalAction))
+                action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.actions[
                     "file-action"
                 ].root
                 if isinstance(action, InternalAction):

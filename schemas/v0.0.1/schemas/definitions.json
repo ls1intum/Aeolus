@@ -397,5 +397,42 @@
       "username",
       "password"
     ]
+  },
+  "repository": {
+    "title": "Repository",
+    "description": "Repository to be checked out during the execution of the actions",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "url": {
+        "description": "The url of the repository",
+        "type": "string",
+        "examples": [
+          "https://github.com/ls1intum/Aeolus.git"
+        ]
+      },
+      "branch": {
+        "description": "The branch to check out",
+        "type": "string",
+        "examples": [
+          "main"
+        ],
+        "default": "main"
+      },
+      "path": {
+        "description": "The path where the content of the repository should be checked out",
+        "type": "string",
+        "examples": [
+          ".",
+          "tests"
+        ],
+        "default": "."
+      }
+    },
+    "required": [
+      "url",
+      "branch",
+      "path"
+    ]
   }
 }

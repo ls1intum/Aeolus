@@ -12,7 +12,7 @@ steps:
   clone:
     file: clone-default.py
     parameters:
-      - name: url
+      name: url
   build:
     script: |
       cargo build

@@ -3,9 +3,12 @@ metadata:
   name: windfile-with-internal-action
   description: This is a windfile with an internal action
   author: Andreas Resch
-jobs:
+actions:
   internal-action:
     script: |
       echo "Hello from an internal action"
     parameters:
       WHO: "me"
+  maven:
+    script: |
+      echo "mvn clean install"

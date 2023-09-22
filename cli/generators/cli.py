@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 from typing import List, Optional
 
-from classes.generated.definitions import InternalAction, Action, ExternalAction
+from classes.generated.definitions import InternalAction, Action, Repository
 from generators.base import BaseGenerator
 from utils import logger
 
@@ -112,34 +112,26 @@ class CliGenerator(BaseGenerator):
                 stdout = exception.stdout
             if not has_passed:
                 if stderr:
-                    logger.error("❌ st", stderr, self.output_settings.emoji)
+                    logger.error("❌ ", stderr, self.output_settings.emoji)
                 if stdout:
                     logger.error("❌ ", stdout, self.output_settings.emoji)
             return has_passed
 
-    def handle_clone(self, name: str, step: ExternalAction) -> None:
+    def handle_clone(self, name: str, repository: Repository) -> None:
         """
         Handles the clone step.
         :param name: Name of the step
-        :param step: Clone step to handle
+        :param repository: Repository
         """
-        if step.parameters is None or step.parameters.root is None or step.parameters.root.root is None:
-            logger.error(
-                "🔨",
-                f"Clone step {name} does not have any parameters. Skipping...",
-                self.output_settings.emoji,
-            )
-            return None
-        directory: str = str(step.parameters.root.root["path"]) if "path" in step.parameters.root.root else "."
+        directory: str = repository.path
+        clone_method: str = f"clone_{name}"
         self.result.append(f"# step {name}")
-        self.result.append(f"# generated from step {name}")
-        self.result.append(f"# original type was {step.use}")
-        self.result.append(f"{name} () " + "{")
+        self.result.append(f"# generated from repository {name}")
+        self.result.append(f"{clone_method} () " + "{")
         self.result.append(f"  echo '🖨️ cloning {name}'")
-        self.result.append(f"  git clone {step.parameters.root.root['repository']} {directory}")
+        self.result.append(f"  git clone {repository.url} --branch {repository.branch} {directory}")
         self.result.append("}")
-        self.functions.append(name)
-        return None
+        self.functions.append(clone_method)
 
     def generate(self) -> str:
         """
@@ -147,14 +139,12 @@ class CliGenerator(BaseGenerator):
         :return: bash script
         """
         self.add_prefix()
-        for name in self.windfile.jobs:
-            step: Action = self.windfile.jobs[name]
-            if isinstance(step.root, ExternalAction):
-                # This is a workaround to be able to clone repositories before we
-                # have the ability to include them directly from actions defined
-                # in repositories. So clone-default is a special action, for now.
-                if step.root.use == "clone-default":
-                    self.handle_clone(name=name, step=step.root)
+        if self.windfile.repositories:
+            for name in self.windfile.repositories:
+                repository: Repository = self.windfile.repositories[name]
+                self.handle_clone(name, repository)
+        for name in self.windfile.actions:
+            step: Action = self.windfile.actions[name]
             if isinstance(step.root, InternalAction):
                 self.handle_step(name=name, step=step.root)
 
