@@ -3,6 +3,6 @@ metadata:
   name: windfile-with-internal-action
   description: This is a windfile with a simple platform action
   author: Andreas Resch
-jobs:
+actions:
   hello-world:
     use: ../actions/platform-action.yml

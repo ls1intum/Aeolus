@@ -4,19 +4,16 @@ metadata:
   description: This is a windfile with an internal action
   author: Andreas Resch
   gitCredentials: artemis_gitlab_admin_credentials
-jobs:
-  clone:
-    use: clone-default
-    parameters:
-      repository: http://docker.for.mac.host.internal:8081/JENREF/jenref-tests.git
-      branch: main
-      path: .
-  clone-tests:
-    use: clone-default
-    parameters:
-      repository: http://docker.for.mac.host.internal:8081/JENREF/jenref-exercise.git
-      branch: main
-      path: assignments
+repositories:
+  tests:
+    url: http://docker.for.mac.host.internal:8081/JENREF/jenref-tests.git
+    branch: main
+    path: .
+  exercise:
+    url: http://docker.for.mac.host.internal:8081/JENREF/jenref-exercise.git
+    branch: main
+    path: assignment
+actions:
   internal-action:
     script: |
       echo "This is an internal action"

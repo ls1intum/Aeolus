@@ -249,7 +249,7 @@ class Merger(PassSettings):
 
                 if converted and len(converted[0]) == 1:
                     # found no other way to do this
-                    self.windfile.jobs[name] = converted[1][0]  # type: ignore
+                    self.windfile.actions[name] = converted[1][0]  # type: ignore
                     self.metadata.append(
                         scope="actions",
                         key=name,
@@ -307,15 +307,15 @@ class Merger(PassSettings):
             )
 
             merge_environment(
-                self.windfile.jobs[name].root.environment,
+                self.windfile.actions[name].root.environment,
                 action,
             )
             merge_parameters(
-                self.windfile.jobs[name].root.parameters,
+                self.windfile.actions[name].root.parameters,
                 action,
             )
             merge_lifecycle(
-                self.windfile.jobs[name].root.excludeDuring,
+                self.windfile.actions[name].root.excludeDuring,
                 action,
             )
             logger.info(
@@ -330,8 +330,8 @@ class Merger(PassSettings):
                 value=name,
             )
 
-            self.windfile.jobs[new_name] = action
-        self.windfile.jobs.pop(name)
+            self.windfile.actions[new_name] = action
+        self.windfile.actions.pop(name)
         return None
 
     def convert_external_action_to_internal(

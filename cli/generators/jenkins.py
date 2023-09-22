@@ -1,7 +1,7 @@
 # pylint: disable=duplicate-code
 from typing import Optional
 
-from classes.generated.definitions import InternalAction, Action, Target, ExternalAction
+from classes.generated.definitions import InternalAction, Action, Target, Repository
 from generators.base import BaseGenerator
 from utils import logger
 
@@ -80,7 +80,7 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append("      }")
         self.add_environment_variables(step=step)
         self.result.append("      steps " + "{")
-
+        self.result.append(f"        echo '⚙️ executing {name}'")
         # for now, we assume that all file actions are shell scripts
         if original_type in ("file", "internal"):
             self.result.append("        sh '''")
@@ -108,28 +108,21 @@ class JenkinsGenerator(BaseGenerator):
                     self.result.append(f'        {env_var} = "' f'{step.environment.root.root[env_var]}"')
             self.result.append("      }")
 
-    def handle_clone(self, name: str, step: ExternalAction) -> None:
+    def handle_clone(self, name: str, repository: Repository) -> None:
         """
         Handles the clone step.
-        :param name: Name of the step
-        :param step: Step to handle
+        :param name: Name of the repository
+        :param repository: Repository ot checkout
         """
-        if step.parameters is None or step.parameters.root is None or step.parameters.root.root is None:
-            logger.error(
-                "🔨",
-                f"Clone step {name} does not have any parameters. Skipping...",
-                self.output_settings.emoji,
-            )
-            return None
-        directory: str = str(step.parameters.root.root["path"]) if "path" in step.parameters.root.root else "."
         prefix: str = ""
         self.result.append(f"    stage('{name}') {{")
         self.result.append(f"{prefix}      steps {{")
-        if directory != ".":
-            self.result.append(f"        dir('{directory}') {{")
+        self.result.append(f"{prefix}        echo '🖨️ cloning {name}'")
+        if repository.path != ".":
+            self.result.append(f"        dir('{repository.path}') {{")
             prefix = "  "
         self.result.append(f"{prefix}        checkout([$class: 'GitSCM',")
-        self.result.append(f"{prefix}          branches: [[name: '{step.parameters.root.root['branch']}']],")
+        self.result.append(f"{prefix}          branches: [[name: '{repository.branch}']],")
         self.result.append(f"{prefix}          doGenerateSubmoduleConfigurations: false,")
         self.result.append(f"{prefix}          extensions: [],")
         self.result.append(f"{prefix}          submoduleCfg: [],")
@@ -137,14 +130,13 @@ class JenkinsGenerator(BaseGenerator):
         if self.windfile.metadata.gitCredentials:
             self.result.append(f"{prefix}             credentialsId: '{self.windfile.metadata.gitCredentials}',")
         self.result.append(f"{prefix}             name: '{name}',")
-        self.result.append(f"{prefix}             url: '{step.parameters.root.root['repository']}'")
+        self.result.append(f"{prefix}             url: '{repository.url}'")
         self.result.append(f"{prefix}          ]]")
         self.result.append(f"{prefix}        ])")
         self.result.append(f"{prefix}      }}")
-        if directory != ".":
+        if repository.path != ".":
             self.result.append(f"{prefix}    }}")
         self.result.append("    }")
-        return None
 
     def generate(self) -> str:
         """
@@ -152,14 +144,12 @@ class JenkinsGenerator(BaseGenerator):
         :return: bash script
         """
         self.add_prefix()
-        for name in self.windfile.jobs:
-            step: Action = self.windfile.jobs[name]
-            if isinstance(step.root, ExternalAction):
-                # This is a workaround to be able to clone repositories before we
-                # have the ability to include them directly from actions defined
-                # in repositories. So clone-default is a special action, for now.
-                if step.root.use == "clone-default":
-                    self.handle_clone(name=name, step=step.root)
+        if self.windfile.repositories:
+            for name in self.windfile.repositories:
+                repository: Repository = self.windfile.repositories[name]
+                self.handle_clone(name=name, repository=repository)
+        for name in self.windfile.actions:
+            step: Action = self.windfile.actions[name]
             if isinstance(step.root, InternalAction):
                 self.handle_step(name=name, step=step.root)
 

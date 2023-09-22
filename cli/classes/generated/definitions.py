@@ -56,6 +56,18 @@ class ContactData(BaseModel):
     email: Optional[str] = Field(None, description='The email of the author.', examples=['aeolus@resch.io'])
 
 
+class Repository(BaseModel):
+    """
+    Repository to be checked out during the execution of the actions
+    """
+
+    url: str = Field(..., description='The url of the repository', examples=['https://github.com/ls1intum/Aeolus.git'])
+    branch: str = Field(..., description='The branch to check out', examples=['main'])
+    path: str = Field(
+        ..., description='The path where the content of the repository should be checked out', examples=['.', 'tests']
+    )
+
+
 class GitCredentials(BaseModel):
     """
     Git credentials that are used to clone the repositories.

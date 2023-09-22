@@ -54,7 +54,7 @@ class Generator(PassSettings):
             logger.error("❌ ", "Merging failed. Aborting.", self.output_settings.emoji)
             return None
         # current_action: FileAction | InternalAction | PlatformAction |
-        # ExternalAction = self.windfile.jobs[
+        # ExternalAction = self.windfile.actions[
         #     "hello-world_0"
         # ].root
         # if not isinstance(current_action, InternalAction):
