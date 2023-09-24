@@ -170,7 +170,281 @@ pipeline {
     }
   }
 }
+```
+And the generated Bamboo YAML specs would look like this:
 
+`python main.py -dev generate -t bamboo -i windfile.yaml`
+
+```yaml
+--- !!com.atlassian.bamboo.specs.util.BambooSpecProperties
+rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
+  description: Plan created from stdin
+  enabled: true
+  key:
+    key: BASE1
+  name: example windfile
+  oid: null
+  pluginConfigurations: []
+  dependenciesProperties:
+    childPlans: []
+    dependenciesConfigurationProperties:
+      blockingStrategy: NONE
+      enabledForBranches: true
+      requireAllStagesPassing: false
+  labels: []
+  notifications: []
+  planBranchConfiguration: null
+  planBranchManagementProperties:
+    branchIntegrationProperties:
+      enabled: false
+      gatekeeper: false
+      integrationBranch: null
+      pushOn: false
+    createPlanBranch:
+      matchingPattern: null
+      trigger: MANUAL
+    defaultTrigger: null
+    deletePlanBranch:
+      removeDeletedFromRepository: false
+      removeDeletedFromRepositoryPeriod: !!java.time.Duration 'PT0S'
+      removeInactiveInRepository: false
+      removeInactiveInRepositoryPeriod: !!java.time.Duration 'PT0S'
+    issueLinkingEnabled: true
+    notificationStrategy: NONE
+    triggeringOption: INHERITED
+  project:
+    description: aeolus
+    key:
+      key: AEOLUS
+    name: AEOLUS
+    oid: null
+    repositories: []
+    repositoryStoredSpecsData: null
+    sharedCredentials: []
+    variables: []
+  repositories:
+    - repositoryDefinition: !!com.atlassian.bamboo.specs.model.repository.git.GitRepositoryProperties
+        description: null
+        name: tests
+        oid: null
+        parent: null
+        project: null
+        repositoryViewerProperties: null
+        authenticationProperties: !!com.atlassian.bamboo.specs.model.repository.git.SharedCredentialsAuthenticationProperties
+          sharedCredentials:
+            name: artemis_gitlab_admin_credentials
+            oid: null
+            scope: GLOBAL
+        branch: main
+        commandTimeout: !!java.time.Duration 'PT3H'
+        fetchWholeRepository: false
+        sshKeyAppliesToSubmodules: false
+        url: http://docker.for.mac.host.internal:8081/JENREF/jenref-tests.git
+        useLfs: false
+        useRemoteAgentCache: false
+        useShallowClones: true
+        useSubmodules: false
+        vcsChangeDetection:
+          changesetFilterPatternRegex: null
+          commitIsolationEnabled: false
+          configuration: {}
+          filterFilePatternOption: NONE
+          filterFilePatternRegex: null
+          maxRetries: 5
+          quietPeriod: !!java.time.Duration 'PT10S'
+          quietPeriodEnabled: false
+        verboseLogs: false
+    - repositoryDefinition: !!com.atlassian.bamboo.specs.model.repository.git.GitRepositoryProperties
+        description: null
+        name: exercise
+        oid: null
+        parent: null
+        project: null
+        repositoryViewerProperties: null
+        authenticationProperties: !!com.atlassian.bamboo.specs.model.repository.git.SharedCredentialsAuthenticationProperties
+          sharedCredentials:
+            name: artemis_gitlab_admin_credentials
+            oid: null
+            scope: GLOBAL
+        branch: main
+        commandTimeout: !!java.time.Duration 'PT3H'
+        fetchWholeRepository: false
+        sshKeyAppliesToSubmodules: false
+        url: http://docker.for.mac.host.internal:8081/JENREF/jenref-exercise.git
+        useLfs: false
+        useRemoteAgentCache: false
+        useShallowClones: true
+        useSubmodules: false
+        vcsChangeDetection:
+          changesetFilterPatternRegex: null
+          commitIsolationEnabled: false
+          configuration: {}
+          filterFilePatternOption: NONE
+          filterFilePatternRegex: null
+          maxRetries: 5
+          quietPeriod: !!java.time.Duration 'PT10S'
+          quietPeriodEnabled: false
+        verboseLogs: false
+  repositoryBranches: []
+  repositoryStoredSpecsData: null
+  stages:
+    - description: ''
+      finalStage: false
+      jobs:
+        - description: ''
+          enabled: true
+          key:
+            key: INTERNALACTION0
+          name: internal-action
+          oid: null
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
+          cleanWorkingDirectory: false
+          dockerConfiguration:
+            dockerRunArguments: []
+            enabled: false
+            image: null
+            volumes: {}
+          finalTasks: []
+          requirements: []
+          tasks:
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions: []
+              description: dummy task to prevent wrong result of build plan run
+              enabled: true
+              requirements: []
+              argument: null
+              body: echo "⚙️ Executing internal-action"
+              environmentVariables: null
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions: []
+              description: internal-action
+              enabled: true
+              requirements: []
+              argument: null
+              body: |
+                echo "This is an internal action"
+              environmentVariables: null
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+      manualStage: false
+      name: internal-action
+    - description: ''
+      finalStage: false
+      jobs:
+        - description: ''
+          enabled: true
+          key:
+            key: SECONDACTION1
+          name: second-action
+          oid: null
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
+          cleanWorkingDirectory: false
+          dockerConfiguration:
+            dockerRunArguments: []
+            enabled: false
+            image: null
+            volumes: {}
+          finalTasks: []
+          requirements: []
+          tasks:
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions: []
+              description: dummy task to prevent wrong result of build plan run
+              enabled: true
+              requirements: []
+              argument: null
+              body: echo "⚙️ Executing second-action"
+              environmentVariables: null
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions: []
+              description: second-action
+              enabled: true
+              requirements: []
+              argument: null
+              body: |
+                wget -qO- https://www.google.com
+              environmentVariables: null
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+      manualStage: false
+      name: second-action
+    - description: ''
+      finalStage: false
+      jobs:
+        - description: ''
+          enabled: true
+          key:
+            key: EXTERNALACTION2
+          name: external-action
+          oid: null
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
+          cleanWorkingDirectory: false
+          dockerConfiguration:
+            dockerRunArguments: []
+            enabled: false
+            image: null
+            volumes: {}
+          finalTasks: []
+          requirements: []
+          tasks:
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions: []
+              description: dummy task to prevent wrong result of build plan run
+              enabled: true
+              requirements: []
+              argument: null
+              body: echo "⚙️ Executing external-action if stage is correct"
+              environmentVariables: null
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions:
+                - !!com.atlassian.bamboo.specs.api.model.plan.condition.AnyConditionProperties
+                  atlassianPlugin:
+                    completeModuleKey: com.atlassian.bamboo.plugins.bamboo-conditional-tasks:variableCondition
+                  configuration:
+                    variable: lifecycle_stage
+                    operation: matches
+                    value: ^.*[^(preparation)].*
+              description: external-action
+              enabled: true
+              requirements: []
+              argument: null
+              body: echo "Hello ${WHO_TO_GREET}"
+              environmentVariables: WHO_TO_GREET=world
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+      manualStage: false
+      name: external-action
+  triggers: []
+  variables:
+    - createOnly: false
+      name: lifecycle_stage
+      value: evaluation
+specModelVersion: 9.3.3
+...
 ```
 
 # Features
@@ -216,8 +490,8 @@ possible options are:
 
 ### Code Generation
 
-| Feature                        | CLI/Bash |  Jenkins  |  Bamboo  |
-|--------------------------------|:--------:|:---------:|:--------:|
-| simple script generation       |    ✅     |     ✅     |    ❌     |
-| usage of environment variables |    ✅     |     ✅     |    ❌     |
-| lifecycle parameter            |    ✅     |     ✅     |    ❌     |
+| Feature                        | CLI/Bash |  Jenkins  | Bamboo |
+|--------------------------------|:--------:|:---------:|:------:|
+| simple script generation       |    ✅     |     ✅     |   ✅    |
+| usage of environment variables |    ✅     |     ✅     |   ✅    |
+| lifecycle parameter            |    ✅     |     ✅     |   ✅    |

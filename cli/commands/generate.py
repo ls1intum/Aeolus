@@ -53,7 +53,7 @@ class Generate(Subcommand):
             "-t",
             help="Target CI system",
             required=True,
-            choices=["cli", "jenkins"],
+            choices=["cli", "jenkins", "bamboo"],
         )
 
         parser.add_argument(
