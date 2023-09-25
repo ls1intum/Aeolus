@@ -9,6 +9,8 @@ import com.atlassian.bamboo.specs.api.builders.project.Project;
 import com.atlassian.bamboo.specs.api.builders.repository.VcsRepository;
 import com.atlassian.bamboo.specs.api.builders.task.Task;
 import com.atlassian.bamboo.specs.builders.repository.git.GitRepository;
+import com.atlassian.bamboo.specs.builders.task.CheckoutItem;
+import com.atlassian.bamboo.specs.builders.task.VcsCheckoutTask;
 import com.atlassian.bamboo.specs.util.BambooSpecSerializer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import de.tum.cit.ase.bamboo.BuildPlanService;
@@ -122,10 +124,15 @@ public class Main {
                 .variables(new Variable("lifecycle_stage", "evaluation"));
         List<Stage> stageList = new ArrayList<>();
         List<GitRepository> repos = new ArrayList<>();
-        for (Repository repository: windFile.getRepositories()) {
-            repos.add(buildPlanService.addRepository(repository, windFile.getMetadata().getGitCredentials().orElseThrow()));
+        if (!windFile.getRepositories().isEmpty()) {
+            List<VcsCheckoutTask> checkoutTasks = new ArrayList<>();
+            for (Repository repository : windFile.getRepositories()) {
+                repos.add(buildPlanService.addRepository(repository, windFile.getMetadata().getGitCredentials().orElseThrow()));
+                checkoutTasks.add(new VcsCheckoutTask().checkoutItems(new CheckoutItem().repository(repository.getName()).path(repository.getPath())));
+            }
+            plan = plan.planRepositories(repos.toArray(new VcsRepository[]{}));
+            stageList.add(new Stage("Checkout").jobs(new Job("Checkout", "CHECKOUT1").tasks(checkoutTasks.toArray(new Task[]{}))));
         }
-        plan = plan.planRepositories(repos.toArray(new VcsRepository[]{}));
         for (Action action : windFile.getActions()) {
             if (action instanceof ExternalAction) {
                 continue;
@@ -136,7 +143,7 @@ public class Main {
             var tasks = buildPlanService.handleAction(internalAction);
             Stage stage = new Stage(internalAction.getName()).jobs(
                     new Job(internalAction.getName(), key).tasks(
-                            tasks.toArray(new Task<?, ?>[0])
+                            tasks.toArray(new Task[]{})
                     ));
             stageList.add(stage);
         }
