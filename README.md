@@ -125,16 +125,17 @@ pipeline {
   stages {
     stage('aeolus') {
       steps {
+        echo '🖨️ cloning aeolus'
         checkout([$class: 'GitSCM',
                   branches: [[name: 'develop']],
                   doGenerateSubmoduleConfigurations: false,
                   extensions: [],
                   submoduleCfg: [],
                   userRemoteConfigs: [[
-                                              credentialsId: 'artemis_gitlab_admin_credentials',
-                                              name: 'aeolus',
-                                              url: 'https://github.com/ls1intum/Aeolus.git'
-                                      ]]
+                          credentialsId: 'artemis_gitlab_admin_credentials',
+                          name: 'aeolus',
+                          url: 'https://github.com/ls1intum/Aeolus.git'
+                  ]]
         ])
       }
     }
@@ -170,6 +171,7 @@ pipeline {
     }
   }
 }
+
 ```
 And the generated Bamboo YAML specs would look like this:
 
@@ -225,7 +227,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
   repositories:
     - repositoryDefinition: !!com.atlassian.bamboo.specs.model.repository.git.GitRepositoryProperties
         description: null
-        name: tests
+        name: aeolus
         oid: null
         parent: null
         project: null
@@ -235,42 +237,11 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
             name: artemis_gitlab_admin_credentials
             oid: null
             scope: GLOBAL
-        branch: main
+        branch: develop
         commandTimeout: !!java.time.Duration 'PT3H'
         fetchWholeRepository: false
         sshKeyAppliesToSubmodules: false
-        url: http://docker.for.mac.host.internal:8081/JENREF/jenref-tests.git
-        useLfs: false
-        useRemoteAgentCache: false
-        useShallowClones: true
-        useSubmodules: false
-        vcsChangeDetection:
-          changesetFilterPatternRegex: null
-          commitIsolationEnabled: false
-          configuration: {}
-          filterFilePatternOption: NONE
-          filterFilePatternRegex: null
-          maxRetries: 5
-          quietPeriod: !!java.time.Duration 'PT10S'
-          quietPeriodEnabled: false
-        verboseLogs: false
-    - repositoryDefinition: !!com.atlassian.bamboo.specs.model.repository.git.GitRepositoryProperties
-        description: null
-        name: exercise
-        oid: null
-        parent: null
-        project: null
-        repositoryViewerProperties: null
-        authenticationProperties: !!com.atlassian.bamboo.specs.model.repository.git.SharedCredentialsAuthenticationProperties
-          sharedCredentials:
-            name: artemis_gitlab_admin_credentials
-            oid: null
-            scope: GLOBAL
-        branch: main
-        commandTimeout: !!java.time.Duration 'PT3H'
-        fetchWholeRepository: false
-        sshKeyAppliesToSubmodules: false
-        url: http://docker.for.mac.host.internal:8081/JENREF/jenref-exercise.git
+        url: https://github.com/ls1intum/Aeolus.git
         useLfs: false
         useRemoteAgentCache: false
         useShallowClones: true
@@ -294,7 +265,42 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
         - description: ''
           enabled: true
           key:
-            key: INTERNALACTION0
+            key: CHECKOUT1
+          name: Checkout
+          oid: null
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
+          cleanWorkingDirectory: false
+          dockerConfiguration:
+            dockerRunArguments: []
+            enabled: false
+            image: null
+            volumes: {}
+          finalTasks: []
+          requirements: []
+          tasks:
+            - !!com.atlassian.bamboo.specs.model.task.VcsCheckoutTaskProperties
+              conditions: []
+              description: ''
+              enabled: true
+              requirements: []
+              checkoutItems:
+                - defaultRepository: false
+                  path: .
+                  repository:
+                    name: aeolus
+                    oid: null
+              cleanCheckout: false
+      manualStage: false
+      name: Checkout
+    - description: ''
+      finalStage: false
+      jobs:
+        - description: ''
+          enabled: true
+          key:
+            key: INTERNALACTION1
           name: internal-action
           oid: null
           pluginConfigurations: []
@@ -336,54 +342,6 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
               workingSubdirectory: null
       manualStage: false
       name: internal-action
-    - description: ''
-      finalStage: false
-      jobs:
-        - description: ''
-          enabled: true
-          key:
-            key: SECONDACTION1
-          name: second-action
-          oid: null
-          pluginConfigurations: []
-          artifactSubscriptions: []
-          artifacts: []
-          cleanWorkingDirectory: false
-          dockerConfiguration:
-            dockerRunArguments: []
-            enabled: false
-            image: null
-            volumes: {}
-          finalTasks: []
-          requirements: []
-          tasks:
-            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
-              conditions: []
-              description: dummy task to prevent wrong result of build plan run
-              enabled: true
-              requirements: []
-              argument: null
-              body: echo "⚙️ Executing second-action"
-              environmentVariables: null
-              interpreter: SHELL
-              location: INLINE
-              path: null
-              workingSubdirectory: null
-            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
-              conditions: []
-              description: second-action
-              enabled: true
-              requirements: []
-              argument: null
-              body: |
-                wget -qO- https://www.google.com
-              environmentVariables: null
-              interpreter: SHELL
-              location: INLINE
-              path: null
-              workingSubdirectory: null
-      manualStage: false
-      name: second-action
     - description: ''
       finalStage: false
       jobs:
