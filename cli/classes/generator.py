@@ -9,6 +9,7 @@ from classes.merger import Merger
 from classes.output_settings import OutputSettings
 from classes.pass_settings import PassSettings
 from classes.validator import Validator
+from generators.bamboo import BambooGenerator
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
 from utils import logger
@@ -69,7 +70,7 @@ class Generator(PassSettings):
         # print(code)
         # print("calling:")
         # execute_arbitrary_code(code, "build", "hello-world_0")
-        actual_generator: Optional[CliGenerator | JenkinsGenerator] = None
+        actual_generator: Optional[CliGenerator | JenkinsGenerator | BambooGenerator] = None
         if self.target == Target.cli.name:
             actual_generator = CliGenerator(
                 windfile=self.windfile,
@@ -79,6 +80,13 @@ class Generator(PassSettings):
             )
         if self.target == Target.jenkins.name:
             actual_generator = JenkinsGenerator(
+                windfile=self.windfile,
+                input_settings=self.input_settings,
+                output_settings=self.output_settings,
+                metadata=self.metadata,
+            )
+        if self.target == Target.bamboo.name:
+            actual_generator = BambooGenerator(
                 windfile=self.windfile,
                 input_settings=self.input_settings,
                 output_settings=self.output_settings,

@@ -1,0 +1,25 @@
+api: v0.0.1
+metadata:
+  name: example windfile
+  description: This is a windfile with an internal action
+  author: Andreas Resch
+  gitCredentials: artemis_gitlab_admin_credentials
+repositories:
+  aeolus:
+    url: https://github.com/ls1intum/Aeolus.git
+    branch: develop
+    path: .
+actions:
+  clone:
+    use: clone-default
+    parameters:
+      repository: https://github.com/ls1intum/Aeolus.git
+      branch: develop
+      path: .
+  internal-action:
+    script: |
+      echo "This is an internal action"
+  external-action:
+    use: simple-action.yml
+    excludeDuring:
+      - working_time
