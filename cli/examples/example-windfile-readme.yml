@@ -10,12 +10,6 @@ repositories:
     branch: develop
     path: .
 actions:
-  clone:
-    use: clone-default
-    parameters:
-      repository: https://github.com/ls1intum/Aeolus.git
-      branch: develop
-      path: .
   internal-action:
     script: |
       echo "This is an internal action"
