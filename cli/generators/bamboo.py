@@ -81,7 +81,7 @@ class BambooGenerator(BaseGenerator):
         client: DockerClient = DockerClient.from_env()
         container_name: str = "bambeolus"
         client.containers.run(
-            image="ghcr.io/ls1intum/aeolus/bamboo-generator",
+            image="ghcr.io/ls1intum/aeolus/bamboo-generator:nightly",
             command=f"--base64 {base64_str}",
             auto_remove=False,
             name=container_name,

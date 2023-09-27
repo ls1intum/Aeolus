@@ -1,0 +1,10 @@
+api: v0.0.1
+metadata:
+  name: windfile-with-github-repo
+  description: This is a windfile with a github repository as action
+  author: Andreas Resch
+actions:
+  hello-world:
+    parameters:
+      WHO_TO_GREET: "from GitHub"
+    use: https://github.com/reschandreas/example-action.git

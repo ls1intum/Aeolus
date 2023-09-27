@@ -140,10 +140,10 @@ class MergeTests(unittest.TestCase):
                     self.fail("Windfile is None")
                 self.assertIsNotNone(windfile)
                 self.assertEqual(len(windfile.actions), 1)
-                self.assertTrue("file-action" in windfile.actions)
-                self.assertTrue(isinstance(windfile.actions["file-action"].root, InternalAction))
+                self.assertTrue("file-action_0" in windfile.actions)
+                self.assertTrue(isinstance(windfile.actions["file-action_0"].root, InternalAction))
                 action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.actions[
-                    "file-action"
+                    "file-action_0"
                 ].root
                 if isinstance(action, InternalAction):
                     self.assertEqual(action.script, content)

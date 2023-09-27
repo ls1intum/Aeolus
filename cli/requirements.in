@@ -10,3 +10,4 @@ docker
 pytest
 pydantic
 coverage
+gitpython
