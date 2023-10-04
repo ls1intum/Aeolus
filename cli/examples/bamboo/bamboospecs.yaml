@@ -1,0 +1,118 @@
+---
+version: 2
+plan:
+  project-key: AEOLUS
+  key: BASE1
+  name: example windfile
+  description: Plan created from stdin
+stages:
+- Checkout:
+    manual: false
+    final: false
+    jobs:
+    - Checkout
+- internal-action:
+    manual: false
+    final: false
+    jobs:
+    - internal-action
+- external-action:
+    manual: false
+    final: false
+    jobs:
+    - external-action
+Checkout:
+  key: CHECKOUT1
+  tasks:
+  - checkout:
+      repository: aeolus
+      path: .
+      force-clean-build: false
+  artifact-subscriptions: []
+internal-action:
+  key: INTERNALACTION1
+  tasks:
+# Checkout Task for default repository will be added implicitly during Specs import
+  - script:
+      interpreter: SHELL
+      scripts:
+      - echo "⚙️ Executing internal-action"
+      description: dummy task to prevent wrong result of build plan run
+  - script:
+      interpreter: SHELL
+      scripts:
+      - |
+        echo "This is an internal action"
+      description: internal-action
+  artifact-subscriptions: []
+external-action:
+  key: EXTERNALACTION2
+  tasks:
+# Checkout Task for default repository will be added implicitly during Specs import
+  - script:
+      interpreter: SHELL
+      scripts:
+      - echo "⚙️ Executing external-action if stage is correct"
+      description: dummy task to prevent wrong result of build plan run
+  - script:
+      interpreter: SHELL
+      scripts:
+      - echo "Hello ${WHO_TO_GREET}"
+      environment: WHO_TO_GREET=world
+      conditions:
+      - variable:
+          matches:
+            lifecycle_stage: ^.*[^(preparation)].*
+      description: external-action
+  artifact-subscriptions: []
+variables:
+  lifecycle_stage: evaluation
+repositories:
+- aeolus:
+    type: git
+    url: https://github.com/ls1intum/Aeolus.git
+    branch: develop
+    shared-credentials: artemis_gitlab_admin_credentials
+    command-timeout-minutes: '180'
+    lfs: false
+    verbose-logs: false
+    use-shallow-clones: true
+    cache-on-agents: false
+    submodules: false
+    ssh-key-applies-to-submodules: false
+    fetch-all: false
+triggers: []
+branches:
+  create: manually
+  delete: never
+  link-to-jira: true
+notifications: []
+labels: []
+dependencies:
+  require-all-stages-passing: false
+  enabled-for-branches: true
+  block-strategy: none
+  plans: []
+other:
+  concurrent-build-plugin: system-default
+  force-stop-build: true
+---
+version: 2
+plan:
+  key: AEOLUS-BASE1
+plan-permissions:
+- roles:
+  - logged-in
+  - anonymous
+  permissions:
+  - view
+- users:
+  - artemis_admin
+  permissions:
+  - view
+  - edit
+  - build
+  - clone
+  - admin
+  - view-configuration
+...

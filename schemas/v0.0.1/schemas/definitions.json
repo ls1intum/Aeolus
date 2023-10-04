@@ -51,6 +51,10 @@
             "$ref": "#/git-credentials"
           }
         ]
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the actions",
+        "$ref": "#/docker"
       }
     },
     "required": [
@@ -197,6 +201,10 @@
       "platform": {
         "description": "Ignored for this action.",
         "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
       }
     },
     "required": [
@@ -232,6 +240,10 @@
       "platform": {
         "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
         "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
       }
     },
     "required": [
@@ -266,6 +278,10 @@
       "platform": {
         "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
         "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
       }
     },
     "required": [
@@ -301,6 +317,10 @@
       "platform": {
         "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
         "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
       }
     },
     "required": [
@@ -433,6 +453,52 @@
       "url",
       "branch",
       "path"
+    ]
+  },
+  "docker": {
+    "title": "Docker",
+    "description": "Docker configuration that is used to execute the actions",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "image": {
+        "description": "The docker image that is used to execute the action",
+        "type": "string",
+        "examples": [
+          "rust:latest"
+        ]
+      },
+      "tag": {
+        "description": "The tag of the docker image that is used to execute the action",
+        "type": "string",
+        "examples": [
+          "latest"
+        ],
+        "default": "latest"
+      },
+      "volumes": {
+        "description": "The volumes that are mounted into the docker container",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "examples": [
+            "/var/run/docker.sock:/var/run/docker.sock"
+          ]
+        }
+      },
+      "parameters": {
+        "description": "The parameters that are passed to the docker daemon, e.g. --cpus=2",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "examples": [
+            "--cpus=2"
+          ]
+        }
+      }
+    },
+    "required": [
+      "image"
     ]
   }
 }

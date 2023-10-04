@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 import logging
 import typing
+from io import TextIOWrapper
 
 import argparse
 import sys
 
+from classes.translator import BambooTranslator
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from commands.generate import Generate
 from commands.merge import Merge
+from commands.translate import Translate
 from commands.validate import Validate
 
 
@@ -54,6 +57,9 @@ def add_argparse() -> argparse.ArgumentParser:
 
     generator_parser = subparsers.add_parser(name="generate")
     Generate.add_arg_parser(parser=generator_parser)
+
+    bambootranslator_parser = subparsers.add_parser(name="translate")
+    Translate.add_arg_parser(parser=bambootranslator_parser)
     return arg_parser
 
 
@@ -70,8 +76,14 @@ if __name__ == "__main__":
         logging.basicConfig(encoding="utf-8", level=logging.DEBUG, format="%(message)s")
     if args.verbose:
         logging.basicConfig(encoding="utf-8", level=logging.INFO, format="%(message)s")
+    if args.command is None:
+        parser.print_help()
+        exit(0)
     output_settings: OutputSettings = OutputSettings(verbose=args.verbose, debug=args.debug, emoji=args.emoji)
-    input_settings: InputSettings = InputSettings(file_path=args.input.name, file=args.input)
+    file_path: str = args.key if "translate" == args.command else args.input.name
+    file: typing.Optional[TextIOWrapper] = None if "translate" == args.command else args.input
+    input_settings: InputSettings = InputSettings(file_path=file_path, file=file)
+
     if args.command == "validate":
         validator: Validate = Validate(
             input_settings=input_settings,
@@ -93,5 +105,8 @@ if __name__ == "__main__":
             args=args,
         )
         generator.generate()
-    if args.command is None:
-        parser.print_help()
+    if args.command == "translate":
+        translator: Translate = Translate(
+            input_settings=input_settings, output_settings=output_settings, url=args.url, token=args.token, args=args
+        )
+        translator.translate(plan_key=args.key)

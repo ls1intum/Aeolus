@@ -35,7 +35,7 @@ public class WindFile {
         windfile.setFilePath("stdin");
         windfile.setApi(data.get("api").toString());
         windfile.setMetadata(WindFileMetadata.fromMap((Map<String, Object>) data.get("metadata")));
-        Map<String, Object> repositories = (Map<String, Object>) data.get("repositories");
+        Map<String, Object> repositories = (Map<String, Object>) data.getOrDefault("repositories", new HashMap<String, Object>());
         for (Map.Entry<String, Object> repository : repositories.entrySet()) {
             Map<String, Object> repoMap = (Map<String, Object>) repository.getValue();
             windfile.appendRepository(Repository.fromMap(repository.getKey(), repoMap));

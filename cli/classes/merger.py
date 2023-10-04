@@ -378,6 +378,7 @@ class Merger(PassSettings):
                             environment=internals.root.environment,
                             parameters=internals.root.parameters,
                             platform=internals.root.platform,
+                            docker=internals.root.docker
                         )
                     )
 
@@ -418,6 +419,7 @@ class Merger(PassSettings):
                         environment=internals.root.environment,
                         parameters=internals.root.parameters,
                         platform=internals.root.platform,
+                        docker=internals.root.docker
                     )
                 )
                 if internal:
@@ -456,6 +458,7 @@ class Merger(PassSettings):
                         environment=action.environment,
                         parameters=action.parameters,
                         platform=action.platform,
+                        docker=action.docker,
                     )
                 )
                 original_types.append("file")

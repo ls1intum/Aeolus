@@ -8,8 +8,6 @@ import com.atlassian.bamboo.specs.api.builders.repository.VcsChangeDetection;
 import com.atlassian.bamboo.specs.api.builders.task.Task;
 import com.atlassian.bamboo.specs.builders.repository.git.GitRepository;
 import com.atlassian.bamboo.specs.builders.task.ScriptTask;
-import com.atlassian.bamboo.specs.util.BambooServer;
-import com.atlassian.bamboo.specs.util.MapBuilder;
 import de.tum.cit.ase.classes.InternalAction;
 import de.tum.cit.ase.classes.Repository;
 
