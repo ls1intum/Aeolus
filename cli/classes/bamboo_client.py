@@ -45,17 +45,18 @@ class BambooClient:
                 if "conditions" not in task_dict:
                     task_dict["condition"] = None
                 else:
-                    for entry in task_dict["conditions"]:
-                        # TODO check if this behaves differently if there are more than one conditions
-                        dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
-                        matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
-                        variable: BambooConditionVariable = BambooConditionVariable(matches=matches["matches"])
-                        if condition is None:
-                            condition: BambooCondition = BambooCondition(variables=[variable])
-                        else:
-                            condition.variables.append(variable)
-                        del task_dict["conditions"]
-                        task_dict["condition"] = None
+                    if "conditions" in task_dict and isinstance(task_dict["conditions"], dict):
+                        for entry in task_dict["conditions"]:
+                            # TODO check if this behaves differently if there are more than one conditions
+                            dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
+                            matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
+                            variable: BambooConditionVariable = BambooConditionVariable(matches=matches["matches"])
+                            if condition is None:
+                                condition: BambooCondition = BambooCondition(variables=[variable])
+                            else:
+                                condition.variables.append(variable)
+                            del task_dict["conditions"]
+                            task_dict["condition"] = None
                 task = BambooTask(**task_dict)
                 task.condition = condition
                 task.environment = environment
