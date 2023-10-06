@@ -55,7 +55,9 @@ class BambooClient:
                 dictionary=task[task_type]
             )
             if task_type == "script":
-                condition: Optional[BambooCondition] = self.parse_condition(conditions=task_dict.get("conditions", None))
+                condition: Optional[BambooCondition] = None
+                if "conditions" in task_dict and isinstance(task_dict["conditions"], list):
+                    condition = self.parse_condition(conditions=task_dict.get("conditions", None))
                 environment: dict[Any, str | float | None] = {}
                 if "environment" in task_dict:
                     for entry in str(task_dict["environment"]).split(";"):
