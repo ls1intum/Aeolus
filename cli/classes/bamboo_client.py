@@ -35,7 +35,7 @@ class BambooClient:
             return None
         condition: Optional[BambooCondition] = None
         for entry in conditions:
-            # TODO check if this behaves differently if there are more than one conditions
+            # check if this behaves differently if there are more than one conditions
             dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
             matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
             variable: BambooConditionVariable = BambooConditionVariable(matches=matches["matches"])
@@ -96,7 +96,7 @@ class BambooClient:
         self,
         final_tasks: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        # TODO think about final tasks management in aeolus
+        # think about final tasks management in aeolus
         # for now, add them at the end
         tmp: list[dict[str, Any]] = final_tasks
         tasks: list[dict[str, Any]] = []
