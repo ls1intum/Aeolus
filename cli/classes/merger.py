@@ -378,7 +378,7 @@ class Merger(PassSettings):
                             environment=internals.root.environment,
                             parameters=internals.root.parameters,
                             platform=internals.root.platform,
-                            docker=internals.root.docker
+                            docker=internals.root.docker,
                         )
                     )
 
@@ -419,7 +419,7 @@ class Merger(PassSettings):
                         environment=internals.root.environment,
                         parameters=internals.root.parameters,
                         platform=internals.root.platform,
-                        docker=internals.root.docker
+                        docker=internals.root.docker,
                     )
                 )
                 if internal:
