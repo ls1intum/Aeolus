@@ -129,8 +129,8 @@ class BambooClient:
                     # to make the creation of the BambooSpecs object easier
                     bamboo_docker = BambooDockerConfig(
                         image=str(job_dict["docker"]["image"]),
-                        volumes=job_dict["docker"]["volumes"],
-                        docker_run_arguments=job_dict["docker"]["docker_run_arguments"],
+                        volumes=job_dict["docker"]["volumes"] if isinstance(job_dict["docker"]["volumes"], dict) else {},
+                        docker_run_arguments=job_dict["docker"]["docker_run_arguments"] if isinstance(job_dict["docker"]["docker_run_arguments"], list) else [],
                     )
                 if "final_tasks" in job_dict:
                     for final in self.handle_final_tasks(final_tasks=job_dict["final_tasks"]):
