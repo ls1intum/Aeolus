@@ -1,8 +1,8 @@
-import sys
 from typing import Optional, Tuple, Any
 import re
 import yaml
 
+from classes.bamboo_credentials import BambooCredentials
 from classes.bamboo_specs import (
     BambooSpecs,
     BambooPlan,
@@ -40,17 +40,11 @@ class BambooTranslator(PassSettings):
     source: Target = Target.bamboo
     client: BambooClient
 
-    def __init__(
-        self,
-        input_settings: InputSettings,
-        output_settings: OutputSettings,
-        url: str,
-        token: str
-    ):
+    def __init__(self, input_settings: InputSettings, output_settings: OutputSettings, credentials: BambooCredentials):
         super().__init__(input_settings=input_settings, output_settings=output_settings)
-        self.client = BambooClient(url=url, token=token)
+        self.client = BambooClient(credentials=credentials)
 
-    def combine_docker_config(self, windfile: WindFile):
+    def combine_docker_config(self, windfile: WindFile) -> None:
         docker_configs: dict[str, Optional[Docker]] = {}
         for action in windfile.actions:
             docker_configs[action] = windfile.actions[action].root.docker
@@ -95,48 +89,49 @@ class BambooTranslator(PassSettings):
                         found[checkout.repository] = repository
         return found
 
+    def extract_action(self, job: BambooJob, task: BambooTask) -> Action:
+        exclude: list[Lifecycle] = []
+        if task.condition is not None:
+            for condition in task.condition.variables:
+                for match in condition.matches:
+                    regex = re.compile(r"[^a-zA-Z |_]")
+                    lifecycle = condition.matches[match]
+                    for entry in regex.sub("", lifecycle).split("|"):
+                        exclude.append(Lifecycle[entry])
+        script_task: BambooTask = task
+        docker: Optional[Docker] = None
+        if job.docker is not None:
+            volume_list: list[str] = []
+            for volume in job.docker.volumes:
+                volume_list.append(f"{volume}:{job.docker.volumes[volume]}")
+            docker = Docker(
+                image=job.docker.image if ":" not in job.docker.image else job.docker.image.split(":")[0],
+                tag=job.docker.image.split(":")[1] if ":" in job.docker.image else "latest",
+                volumes=volume_list,
+                parameters=job.docker.docker_run_arguments,
+            )
+        environment: Environment = Environment(root=Dictionary(root=script_task.environment))
+        action: Action = Action(
+            root=InternalAction(
+                script="\n".join(script_task.scripts),
+                excludeDuring=exclude,
+                docker=docker,
+                environment=environment,
+                platform=None,
+            )
+        )
+        return action
+
     def extract_actions(self, stages: dict[str, BambooStage]) -> dict[Any, Action]:
         actions: dict[Any, Action] = {}
-        for stage_name, stage in stages.items():
+        for _, stage in stages.items():
             for job_name in stage.jobs:
                 job: BambooJob = stage.jobs[job_name]
                 counter: int = 0
                 for task in job.tasks:
                     if isinstance(task, BambooTask):
-                        exclude: list[Lifecycle] = []
-                        if task.condition is not None:
-                            for condition in task.condition.variables:
-                                for match in condition.matches:
-                                    regex = re.compile(r"[^a-zA-Z |_]")
-                                    lifecycle = condition.matches[match]
-                                    for entry in regex.sub("", lifecycle).split("|"):
-                                        exclude.append(Lifecycle[entry])
-                        script_task: BambooTask = task
-                        docker: Optional[Docker] = None
-                        if job.docker is not None:
-                            volume_list: list[str] = []
-                            for volume in job.docker.volumes:
-                                volume_list.append(f"{volume}:{job.docker.volumes[volume]}")
-                            docker = Docker(
-                                image=job.docker.image
-                                if ":" not in job.docker.image
-                                else job.docker.image.split(":")[0],
-                                tag=job.docker.image.split(":")[1] if ":" in job.docker.image else "latest",
-                                volumes=volume_list,
-                                parameters=job.docker.docker_run_arguments,
-                            )
-                        environment: Environment = Environment(root=Dictionary(root=script_task.environment))
-                        action: Action = Action(
-                            root=InternalAction(
-                                script="\n".join(script_task.scripts),
-                                excludeDuring=exclude,
-                                docker=docker,
-                                environment=environment,
-                                platform=None,
-                            )
-                        )
                         counter += 1
-                        actions[job.key + str(counter)] = action
+                        actions[job.key + str(counter)] = self.extract_action(job=job, task=task)
         return actions
 
     def translate(self, plan_key: str) -> Optional[WindFile]:
@@ -151,7 +146,9 @@ class BambooTranslator(PassSettings):
         # raw: dict[str, str] = optional[1]
         plan: BambooPlan = specs.plan
         actions: dict[Any, Action] = self.extract_actions(stages=specs.stages)
-        repositories: dict[str, Repository] = self.extract_respositories(stages=specs.stages, repositories=specs.repositories)
+        repositories: dict[str, Repository] = self.extract_respositories(
+            stages=specs.stages, repositories=specs.repositories
+        )
         metadata: WindfileMetadata = WindfileMetadata(
             name=plan.name,
             description=plan.description,

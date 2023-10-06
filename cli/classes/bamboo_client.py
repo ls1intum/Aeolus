@@ -4,6 +4,7 @@ from xml.dom.minidom import parseString, Document, Node
 import requests
 import yaml
 
+from classes.bamboo_credentials import BambooCredentials
 from classes.bamboo_specs import (
     BambooSpecs,
     BambooPlan,
@@ -19,12 +20,10 @@ from classes.bamboo_specs import (
 
 
 class BambooClient:
-    url: str = ""
-    token: str = ""
+    credentials: BambooCredentials
 
-    def __init__(self, url: str, token: str):
-        self.url = url
-        self.token = token
+    def __init__(self, credentials: BambooCredentials):
+        self.credentials = credentials
 
     def parse_condition(self, conditions: Optional[list[dict[str, Any]]]) -> Optional[BambooCondition]:
         """
@@ -51,12 +50,17 @@ class BambooClient:
         for task in job_dict:
             task = self.fix_keys(dictionary=task)
             task_type: str = list(task.keys())[0]
-            task_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[str]]] = self.fix_keys(
-                dictionary=task[task_type]
-            )
+            task_dict: dict[
+                str, Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]]
+            ] = self.fix_keys(dictionary=task[task_type])
             if task_type == "script":
                 condition: Optional[BambooCondition] = None
-                if "conditions" in task_dict and isinstance(task_dict["conditions"], list):
+                if (
+                    "conditions" in task_dict
+                    and isinstance(task_dict["conditions"], list)
+                    and len(task_dict["conditions"]) > 0
+                    and isinstance(task_dict["conditions"][0], dict)
+                ):
                     condition = self.parse_condition(conditions=task_dict.get("conditions", None))
                 environment: dict[Any, str | float | None] = {}
                 if "environment" in task_dict:
@@ -144,9 +148,9 @@ class BambooClient:
         :param plan_key:
         :return: YAML representation of the plan
         """
-        auth: dict = {"Authorization": f"Bearer {self.token}"}
+        auth: dict = {"Authorization": f"Bearer {self.credentials.token}"}
         response = requests.get(
-            f"{self.url}/rest/api/latest/plan/{plan_key}/specs?all", params={"format": "yaml"}, headers=auth
+            f"{self.credentials.url}/rest/api/latest/plan/{plan_key}/specs?all", params={"format": "yaml"}, headers=auth
         )
         if response.status_code != 200:
             return None

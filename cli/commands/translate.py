@@ -2,8 +2,8 @@ import typing
 
 import argparse
 
+from classes.bamboo_credentials import BambooCredentials
 from classes.translator import BambooTranslator
-from classes.generated.definitions import Target
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from commands.subcommand import Subcommand
@@ -22,14 +22,13 @@ class Translate(Subcommand):
         self,
         input_settings: InputSettings,
         output_settings: OutputSettings,
-        url: str,
-        token: str,
+        credentials: BambooCredentials,
         args: typing.Any,
     ):
         super().__init__(args)
 
         self.translator = BambooTranslator(
-            input_settings=input_settings, output_settings=output_settings, url=url, token=token
+            input_settings=input_settings, output_settings=output_settings, credentials=credentials
         )
 
     @staticmethod
