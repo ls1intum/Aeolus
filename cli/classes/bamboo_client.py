@@ -25,16 +25,17 @@ class BambooClient:
     def __init__(self, credentials: BambooCredentials):
         self.credentials = credentials
 
-    def parse_condition(self, conditions: Optional[list[dict[str, Any]]]) -> Optional[BambooCondition]:
+    def parse_condition(self, conditions: Optional[list[str] | list[dict[str, Any]]]) -> Optional[BambooCondition]:
         """
         Parse a condition string into a BambooCondition object.
-        :param conditions: conditions from Bamboo Repsonse
+        :param conditions: conditions from Bamboo Response
         :return: BambooCondition object
         """
-        if conditions is None:
+        if conditions is None or (len(conditions) == 0 and isinstance(conditions[0], str)):
             return None
         condition: Optional[BambooCondition] = None
-        for entry in conditions:
+        dictionary: list[dict[str, Any]] = conditions
+        for entry in dictionary:
             # TODO check if this behaves differently if there are more than one conditions
             dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
             matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
