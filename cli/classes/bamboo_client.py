@@ -55,13 +55,8 @@ class BambooClient:
             ] = self.fix_keys(dictionary=task[task_type])
             if task_type == "script":
                 condition: Optional[BambooCondition] = None
-                if (
-                    "conditions" in task_dict
-                    and isinstance(task_dict["conditions"], list)
-                    and len(task_dict["conditions"]) > 0
-                    and isinstance(task_dict["conditions"][0], dict)
-                ):
-                    conditions: Optional[list[dict[str, Any]]] = task_dict.get("conditions", None)
+                conditions: Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]] = task_dict.get("conditions", None)
+                if isinstance(conditions, list) and len(conditions) > 0 and isinstance(conditions[0], dict):
                     condition = self.parse_condition(conditions=conditions)
                 environment: dict[Any, str | float | None] = {}
                 if "environment" in task_dict:
