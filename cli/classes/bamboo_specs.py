@@ -101,7 +101,7 @@ class BambooJob:
 
 
 class BambooStage:
-    def __init__(self, manual: bool, final: bool, jobs: list[BambooJob]) -> None:
+    def __init__(self, manual: bool, final: bool, jobs: dict[str, BambooJob]) -> None:
         self.manual = manual
         self.final = final
         self.jobs = jobs

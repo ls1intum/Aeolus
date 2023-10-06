@@ -3,7 +3,15 @@ from typing import Optional, Tuple, Any
 import re
 import yaml
 
-from classes.bamboo_specs import BambooSpecs, BambooPlan, BambooJob, BambooStage, BambooCheckoutTask, BambooTask
+from classes.bamboo_specs import (
+    BambooSpecs,
+    BambooPlan,
+    BambooJob,
+    BambooStage,
+    BambooCheckoutTask,
+    BambooTask,
+    BambooRepository,
+)
 from classes.bamboo_client import BambooClient
 from classes.generated.definitions import (
     Target,
@@ -53,7 +61,7 @@ class BambooTranslator(PassSettings):
             docker_configs[action] = windfile.actions[action].root.docker
         first: Optional[Docker] = list(docker_configs.values())[0]
         are_identical: bool = True
-        for key, config in docker_configs.items():
+        for _, config in docker_configs.items():
             if first != config:
                 logger.info("🚧", "Docker configurations are not identical", self.output_settings.emoji)
                 are_identical = False
@@ -74,34 +82,32 @@ class BambooTranslator(PassSettings):
             if root_action.excludeDuring is not None and len(root_action.excludeDuring) == 0:
                 root_action.excludeDuring = None
 
-    def translate(self, plan_key: str) -> Optional[WindFile]:
-        """
-        Translate the given build plan into a windfile.
-        :return: Windfile
-        """
-        optional: Optional[Tuple[BambooSpecs, dict[str, Any]]] = self.client.get_plan_yaml(plan_key=plan_key)
-        if optional is None:
-            return None
-        specs: BambooSpecs = optional[0]
-        # raw: dict[str, str] = optional[1]
-        plan: BambooPlan = specs.plan
-        actions: dict[Any, Action] = {}
-        repositories: dict[str, Repository] = {}
-        for stage_name in specs.stages:
-            stage: BambooStage = specs.stages[stage_name]
+    def extract_respositories(
+        self, stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+    ) -> dict[str, Repository]:
+        found: dict[str, Repository] = {}
+        for stage_name, stage in stages.items():
             for job_name in stage.jobs:
                 job: BambooJob = stage.jobs[job_name]
-                counter: int = 0
                 for task in job.tasks:
                     if isinstance(task, BambooCheckoutTask):
                         checkout: BambooCheckoutTask = task
                         repository: Repository = Repository(
-                            url=specs.repositories[checkout.repository].url,
-                            branch=specs.repositories[checkout.repository].branch,
+                            url=repositories[checkout.repository].url,
+                            branch=repositories[checkout.repository].branch,
                             path=checkout.path,
                         )
-                        repositories[checkout.repository] = repository
-                    elif isinstance(task, BambooTask):
+                        found[checkout.repository] = repository
+        return found
+
+    def extract_actions(self, stages: dict[str, BambooStage]) -> dict[Any, Action]:
+        actions: dict[Any, Action] = {}
+        for stage_name, stage in stages.items():
+            for job_name in stage.jobs:
+                job: BambooJob = stage.jobs[job_name]
+                counter: int = 0
+                for task in job.tasks:
+                    if isinstance(task, BambooTask):
                         exclude: list[Lifecycle] = []
                         if task.condition is not None:
                             for condition in task.condition.variables:
@@ -127,7 +133,7 @@ class BambooTranslator(PassSettings):
                         environment: Environment = Environment(root=Dictionary(root=script_task.environment))
                         action: Action = Action(
                             root=InternalAction(
-                                script="\n".join(scriptTask.scripts),
+                                script="\n".join(script_task.scripts),
                                 excludeDuring=exclude,
                                 docker=docker,
                                 environment=environment,
@@ -136,6 +142,21 @@ class BambooTranslator(PassSettings):
                         )
                         counter += 1
                         actions[job.key + str(counter)] = action
+        return actions
+
+    def translate(self, plan_key: str) -> Optional[WindFile]:
+        """
+        Translate the given build plan into a windfile.
+        :return: Windfile
+        """
+        optional: Optional[Tuple[BambooSpecs, dict[str, Any]]] = self.client.get_plan_yaml(plan_key=plan_key)
+        if optional is None:
+            return None
+        specs: BambooSpecs = optional[0]
+        # raw: dict[str, str] = optional[1]
+        plan: BambooPlan = specs.plan
+        actions: dict[Any, Action] = self.extract_actions(stages=specs.stages)
+        repositories: dict[str, Repository] = self.extract_respositories(stages=specs.stages, repositories=specs.repositories)
         metadata: WindfileMetadata = WindfileMetadata(
             name=plan.name,
             description=plan.description,
