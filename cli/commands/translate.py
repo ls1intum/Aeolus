@@ -29,7 +29,7 @@ class Translate(Subcommand):
         super().__init__(args)
 
         self.translator = BambooTranslator(
-            input_settings=input_settings, output_settings=output_settings, target=Target.bamboo, url=url, token=token
+            input_settings=input_settings, output_settings=output_settings, url=url, token=token
         )
 
     @staticmethod

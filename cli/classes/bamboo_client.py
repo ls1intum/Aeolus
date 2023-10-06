@@ -31,35 +31,37 @@ class BambooClient:
         for task in job_dict:
             task = self.fix_keys(dictionary=task)
             task_type: str = list(task.keys())[0]
-            task_dict: dict[str, Optional[int | bool | str | dict[str, Any]]] = self.fix_keys(
+            task_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[str]]] = self.fix_keys(
                 dictionary=task[task_type]
             )
             if task_type == "script":
                 condition: Optional[BambooCondition] = None
-                environment: dict[str, str] = {}
+                environment: dict[Any, str | float | None] = {}
                 if "environment" in task_dict:
                     for entry in str(task_dict["environment"]).split(";"):
                         key, value = entry.split("=")
                         environment[key] = value
-                task_dict["environment"] = None
-                if "conditions" not in task_dict:
-                    task_dict["condition"] = None
-                else:
-                    if "conditions" in task_dict and isinstance(task_dict["conditions"], list):
-                        for entry in task_dict["conditions"]:
-                            # TODO check if this behaves differently if there are more than one conditions
-                            dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
-                            matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
-                            variable: BambooConditionVariable = BambooConditionVariable(matches=matches["matches"])
-                            if condition is None:
-                                condition: BambooCondition = BambooCondition(variables=[variable])
-                            else:
-                                condition.variables.append(variable)
-                            del task_dict["conditions"]
-                            task_dict["condition"] = None
-                task = BambooTask(**task_dict)
-                task.condition = condition
-                task.environment = environment
+                if "conditions" in task_dict and isinstance(task_dict["conditions"], list):
+                    for entry in task_dict["conditions"]:
+                        # TODO check if this behaves differently if there are more than one conditions
+                        dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
+                        matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
+                        variable: BambooConditionVariable = BambooConditionVariable(matches=matches["matches"])
+                        if condition is None:
+                            condition = BambooCondition(variables=[variable])
+                        else:
+                            condition.variables.append(variable)
+                scripts: list[str] = []
+                if "scripts" in task_dict:
+                    for script in task_dict["scripts"]:
+                        scripts.append(str(script))
+                task = BambooTask(
+                    interpreter=str(task_dict["interpreter"]),
+                    scripts=scripts,
+                    environment=environment,
+                    description=str(task_dict["description"]) if "description" in task_dict else "",
+                    condition=condition,
+                )
                 tasks.append(task)
             elif task_type == "checkout":
                 checkout: BambooCheckoutTask = BambooCheckoutTask(**task_dict)

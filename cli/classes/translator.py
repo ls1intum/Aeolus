@@ -45,15 +45,10 @@ class BambooTranslator(PassSettings):
         input_settings: InputSettings,
         output_settings: OutputSettings,
         url: str,
-        token: str,
-        target: Target = Target.bamboo,
+        token: str
     ):
         super().__init__(input_settings=input_settings, output_settings=output_settings)
-        if target != Target.bamboo:
-            print("BambooTranslator only supports Bamboo as target")
-            sys.exit(1)
         self.client = BambooClient(url=url, token=token)
-        self.target = target
 
     def combine_docker_config(self, windfile: WindFile):
         docker_configs: dict[str, Optional[Docker]] = {}
@@ -86,7 +81,7 @@ class BambooTranslator(PassSettings):
         self, stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
     ) -> dict[str, Repository]:
         found: dict[str, Repository] = {}
-        for stage_name, stage in stages.items():
+        for _, stage in stages.items():
             for job_name in stage.jobs:
                 job: BambooJob = stage.jobs[job_name]
                 for task in job.tasks:
