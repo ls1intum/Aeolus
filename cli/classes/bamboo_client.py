@@ -1,5 +1,5 @@
 from typing import Optional, Tuple, Any
-from xml.dom.minidom import parseString, Document, Node, Element
+from xml.dom.minidom import parseString, Document, Element, Text
 
 import requests
 import yaml
@@ -97,7 +97,7 @@ class BambooClient:
     def handle_final_tasks(
         self,
         final_tasks: list[dict[str, Any]],
-    ):
+    ) -> list[dict[str, Any]]:
         # TODO think about final tasks management in aeolus
         # for now, add them at the end
         tmp: list[dict[str, Any]] = final_tasks
@@ -129,7 +129,7 @@ class BambooClient:
                     bamboo_docker = BambooDockerConfig(
                         image=str(job_dict["docker"]["image"]),
                         volumes=job_dict["docker"]["volumes"],
-                        docker_run_arguments=job_dict["docker"]["docker_run_arguments"]
+                        docker_run_arguments=job_dict["docker"]["docker_run_arguments"],
                     )
                 if "final_tasks" in job_dict:
                     for final in self.handle_final_tasks(final_tasks=job_dict["final_tasks"]):
@@ -137,13 +137,20 @@ class BambooClient:
                     del job_dict["final_tasks"]
                 if "other" not in job_dict:
                     job_dict["other"] = None
-                tasks: list[BambooTask] = self.handle_tasks(job_dict=job_dict["tasks"])
+                tasks_dict: Optional[list[dict[str, Any]]] = None
+                if isinstance(job_dict["tasks"], list) and len(job_dict["tasks"]) > 0 and isinstance(job_dict["tasks"][0], dict):
+                    tasks_dict = job_dict["tasks"]
+                if tasks_dict is None:
+                    continue
+                tasks: list[BambooCheckoutTask | BambooTask] = self.handle_tasks(job_dict=tasks_dict)
                 job: BambooJob = BambooJob(
                     key=str(job_dict["key"]),
                     tasks=tasks,
-                    artifact_subscriptions=job_dict["artifact_subscriptions"],
+                    artifact_subscriptions=job_dict["artifact_subscriptions"]
+                    if isinstance(job_dict["artifact_subscriptions"], list)
+                    else [],
                     docker=bamboo_docker,
-                    other=job_dict["other"],
+                    other=job_dict["other"] if isinstance(job_dict["other"], dict) else None,
                 )
                 stage.jobs[job_name] = job
             stages[stage_name] = stage
@@ -164,9 +171,12 @@ class BambooClient:
         if response.status_code != 200:
             return None
         document: Document = parseString(response.text)
-        code_node: Element | None = document.firstChild.firstChild.firstChild
-        if code_node is not None and code_node.firstChild is not None:
-            code: str = code_node.firstChild.nodeValue
+        element: Element | None = document.firstChild.firstChild.firstChild
+        if element is not None:
+            code_element: Text | None = element.firstChild
+            if code_element is None:
+                return None
+            code: str = code_element.nodeValue
 
             specs: str = code.split("\n---\n")[0]
             # permissions: str = code.split("\n---\n")[1]
