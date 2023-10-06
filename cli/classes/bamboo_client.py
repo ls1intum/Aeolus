@@ -138,7 +138,11 @@ class BambooClient:
                 if "other" not in job_dict:
                     job_dict["other"] = None
                 tasks_dict: Optional[list[dict[str, Any]]] = None
-                if isinstance(job_dict["tasks"], list) and len(job_dict["tasks"]) > 0 and isinstance(job_dict["tasks"][0], dict):
+                if (
+                    isinstance(job_dict["tasks"], list)
+                    and len(job_dict["tasks"]) > 0
+                    and isinstance(job_dict["tasks"][0], dict)
+                ):
                     tasks_dict = job_dict["tasks"]
                 if tasks_dict is None:
                     continue
@@ -156,14 +160,14 @@ class BambooClient:
             stages[stage_name] = stage
         return stages
 
-    def extract_code(self, node: Node) -> str:
+    def extract_code(self, node: Node) -> Optional[str]:
         if node.firstChild is None:
             if isinstance(node, Text):
                 element: Text = node
                 return element.data
+            return None
         else:
             return self.extract_code(node=node.firstChild)
-
 
     def get_plan_yaml(self, plan_key: str) -> Optional[Tuple[BambooSpecs, dict[str, str]]]:
         """
