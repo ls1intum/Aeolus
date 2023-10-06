@@ -55,7 +55,9 @@ class BambooClient:
             ] = self.fix_keys(dictionary=task[task_type])
             if task_type == "script":
                 condition: Optional[BambooCondition] = None
-                conditions: Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]] = task_dict.get("conditions", None)
+                conditions: Optional[int | bool | str | dict[str, Any] | list[str]] | list[
+                    dict[str, Any]
+                ] = task_dict.get("conditions", None)
                 if isinstance(conditions, list) and len(conditions) > 0 and isinstance(conditions[0], dict):
                     condition = self.parse_condition(conditions=conditions)
                 environment: dict[Any, str | float | None] = {}
@@ -131,8 +133,11 @@ class BambooClient:
                         if isinstance(job_dict["docker"]["docker_run_arguments"], list)
                         else [],
                     )
-                if "final_tasks" in job_dict and isinstance(job_dict["final_tasks"], list)\
-                        and isinstance(job_dict["tasks"], list):
+                if (
+                    "final_tasks" in job_dict
+                    and isinstance(job_dict["final_tasks"], list)
+                    and isinstance(job_dict["tasks"], list)
+                ):
                     for final in self.handle_final_tasks(final_tasks=job_dict["final_tasks"]):
                         job_dict["tasks"].append(final)
                     del job_dict["final_tasks"]
