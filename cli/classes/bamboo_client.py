@@ -26,6 +26,26 @@ class BambooClient:
         self.url = url
         self.token = token
 
+    def parse_condition(self, conditions: Optional[list[dict[str, Any]]]) -> Optional[BambooCondition]:
+        """
+        Parse a condition string into a BambooCondition object.
+        :param condition: condition string
+        :return: BambooCondition object
+        """
+        if conditions is None:
+            return None
+        condition: Optional[BambooCondition] = None
+        for entry in conditions:
+            # TODO check if this behaves differently if there are more than one conditions
+            dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
+            matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
+            variable: BambooConditionVariable = BambooConditionVariable(matches=matches["matches"])
+            if condition is None:
+                condition = BambooCondition(variables=[variable])
+            else:
+                condition.variables.append(variable)
+        return condition
+
     def handle_tasks(self, job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooCheckoutTask]:
         tasks: list[BambooTask | BambooCheckoutTask] = []
         for task in job_dict:
@@ -35,40 +55,34 @@ class BambooClient:
                 dictionary=task[task_type]
             )
             if task_type == "script":
-                condition: Optional[BambooCondition] = None
+                condition: Optional[BambooCondition] = self.parse_condition(conditions=task_dict.get("conditions", None))
                 environment: dict[Any, str | float | None] = {}
                 if "environment" in task_dict:
                     for entry in str(task_dict["environment"]).split(";"):
                         key, value = entry.split("=")
                         environment[key] = value
-                if "conditions" in task_dict and isinstance(task_dict["conditions"], list):
-                    for entry in task_dict["conditions"]:
-                        # TODO check if this behaves differently if there are more than one conditions
-                        dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
-                        matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
-                        variable: BambooConditionVariable = BambooConditionVariable(matches=matches["matches"])
-                        if condition is None:
-                            condition = BambooCondition(variables=[variable])
-                        else:
-                            condition.variables.append(variable)
                 scripts: list[str] = []
                 if "scripts" in task_dict:
                     for script in task_dict["scripts"]:
                         scripts.append(str(script))
-                tasks.append(BambooTask(
-                    interpreter=str(task_dict["interpreter"]),
-                    scripts=scripts,
-                    environment=environment,
-                    description=str(task_dict["description"]) if "description" in task_dict else "",
-                    condition=condition,
-                ))
+                tasks.append(
+                    BambooTask(
+                        interpreter=str(task_dict["interpreter"]),
+                        scripts=scripts,
+                        environment=environment,
+                        description=str(task_dict["description"]) if "description" in task_dict else "",
+                        condition=condition,
+                    )
+                )
             elif task_type == "checkout":
-                tasks.append(BambooCheckoutTask(
-                    repository=str(task_dict["repository"]),
-                    force_clean_build=bool(task_dict["force_clean_build"]),
-                    path=str(task_dict["path"]) if "path" in task_dict else "",
-                    description=str(task_dict["description"]) if "description" in task_dict else "",
-                ))
+                tasks.append(
+                    BambooCheckoutTask(
+                        repository=str(task_dict["repository"]),
+                        force_clean_build=bool(task_dict["force_clean_build"]),
+                        path=str(task_dict["path"]) if "path" in task_dict else "",
+                        description=str(task_dict["description"]) if "description" in task_dict else "",
+                    )
+                )
             else:
                 print(f"Task type {task_type} is not implemented")
                 # raise NotImplementedError(f"Task type {task_type} is not implemented")
