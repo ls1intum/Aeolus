@@ -1,5 +1,5 @@
 from typing import Optional, Tuple, Any
-from xml.dom.minidom import parseString, Document, Element, Text
+from xml.dom.minidom import parseString, Document, Element, Text, Node
 
 import requests
 import yaml
@@ -156,6 +156,15 @@ class BambooClient:
             stages[stage_name] = stage
         return stages
 
+    def extract_code(self, node: Node) -> str:
+        if node.firstChild is None:
+            if isinstance(node, Text):
+                element: Text = node
+                return element.data
+        else:
+            return self.extract_code(node=node.firstChild)
+
+
     def get_plan_yaml(self, plan_key: str) -> Optional[Tuple[BambooSpecs, dict[str, str]]]:
         """
         Get the YAML representation of the given plan by using the REST API.
@@ -171,13 +180,8 @@ class BambooClient:
         if response.status_code != 200:
             return None
         document: Document = parseString(response.text)
-        element: Element | None = document.firstChild.firstChild.firstChild
-        if element is not None:
-            code_element: Text | None = element.firstChild
-            if code_element is None:
-                return None
-            code: str = code_element.nodeValue
-
+        code: Optional[str] = self.extract_code(node=document)
+        if code is not None:
             specs: str = code.split("\n---\n")[0]
             # permissions: str = code.split("\n---\n")[1]
             dictionary: dict[str, Any] = yaml.safe_load(specs)
