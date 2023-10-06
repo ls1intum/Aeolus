@@ -4,7 +4,6 @@ import argparse
 
 from classes.translator import BambooTranslator
 from classes.generated.definitions import Target
-from classes.generator import Generator
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from commands.subcommand import Subcommand

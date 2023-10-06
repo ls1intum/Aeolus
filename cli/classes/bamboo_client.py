@@ -45,7 +45,7 @@ class BambooClient:
                 if "conditions" not in task_dict:
                     task_dict["condition"] = None
                 else:
-                    if "conditions" in task_dict and isinstance(task_dict["conditions"], dict):
+                    if "conditions" in task_dict and isinstance(task_dict["conditions"], list):
                         for entry in task_dict["conditions"]:
                             # TODO check if this behaves differently if there are more than one conditions
                             dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
@@ -145,7 +145,7 @@ class BambooClient:
                 repo: dict[str, int | bool | str] = repo_dict[repo_name]
                 repo = self.fix_keys(dictionary=repo)
                 repositories[repo_name] = BambooRepository(
-                    type=str(repo["type"]),
+                    repo_type=str(repo["type"]),
                     url=str(repo["url"]),
                     branch=str(repo["branch"]),
                     shared_credentials=str(repo["shared_credentials"]),

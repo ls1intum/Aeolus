@@ -114,7 +114,7 @@ class BambooStage:
 class BambooRepository:
     def __init__(
         self,
-        type: str,
+        repo_type: str,
         url: str,
         branch: str,
         shared_credentials: str,
@@ -127,7 +127,7 @@ class BambooRepository:
         ssh_key_applies_to_submodules: bool,
         fetch_all: bool,
     ) -> None:
-        self.type = type
+        self.repo_type = repo_type
         self.url = url
         self.branch = branch
         self.shared_credentials = shared_credentials
@@ -140,7 +140,7 @@ class BambooRepository:
         self.ssh_key_applies_to_submodules = ssh_key_applies_to_submodules
         self.fetch_all = fetch_all
 
-    type: str
+    repo_type: str
     url: str
     branch: str
     shared_credentials: str

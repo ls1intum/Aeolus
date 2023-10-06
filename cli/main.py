@@ -6,7 +6,6 @@ from io import TextIOWrapper
 import argparse
 import sys
 
-from classes.translator import BambooTranslator
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from commands.generate import Generate
@@ -78,7 +77,7 @@ if __name__ == "__main__":
         logging.basicConfig(encoding="utf-8", level=logging.INFO, format="%(message)s")
     if args.command is None:
         parser.print_help()
-        exit(0)
+        sys.exit(0)
     output_settings: OutputSettings = OutputSettings(verbose=args.verbose, debug=args.debug, emoji=args.emoji)
     file_path: str = args.key if "translate" == args.command else args.input.name
     file: typing.Optional[TextIOWrapper] = None if "translate" == args.command else args.input

@@ -1,3 +1,4 @@
+import sys
 from typing import Optional, Tuple, Any
 import re
 import yaml
@@ -42,7 +43,7 @@ class BambooTranslator(PassSettings):
         super().__init__(input_settings=input_settings, output_settings=output_settings)
         if target != Target.bamboo:
             print("BambooTranslator only supports Bamboo as target")
-            exit(1)
+            sys.exit(1)
         self.client = BambooClient(url=url, token=token)
         self.target = target
 
@@ -52,8 +53,8 @@ class BambooTranslator(PassSettings):
             docker_configs[action] = windfile.actions[action].root.docker
         first: Optional[Docker] = list(docker_configs.values())[0]
         are_identical: bool = True
-        for docker_config in docker_configs:
-            if first != docker_configs[docker_config]:
+        for key, config in docker_configs.items():
+            if first != config:
                 logger.info("🚧", "Docker configurations are not identical", self.output_settings.emoji)
                 are_identical = False
                 break
@@ -66,20 +67,11 @@ class BambooTranslator(PassSettings):
     def clean_up(self, windfile: WindFile) -> None:
         for action in windfile.actions:
             root_action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.actions[action].root
-            if (
-                root_action.environment is not None
-                and len(root_action.environment.root.root) == 0
-            ):
+            if root_action.environment is not None and len(root_action.environment.root.root) == 0:
                 root_action.environment = None
-            if (
-                root_action.parameters is not None
-                and len(root_action.parameters.root.root) == 0
-            ):
+            if root_action.parameters is not None and len(root_action.parameters.root.root) == 0:
                 root_action.parameters = None
-            if (
-                root_action.excludeDuring is not None
-                and len(root_action.excludeDuring) == 0
-            ):
+            if root_action.excludeDuring is not None and len(root_action.excludeDuring) == 0:
                 root_action.excludeDuring = None
 
     def translate(self, plan_key: str) -> Optional[WindFile]:
@@ -114,11 +106,11 @@ class BambooTranslator(PassSettings):
                         if task.condition is not None:
                             for condition in task.condition.variables:
                                 for match in condition.matches:
-                                    regex = re.compile("[^a-zA-Z\ \|\_]")
+                                    regex = re.compile(r"[^a-zA-Z |_]")
                                     lifecycle = condition.matches[match]
                                     for entry in regex.sub("", lifecycle).split("|"):
                                         exclude.append(Lifecycle[entry])
-                        scriptTask: BambooTask = task
+                        script_task: BambooTask = task
                         docker: Optional[Docker] = None
                         if job.docker is not None:
                             volume_list: list[str] = []
@@ -132,14 +124,16 @@ class BambooTranslator(PassSettings):
                                 volumes=volume_list,
                                 parameters=job.docker.docker_run_arguments,
                             )
-                        environment: Environment = Environment(root=Dictionary(root=scriptTask.environment))
-                        action: Action = Action(root=InternalAction(
-                            script="\n".join(scriptTask.scripts),
-                            excludeDuring=exclude,
-                            docker=docker,
-                            environment=environment,
-                            platform=None,
-                        ))
+                        environment: Environment = Environment(root=Dictionary(root=script_task.environment))
+                        action: Action = Action(
+                            root=InternalAction(
+                                script="\n".join(scriptTask.scripts),
+                                excludeDuring=exclude,
+                                docker=docker,
+                                environment=environment,
+                                platform=None,
+                            )
+                        )
                         counter += 1
                         actions[job.key + str(counter)] = action
         metadata: WindfileMetadata = WindfileMetadata(
