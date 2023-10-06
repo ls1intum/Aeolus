@@ -34,8 +34,7 @@ class BambooClient:
         if conditions is None or (len(conditions) == 0 and isinstance(conditions[0], str)):
             return None
         condition: Optional[BambooCondition] = None
-        dictionary: list[dict[str, Any]] = conditions
-        for entry in dictionary:
+        for entry in conditions:
             # TODO check if this behaves differently if there are more than one conditions
             dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
             matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
