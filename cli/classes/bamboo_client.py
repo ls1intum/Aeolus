@@ -118,6 +118,7 @@ class BambooClient:
             stage_name = list(stage_dict.keys())[0]
             job_list: list[str] = stage_dict[stage_name]["jobs"]
             stage_dict[stage_name]["jobs"] = {}
+            bamboo_docker: Optional[BambooDockerConfig] = None
             stage: BambooStage = BambooStage(**stage_dict[stage_name])
             for job_name in job_list:
                 job_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[Any]]] = plan_specs[job_name]
@@ -125,19 +126,25 @@ class BambooClient:
                 if "docker" in job_dict:
                     # we handle docker "tasks" differently (in the metadata rather then a job), so we remove them here
                     # to make the creation of the BambooSpecs object easier
-                    docker_config: dict[str, Any] = self.fix_keys(job_dict["docker"])
-                    job_dict["docker"] = BambooDockerConfig(**docker_config)
-                else:
-                    job_dict["docker"] = None
+                    bamboo_docker = BambooDockerConfig(
+                        image=str(job_dict["docker"]["image"]),
+                        volumes=job_dict["docker"]["volumes"],
+                        docker_run_arguments=job_dict["docker"]["docker_run_arguments"]
+                    )
                 if "final_tasks" in job_dict:
                     for final in self.handle_final_tasks(final_tasks=job_dict["final_tasks"]):
                         job_dict["tasks"].append(final)
                     del job_dict["final_tasks"]
                 if "other" not in job_dict:
                     job_dict["other"] = None
-                job: BambooJob = BambooJob(**job_dict)
                 tasks: list[BambooTask] = self.handle_tasks(job_dict=job_dict["tasks"])
-                job.tasks = tasks
+                job: BambooJob = BambooJob(
+                    key=str(job_dict["key"]),
+                    tasks=tasks,
+                    artifact_subscriptions=job_dict["artifact_subscriptions"],
+                    docker=bamboo_docker,
+                    other=job_dict["other"],
+                )
                 stage.jobs[job_name] = job
             stages[stage_name] = stage
         return stages
@@ -148,9 +155,11 @@ class BambooClient:
         :param plan_key:
         :return: YAML representation of the plan
         """
-        auth: dict = {"Authorization": f"Bearer {self.credentials.token}"}
         response = requests.get(
-            f"{self.credentials.url}/rest/api/latest/plan/{plan_key}/specs?all", params={"format": "yaml"}, headers=auth
+            f"{self.credentials.url}/rest/api/latest/plan/{plan_key}/specs?all",
+            params={"format": "yaml"},
+            headers={"Authorization": f"Bearer {self.credentials.token}"},
+            timeout=30,
         )
         if response.status_code != 200:
             return None
