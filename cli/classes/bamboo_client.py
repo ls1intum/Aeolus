@@ -55,17 +55,20 @@ class BambooClient:
                 if "scripts" in task_dict:
                     for script in task_dict["scripts"]:
                         scripts.append(str(script))
-                task = BambooTask(
+                tasks.append(BambooTask(
                     interpreter=str(task_dict["interpreter"]),
                     scripts=scripts,
                     environment=environment,
                     description=str(task_dict["description"]) if "description" in task_dict else "",
                     condition=condition,
-                )
-                tasks.append(task)
+                ))
             elif task_type == "checkout":
-                checkout: BambooCheckoutTask = BambooCheckoutTask(**task_dict)
-                tasks.append(checkout)
+                tasks.append(BambooCheckoutTask(
+                    repository=str(task_dict["repository"]),
+                    force_clean_build=bool(task_dict["force_clean_build"]),
+                    path=str(task_dict["path"]) if "path" in task_dict else "",
+                    description=str(task_dict["description"]) if "description" in task_dict else "",
+                ))
             else:
                 print(f"Task type {task_type} is not implemented")
                 # raise NotImplementedError(f"Task type {task_type} is not implemented")
