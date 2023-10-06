@@ -1,5 +1,5 @@
 from typing import Optional, Tuple, Any
-from xml.dom.minidom import parseString, Document, Element, Text, Node
+from xml.dom.minidom import parseString, Document, Text, Node
 
 import requests
 import yaml
@@ -28,7 +28,7 @@ class BambooClient:
     def parse_condition(self, conditions: Optional[list[dict[str, Any]]]) -> Optional[BambooCondition]:
         """
         Parse a condition string into a BambooCondition object.
-        :param condition: condition string
+        :param conditions: conditions from Bamboo Repsonse
         :return: BambooCondition object
         """
         if conditions is None:
@@ -61,14 +61,15 @@ class BambooClient:
                     and len(task_dict["conditions"]) > 0
                     and isinstance(task_dict["conditions"][0], dict)
                 ):
-                    condition = self.parse_condition(conditions=task_dict.get("conditions", None))
+                    conditions: Optional[list[dict[str, Any]]] = task_dict.get("conditions", None)
+                    condition = self.parse_condition(conditions=conditions)
                 environment: dict[Any, str | float | None] = {}
                 if "environment" in task_dict:
                     for entry in str(task_dict["environment"]).split(";"):
                         key, value = entry.split("=")
                         environment[key] = value
                 scripts: list[str] = []
-                if "scripts" in task_dict:
+                if "scripts" in task_dict and isinstance(task_dict["scripts"], list):
                     for script in task_dict["scripts"]:
                         scripts.append(str(script))
                 tasks.append(
@@ -123,8 +124,8 @@ class BambooClient:
             for job_name in job_list:
                 job_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[Any]]] = plan_specs[job_name]
                 job_dict = self.fix_keys(dictionary=job_dict)
-                if "docker" in job_dict:
-                    # we handle docker "tasks" differently (in the metadata rather then a job), so we remove them here
+                if "docker" in job_dict and isinstance(job_dict["docker"], dict):
+                    # we handle docker "tasks" differently (in the metadata rather than a job), so we remove them here
                     # to make the creation of the BambooSpecs object easier
                     bamboo_docker = BambooDockerConfig(
                         image=str(job_dict["docker"]["image"]),
