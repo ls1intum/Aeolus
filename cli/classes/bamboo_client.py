@@ -129,10 +129,15 @@ class BambooClient:
                     # to make the creation of the BambooSpecs object easier
                     bamboo_docker = BambooDockerConfig(
                         image=str(job_dict["docker"]["image"]),
-                        volumes=job_dict["docker"]["volumes"] if isinstance(job_dict["docker"]["volumes"], dict) else {},
-                        docker_run_arguments=job_dict["docker"]["docker_run_arguments"] if isinstance(job_dict["docker"]["docker_run_arguments"], list) else [],
+                        volumes=job_dict["docker"]["volumes"]
+                        if isinstance(job_dict["docker"]["volumes"], dict)
+                        else {},
+                        docker_run_arguments=job_dict["docker"]["docker_run_arguments"]
+                        if isinstance(job_dict["docker"]["docker_run_arguments"], list)
+                        else [],
                     )
-                if "final_tasks" in job_dict:
+                if "final_tasks" in job_dict and isinstance(job_dict["final_tasks"], list)\
+                        and isinstance(job_dict["tasks"], list):
                     for final in self.handle_final_tasks(final_tasks=job_dict["final_tasks"]):
                         job_dict["tasks"].append(final)
                     del job_dict["final_tasks"]
@@ -167,8 +172,7 @@ class BambooClient:
                 element: Text = node
                 return element.data
             return None
-        else:
-            return self.extract_code(node=node.firstChild)
+        return self.extract_code(node=node.firstChild)
 
     def get_plan_yaml(self, plan_key: str) -> Optional[Tuple[BambooSpecs, dict[str, str]]]:
         """
