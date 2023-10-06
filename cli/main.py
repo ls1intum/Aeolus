@@ -6,6 +6,7 @@ from io import TextIOWrapper
 import argparse
 import sys
 
+from classes.bamboo_credentials import BambooCredentials
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from commands.generate import Generate
@@ -105,7 +106,8 @@ if __name__ == "__main__":
         )
         generator.generate()
     if args.command == "translate":
+        credentials: BambooCredentials = BambooCredentials(url=args.url, token=args.token)
         translator: Translate = Translate(
-            input_settings=input_settings, output_settings=output_settings, url=args.url, token=args.token, args=args
+            input_settings=input_settings, output_settings=output_settings, credentials=credentials, args=args
         )
         translator.translate(plan_key=args.key)

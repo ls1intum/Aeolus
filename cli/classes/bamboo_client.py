@@ -1,5 +1,5 @@
 from typing import Optional, Tuple, Any
-from xml.dom.minidom import parseString, Document, Node
+from xml.dom.minidom import parseString, Document, Node, Element
 
 import requests
 import yaml
@@ -155,7 +155,7 @@ class BambooClient:
         if response.status_code != 200:
             return None
         document: Document = parseString(response.text)
-        code_node: Node | None = document.firstChild.firstChild.firstChild
+        code_node: Element | None = document.firstChild.firstChild.firstChild
         if code_node is not None and code_node.firstChild is not None:
             code: str = code_node.firstChild.nodeValue
 
