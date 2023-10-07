@@ -379,17 +379,19 @@ class Merger(PassSettings):
                             parameters=internals.root.parameters,
                             platform=internals.root.platform,
                             docker=internals.root.docker,
+                            always=internals.root.always,
                         )
                     )
 
                 elif isinstance(internals.root, PlatformAction):
                     original_types.append("platform")
-                    content = get_content_of(
-                        file=os.path.join(
-                            os.path.dirname(absolute_path),
-                            internals.root.file,
+                    if internals.root.file:
+                        content = get_content_of(
+                            file=os.path.join(
+                                os.path.dirname(absolute_path),
+                                internals.root.file,
+                            )
                         )
-                    )
                 elif isinstance(internals.root, FileAction):
                     original_types.append("file")
                     content = get_content_of(
@@ -420,6 +422,7 @@ class Merger(PassSettings):
                         parameters=internals.root.parameters,
                         platform=internals.root.platform,
                         docker=internals.root.docker,
+                        always=internals.root.always,
                     )
                 )
                 if internal:
@@ -459,6 +462,7 @@ class Merger(PassSettings):
                         parameters=action.parameters,
                         platform=action.platform,
                         docker=action.docker,
+                        always=action.always,
                     )
                 )
                 original_types.append("file")

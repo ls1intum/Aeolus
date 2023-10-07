@@ -4,6 +4,10 @@ from typing import Optional, Any
 
 
 class BambooPlan:
+    """
+    BambooPlan represents a Bamboo plan as returned by the Bamboo REST API.
+    """
+
     def __init__(self, project_key: str, key: str, name: str, description: str) -> None:
         self.project_key = project_key
         self.key = key
@@ -17,6 +21,10 @@ class BambooPlan:
 
 
 class BambooCheckoutTask:
+    """
+    BambooCheckoutTask represents a Bamboo checkout task as returned by the Bamboo REST API.
+    """
+
     def __init__(
         self, repository: str, force_clean_build: bool, path: Optional[str] = None, description: Optional[str] = None
     ) -> None:
@@ -32,6 +40,10 @@ class BambooCheckoutTask:
 
 
 class BambooConditionVariable:
+    """
+    BambooConditionVariable represents a Bamboo condition variable as returned by the Bamboo REST API.
+    """
+
     def __init__(self, matches: dict[str, str]) -> None:
         self.matches = matches
 
@@ -39,6 +51,10 @@ class BambooConditionVariable:
 
 
 class BambooCondition:
+    """
+    BambooCondition represents a Bamboo condition as returned by the Bamboo REST API.
+    """
+
     def __init__(self, variables: list[BambooConditionVariable]) -> None:
         self.variables = variables
 
@@ -46,6 +62,10 @@ class BambooCondition:
 
 
 class BambooTask:
+    """
+    BambooTask represents a Bamboo task as returned by the Bamboo REST API.
+    """
+
     def __init__(
         self,
         interpreter: str,
@@ -53,21 +73,59 @@ class BambooTask:
         environment: dict[Any, str | float | None],
         description: str,
         condition: Optional[BambooCondition],
+        always_execute: bool = False,
     ) -> None:
         self.interpreter = interpreter
         self.scripts = scripts
         self.environment = environment
         self.description = description
         self.condition = condition
+        self.always_execute = always_execute
 
     interpreter: str
     scripts: list[str]
     environment: dict[Any, str | float | None]
     description: str
     condition: Optional[BambooCondition]
+    always_execute: bool
+
+
+class BambooSpecialTask(BambooTask):
+    """
+    SpecialBambooTask represents a special Bamboo task as returned by the Bamboo REST API.
+    """
+
+    def __init__(
+        self,
+        interpreter: str,
+        scripts: list[str],
+        parameters: dict[Any, int | str | float | bool | None],
+        environment: dict[Any, int | str | float | bool | None],
+        description: str,
+        condition: Optional[BambooCondition],
+        always_execute: bool,
+        task_type: str,
+    ) -> None:
+        super().__init__(
+            interpreter=interpreter,
+            scripts=scripts,
+            environment=environment,
+            description=description,
+            condition=condition,
+            always_execute=always_execute,
+        )
+        self.task_type = task_type
+        self.parameters = parameters
+
+    parameters: dict[Any, str | float | bool | None]
+    task_type: str
 
 
 class BambooDockerConfig:
+    """
+    BambooDockerConfig represents the docker configuration of a Bamboo job as returned by the Bamboo REST API.
+    """
+
     def __init__(self, image: str, volumes: dict[str, str], docker_run_arguments: list[str]) -> None:
         self.image = image
         self.volumes = volumes
@@ -79,10 +137,14 @@ class BambooDockerConfig:
 
 
 class BambooJob:
+    """
+    BambooJob represents a Bamboo job as returned by the Bamboo REST API.
+    """
+
     def __init__(
         self,
         key: str,
-        tasks: list[BambooCheckoutTask | BambooTask],
+        tasks: list[BambooCheckoutTask | BambooTask | BambooSpecialTask],
         artifact_subscriptions: list[Any],
         docker: Optional[BambooDockerConfig],
         other: Optional[dict[str, Any]],
@@ -101,6 +163,10 @@ class BambooJob:
 
 
 class BambooStage:
+    """
+    BambooStage represents a Bamboo stage as returned by the Bamboo REST API.
+    """
+
     def __init__(self, manual: bool, final: bool, jobs: dict[str, BambooJob]) -> None:
         self.manual = manual
         self.final = final
@@ -112,6 +178,10 @@ class BambooStage:
 
 
 class BambooRepository:
+    """
+    BambooRepository represents a Bamboo repository as returned by the Bamboo REST API.
+    """
+
     def __init__(
         self,
         repo_type: str,
@@ -155,6 +225,10 @@ class BambooRepository:
 
 
 class BambooSpecs:
+    """
+    BambooSpecs represents the specs of a Bamboo plan as returned by the Bamboo REST API.
+    """
+
     def __init__(
         self,
         version: int,

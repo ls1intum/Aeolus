@@ -117,6 +117,9 @@ class FileAction(BaseModel):
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
 
 
 class InternalAction(BaseModel):
@@ -140,6 +143,9 @@ class InternalAction(BaseModel):
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
 
 
 class PlatformAction(BaseModel):
@@ -150,8 +156,7 @@ class PlatformAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    for_: Target = Field(..., alias='for', description='The platform that this action is defined for.')
-    file: str = Field(..., description='The file of the platform action. Written in Python')
+    file: Optional[str] = Field(None, description='The file of the platform action. Written in Python')
     parameters: Optional[Parameters] = None
     function: Optional[constr(pattern=r'^[a-zA-Z0-9._-]+$')] = Field(
         'run', description='The function of the platform action.', examples=['run']
@@ -163,7 +168,11 @@ class PlatformAction(BaseModel):
     )
     environment: Optional[Environment] = Field(None, description='Environment variables for this platform action.')
     platform: Optional[Target] = Field(None, description='Ignored for this action.')
+    kind: Optional[str] = Field(None, description='The kind of the platform action.', examples=['junit'])
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
 
 
 class Author(RootModel):

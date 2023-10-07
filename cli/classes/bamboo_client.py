@@ -16,10 +16,54 @@ from classes.bamboo_specs import (
     BambooCondition,
     BambooConditionVariable,
     BambooDockerConfig,
+    BambooSpecialTask,
 )
 
 
+def handle_final_tasks(
+    final_tasks: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    Handle final tasks in the Bamboo response. We iterate over
+    the list of final tasks and prepare them to be added
+    to the list of tasks. Also, we set always_execute to True
+    :param final_tasks: list of final tasks from Bamboo
+    :return: list of final tasks that can be added to the list of tasks
+    """
+    # think about final tasks management in aeolus
+    # for now, add them at the end, and always execute them
+    tmp: list[dict[str, Any]] = final_tasks
+    tasks: list[dict[str, Any]] = []
+    for item in tmp:
+        old_key: str = list(item.keys())[0]
+        task_type: str = item[old_key]["type"] if "type" in item[old_key] else old_key
+        if "type" in item[old_key]:
+            del item[old_key]["type"]
+        item[old_key]["always_execute"] = True
+        tasks.append({task_type: item[old_key]})
+    return tasks
+
+
+def fix_keys(dictionary: dict[str, Any]) -> dict[str, Any]:
+    """
+    Replace all "-" in keys with "_"
+    :param dictionary to fix
+    :return: dictionary with fixed keys
+    """
+    clean: dict[str, Any] = {}
+    for key in dictionary.keys():
+        if "-" in key:
+            clean[key.replace("-", "_")] = dictionary[key]
+        else:
+            clean[key] = dictionary[key]
+    return clean
+
+
 class BambooClient:
+    """
+    Client for the Bamboo REST API.
+    """
+
     credentials: BambooCredentials
 
     def __init__(self, credentials: BambooCredentials):
@@ -37,8 +81,8 @@ class BambooClient:
         for entry in conditions:
             # check if this behaves differently if there are more than one conditions
             if isinstance(entry, dict):
-                dictionary: dict[str, dict[str, str]] = self.fix_keys(dictionary=entry)
-                matches: dict[str, dict[str, str]] = self.fix_keys(dictionary=dictionary["variable"])
+                dictionary: dict[str, dict[str, str]] = fix_keys(dictionary=entry)
+                matches: dict[str, dict[str, str]] = fix_keys(dictionary=dictionary["variable"])
                 variable: BambooConditionVariable = BambooConditionVariable(matches=matches["matches"])
                 if condition is None:
                     condition = BambooCondition(variables=[variable])
@@ -46,39 +90,65 @@ class BambooClient:
                     condition.variables.append(variable)
         return condition
 
-    def handle_tasks(self, job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooCheckoutTask]:
-        tasks: list[BambooTask | BambooCheckoutTask] = []
+    def handle_script_task(self, task_dict: dict[str, Any]) -> BambooTask:
+        condition: Optional[BambooCondition] = None
+        conditions: Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]] = task_dict.get(
+            "conditions", None
+        )
+        if isinstance(conditions, list) and len(conditions) > 0 and isinstance(conditions[0], dict):
+            condition = self.parse_condition(conditions=conditions)
+        environment: dict[Any, str | float | None] = {}
+        if "environment" in task_dict:
+            for entry in str(task_dict["environment"]).split(";"):
+                key, value = entry.split("=")
+                environment[key] = value
+        scripts: list[str] = []
+        if "scripts" in task_dict and isinstance(task_dict["scripts"], list):
+            for script in task_dict["scripts"]:
+                scripts.append(str(script))
+        return BambooTask(
+            interpreter=str(task_dict["interpreter"]),
+            scripts=scripts,
+            environment=environment,
+            description=str(task_dict["description"]) if "description" in task_dict else "",
+            condition=condition,
+            always_execute=bool(task_dict["always_execute"]) if "always_execute" in task_dict else False,
+        )
+
+    def handle_tasks(self, job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooCheckoutTask | BambooSpecialTask]:
+        """
+        Handle the tasks in the Bamboo response. We iterate over the job
+        and convert the tasks into easy to work with objects.
+        :param job_dict: list of jobs from Bamboo
+        :return: list of BambooTask objects
+        """
+        tasks: list[BambooTask | BambooCheckoutTask | BambooSpecialTask] = []
         for task in job_dict:
-            task = self.fix_keys(dictionary=task)
+            task = fix_keys(dictionary=task)
             task_type: str = list(task.keys())[0]
             task_dict: dict[
                 str, Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]]
-            ] = self.fix_keys(dictionary=task[task_type])
-            if task_type == "script":
-                condition: Optional[BambooCondition] = None
-                conditions: Optional[int | bool | str | dict[str, Any] | list[str]] | list[
-                    dict[str, Any]
-                ] = task_dict.get("conditions", None)
-                if isinstance(conditions, list) and len(conditions) > 0 and isinstance(conditions[0], dict):
-                    condition = self.parse_condition(conditions=conditions)
-                environment: dict[Any, str | float | None] = {}
-                if "environment" in task_dict:
-                    for entry in str(task_dict["environment"]).split(";"):
-                        key, value = entry.split("=")
-                        environment[key] = value
-                scripts: list[str] = []
-                if "scripts" in task_dict and isinstance(task_dict["scripts"], list):
-                    for script in task_dict["scripts"]:
-                        scripts.append(str(script))
+            ] = fix_keys(dictionary=task[task_type])
+            if task_type == "junit":
+                parameters: dict[Any, int | bool | str | float | None] = {}
+                for key, value in task_dict.items():
+                    if key not in ["type", "description", "always_execute"]:
+                        if isinstance(value, (str, int, bool, float)):
+                            parameters[key] = value
                 tasks.append(
-                    BambooTask(
-                        interpreter=str(task_dict["interpreter"]),
-                        scripts=scripts,
-                        environment=environment,
+                    BambooSpecialTask(
+                        interpreter=task_type,
+                        scripts=[],
+                        parameters=parameters,
+                        environment={},
                         description=str(task_dict["description"]) if "description" in task_dict else "",
-                        condition=condition,
+                        condition=None,
+                        always_execute=bool(task_dict["always_execute"]) if "always_execute" in task_dict else False,
+                        task_type=str(task_type),
                     )
                 )
+            elif task_type == "script":
+                tasks.append(self.handle_script_task(task_dict=task_dict))
             elif task_type == "checkout":
                 tasks.append(
                     BambooCheckoutTask(
@@ -93,23 +163,13 @@ class BambooClient:
                 # raise NotImplementedError(f"Task type {task_type} is not implemented")
         return tasks
 
-    def handle_final_tasks(
-        self,
-        final_tasks: list[dict[str, Any]],
-    ) -> list[dict[str, Any]]:
-        # think about final tasks management in aeolus
-        # for now, add them at the end
-        tmp: list[dict[str, Any]] = final_tasks
-        tasks: list[dict[str, Any]] = []
-        for item in tmp:
-            old_key: str = list(item.keys())[0]
-            task_type: str = item[old_key]["type"] if "type" in item[old_key] else old_key
-            if "type" in item[old_key]:
-                del item[old_key]["type"]
-            tasks.append({task_type: item[old_key]})
-        return tasks
-
     def convert_stages(self, plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
+        """
+        We convert the stages from the API response into structured
+        objects that are easier to work with.
+        :param plan_specs: Response from the Bamboo API
+        :return: dict of BambooStage objects including BambooJob and BambooTask objects
+        """
         stages: dict[str, BambooStage] = {}
         dictionary: list[dict[str, Any]] = plan_specs["stages"]
 
@@ -121,7 +181,7 @@ class BambooClient:
             stage: BambooStage = BambooStage(**stage_dict[stage_name])
             for job_name in job_list:
                 job_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[Any]]] = plan_specs[job_name]
-                job_dict = self.fix_keys(dictionary=job_dict)
+                job_dict = fix_keys(dictionary=job_dict)
                 if "docker" in job_dict and isinstance(job_dict["docker"], dict):
                     # we handle docker "tasks" differently (in the metadata rather than a job), so we remove them here
                     # to make the creation of the BambooSpecs object easier
@@ -130,8 +190,8 @@ class BambooClient:
                         volumes=job_dict["docker"]["volumes"]
                         if isinstance(job_dict["docker"]["volumes"], dict)
                         else {},
-                        docker_run_arguments=job_dict["docker"]["docker_run_arguments"]
-                        if isinstance(job_dict["docker"]["docker_run_arguments"], list)
+                        docker_run_arguments=job_dict["docker"]["docker-run-arguments"]
+                        if isinstance(job_dict["docker"]["docker-run-arguments"], list)
                         else [],
                     )
                 if (
@@ -139,7 +199,7 @@ class BambooClient:
                     and isinstance(job_dict["final_tasks"], list)
                     and isinstance(job_dict["tasks"], list)
                 ):
-                    for final in self.handle_final_tasks(final_tasks=job_dict["final_tasks"]):
+                    for final in handle_final_tasks(final_tasks=job_dict["final_tasks"]):
                         job_dict["tasks"].append(final)
                     del job_dict["final_tasks"]
                 if "other" not in job_dict:
@@ -153,7 +213,9 @@ class BambooClient:
                     tasks_dict = job_dict["tasks"]
                 if tasks_dict is None:
                     continue
-                tasks: list[BambooCheckoutTask | BambooTask] = self.handle_tasks(job_dict=tasks_dict)
+                tasks: list[BambooCheckoutTask | BambooTask | BambooSpecialTask] = self.handle_tasks(
+                    job_dict=tasks_dict
+                )
                 job: BambooJob = BambooJob(
                     key=str(job_dict["key"]),
                     tasks=tasks,
@@ -168,6 +230,11 @@ class BambooClient:
         return stages
 
     def extract_code(self, node: Node) -> Optional[str]:
+        """
+        Extract the YAML code for a plan from the given xml document.
+        :param node: xml node
+        :return: YAML code
+        """
         if node.firstChild is None:
             if isinstance(node, Text):
                 element: Text = node
@@ -195,13 +262,13 @@ class BambooClient:
             specs: str = code.split("\n---\n")[0]
             # permissions: str = code.split("\n---\n")[1]
             dictionary: dict[str, Any] = yaml.safe_load(specs)
-            dictionary["plan"] = self.fix_keys(dictionary=dictionary["plan"])
+            dictionary["plan"] = fix_keys(dictionary=dictionary["plan"])
             stages: dict[str, BambooStage] = self.convert_stages(plan_specs=dictionary)
             repositories: dict[str, BambooRepository] = {}
             for repo_dict in dictionary["repositories"]:
                 repo_name = list(repo_dict.keys())[0]
                 repo: dict[str, int | bool | str] = repo_dict[repo_name]
-                repo = self.fix_keys(dictionary=repo)
+                repo = fix_keys(dictionary=repo)
                 repositories[repo_name] = BambooRepository(
                     repo_type=str(repo["type"]),
                     url=str(repo["url"]),
@@ -227,17 +294,3 @@ class BambooClient:
             bamboo_specs: BambooSpecs = BambooSpecs(**sanitized)
             return bamboo_specs, yaml.safe_load(specs)
         return None
-
-    def fix_keys(self, dictionary: dict[str, Any]) -> dict[str, Any]:
-        """
-        Replace all "-" in keys with "_"
-        :param dictionary to fix
-        :return: dictionary with fixed keys
-        """
-        clean: dict[str, Any] = {}
-        for key in dictionary.keys():
-            if "-" in key:
-                clean[key.replace("-", "_")] = dictionary[key]
-            else:
-                clean[key] = dictionary[key]
-        return clean
