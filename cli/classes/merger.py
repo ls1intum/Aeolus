@@ -120,6 +120,8 @@ class Merger(PassSettings):
         Mainly sets metadata needed for the generation process.
         :return: True if the internal actions could be merged, False otherwise
         """
+        if self.windfile is None:
+            return False
         logger.info("🏠 ", "Merging internal actions", self.output_settings.emoji)
         actions: List[tuple[str, Action]] = get_internal_actions_with_names(self.windfile)
         for action in actions:

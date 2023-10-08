@@ -1,5 +1,7 @@
 from typing import Optional
 
+from classes.ci_credentials import CICredentials
+
 
 class OutputSettings:
     """
@@ -9,19 +11,16 @@ class OutputSettings:
     verbose: bool = False
     debug: bool = False
     emoji: bool = False
-    ci_url: Optional[str] = None
-    ci_token: Optional[str] = None
+    ci_credentials: Optional[CICredentials] = None
 
     def __init__(
         self,
         verbose: bool = False,
         debug: bool = False,
         emoji: bool = False,
-        ci_url: Optional[str] = None,
-        ci_token: Optional[str] = None,
+        ci_credentials: Optional[str] = None,
     ):
         self.verbose = verbose
         self.debug = debug
         self.emoji = emoji
-        self.ci_url = ci_url
-        self.ci_token = ci_token
+        self.ci_credentials = ci_credentials

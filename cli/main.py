@@ -7,6 +7,7 @@ import argparse
 import sys
 
 from classes.bamboo_credentials import BambooCredentials
+from classes.ci_credentials import CICredentials
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from commands.generate import Generate
@@ -80,7 +81,7 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(0)
     output_settings: OutputSettings = OutputSettings(
-        verbose=args.verbose, debug=args.debug, emoji=args.emoji, ci_url=None, ci_token=None
+        verbose=args.verbose, debug=args.debug, emoji=args.emoji, ci_credentials=None
     )
     file_path: str = args.key if "translate" == args.command else args.input.name
     file: typing.Optional[TextIOWrapper] = None if "translate" == args.command else args.input
@@ -109,8 +110,7 @@ if __name__ == "__main__":
                     output_settings.emoji,
                 )
                 raise ValueError("Publishing requires a Bamboo URL and a token")
-            output_settings.ci_url = args.url
-            output_settings.ci_token = args.token
+            output_settings.ci_credentials = CICredentials(url=args.url, token=args.token)
 
         generator: Generate = Generate(
             input_settings=input_settings,
