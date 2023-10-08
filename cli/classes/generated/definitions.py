@@ -18,7 +18,7 @@ class Api(RootModel):
 
 
 class Dictionary(RootModel):
-    root: Dict[constr(pattern=r'.+'), Optional[Union[str, float]]]
+    root: Dict[constr(pattern=r'.+'), Optional[Union[str, float, bool]]]
 
 
 class Docker(BaseModel):

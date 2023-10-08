@@ -9,6 +9,7 @@ public class WindFileMetadata {
     private String name;
     private String description;
     private Author author;
+    private DockerConfig docker;
     private Optional<String> gitCredentials;
 
     public String getName() {
@@ -43,6 +44,14 @@ public class WindFileMetadata {
         this.gitCredentials = gitCredentials;
     }
 
+    public DockerConfig getDocker() {
+        return docker;
+    }
+
+    private void setDocker(DockerConfig docker) {
+        this.docker = docker;
+    }
+
     public static WindFileMetadata fromMap(Map<String, Object> map) {
         WindFileMetadata metadata = new WindFileMetadata();
         metadata.setName((String) map.get("name"));
@@ -50,6 +59,7 @@ public class WindFileMetadata {
         Object author = map.get("author");
         metadata.setAuthor(Author.fromObject(author));
         metadata.setGitCredentials(Optional.ofNullable((String) map.get("gitCredentials")));
+        metadata.setDocker(DockerConfig.fromMap((Map<String, Object>) map.getOrDefault("docker", null)));
         return metadata;
     }
 }

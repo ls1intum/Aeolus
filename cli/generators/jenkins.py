@@ -177,7 +177,7 @@ class JenkinsGenerator(BaseGenerator):
         for name in self.windfile.actions:
             step: Action = self.windfile.actions[name]
             if isinstance(step.root, InternalAction) and not step.root.always:
-                self.handle_step(name=name, step=step.root)
+                self.handle_step(name=name, step=step.root, call=True)
         self.result.append("  }")
         if self.has_always_actions():
             self.result.append("  post {")

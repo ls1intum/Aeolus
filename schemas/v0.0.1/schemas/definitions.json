@@ -374,6 +374,7 @@
         "type": [
           "string",
           "number",
+          "boolean",
           "null"
         ]
       }

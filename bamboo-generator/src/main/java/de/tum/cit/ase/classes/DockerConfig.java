@@ -19,7 +19,15 @@ public class DockerConfig {
         DockerConfig dockerConfig = new DockerConfig();
         dockerConfig.setImage((String) map.get("image"));
         dockerConfig.setTag((String) map.getOrDefault("tag", "latest"));
-        dockerConfig.setVolumes((Map<String, String>) map.getOrDefault("volumes", new HashMap<>()));
+        ArrayList<String> volumes = (ArrayList<String>) map.getOrDefault("volumes", new ArrayList<>());
+        HashMap<String, String> volumesMap = new HashMap<>();
+        for (String volume : volumes) {
+            String[] split = volume.split(":");
+            if (split.length == 2) {
+                volumesMap.put(split[0], split[1]);
+            }
+        }
+        dockerConfig.setVolumes(volumesMap);
         dockerConfig.setParameters((List<String>) map.getOrDefault("parameters", new ArrayList<>()));
         return dockerConfig;
     }
