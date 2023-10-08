@@ -269,13 +269,11 @@ class Merger(PassSettings):
                         typing.List[Action],
                     ]
                 ] = None
-                if isinstance(action, PlatformAction):
-                    if action.file is not None:
-                        path = action.file
-                    else:
-                        converted = ([name], [Action(root=action)])
-                if isinstance(action, FileAction):
+                if isinstance(action, PlatformAction, FileAction):
                     path = action.file
+                    if isinstance(action, PlatformAction):
+                        if path is None:
+                            converted = ([name], [Action(root=action)])
                 elif isinstance(action, ExternalAction):
                     path = action.use
                 if path:
