@@ -269,7 +269,7 @@ class Merger(PassSettings):
                         typing.List[Action],
                     ]
                 ] = None
-                if isinstance(action, PlatformAction, FileAction):
+                if isinstance(action, (PlatformAction, FileAction)):
                     path = action.file
                     if isinstance(action, PlatformAction):
                         if path is None:
