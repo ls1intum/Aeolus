@@ -92,12 +92,12 @@ public class WindFile {
         return actions;
     }
 
-    public List<Repository> getRepositories() {
-        return repositories;
-    }
-
     public void setActions(List<Action> actions) {
         this.actions = actions;
+    }
+
+    public List<Repository> getRepositories() {
+        return repositories;
     }
 
     public void setRepositories(List<Repository> repositories) {

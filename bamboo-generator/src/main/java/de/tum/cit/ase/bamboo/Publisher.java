@@ -15,6 +15,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 public class Publisher {
 
@@ -53,7 +54,7 @@ public class Publisher {
                     DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             ByteArrayInputStream input = new ByteArrayInputStream(
-                    responseString.getBytes("UTF-8"));
+                    responseString.getBytes(StandardCharsets.UTF_8));
             Document doc = builder.parse(input);
             return doc.getFirstChild().getFirstChild().getFirstChild().getTextContent();
         } catch (IOException | ParserConfigurationException | SAXException e) {

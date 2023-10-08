@@ -146,8 +146,8 @@ public class Main {
         WindFile windFile = getInput(args);
 
         BuildPlanService buildPlanService = new BuildPlanService();
-        Project project = new Project().key("AEOLUS").name("AEOLUS").description("aeolus");
-        Plan plan = new Plan(project, windFile.getMetadata().getName(), "BASE1")
+        Project project = getEmptyProject(windFile.getMetadata());
+        Plan plan = new Plan(project, windFile.getMetadata().getName(), windFile.getMetadata().getPlanName())
                 .description("Plan created from " + windFile.getFilePath())
                 .variables(new Variable("lifecycle_stage", "evaluation"));
         List<Stage> stageList = new ArrayList<>();
@@ -170,7 +170,7 @@ public class Main {
                 var key = new BambooKey(keyInput);
                 var tasks = buildPlanService.handleAction(internalAction);
                 Stage stage = new Stage(internalAction.getName()).jobs(
-                        new Job(internalAction.getName(), key).tasks(
+                        new Job(internalAction.getName(), key).dockerConfiguration(internalAction.convertDockerConfig()).tasks(
                                 tasks.toArray(new Task[]{})
                         ));
                 stageList.add(stage);
@@ -180,7 +180,7 @@ public class Main {
                 var key = new BambooKey(keyInput);
                 var tasks = buildPlanService.handleSpecialAction(platformAction);
                 Stage stage = new Stage(platformAction.getName()).jobs(
-                        new Job(platformAction.getName(), key).tasks(
+                        new Job(platformAction.getName(), key).dockerConfiguration(platformAction.convertDockerConfig()).tasks(
                                 tasks.toArray(new Task[]{})
                         ).dockerConfiguration(action.convertDockerConfig()));
                 stageList.add(stage);
@@ -190,6 +190,11 @@ public class Main {
         final String yaml = BambooSpecSerializer.dump(plan);
         System.err.println("✅ Generation done, printing result to stdout");
         System.out.println(yaml);
+        if (publish) {
+            Publisher publisher = new Publisher(bambooUrl, bambooToken);
+            publisher.publish(plan);
+            System.err.println("✅ Published to Bamboo");
+        }
     }
 
     private static void getYAML(String[] args) {
@@ -211,5 +216,10 @@ public class Main {
             case GENERATION -> generateBuildPlan(args);
             case FETCH_YAML -> getYAML(args);
         }
+    }
+
+    private static Project getEmptyProject(WindFileMetadata metadata) {
+        String id = metadata.getProjectKey();
+        return new Project().key(id).name(id).description(metadata.getDescription() + "\n---created using aeolus");
     }
 }

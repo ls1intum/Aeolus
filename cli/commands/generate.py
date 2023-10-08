@@ -63,6 +63,24 @@ class Generate(Subcommand):
             action="store_true",
         )
 
+        parser.add_argument(
+            "--publish",
+            "-p",
+            help="Publish the generated file to the CI system",
+            action="store_true",
+        )
+
+        parser.add_argument(
+            "--url",
+            help="URL of the Bamboo Server",
+            type=str,
+        )
+        parser.add_argument(
+            "--token",
+            help="Auth token for the Bamboo Server",
+            type=str,
+        )
+
     def generate(self) -> None:
         """
         Generate the CI file.

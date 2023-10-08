@@ -20,6 +20,15 @@
           "rust-exercise-jobs"
         ]
       },
+      "id": {
+        "description": "The id of the resulting job in the CI system.",
+        "type": "string",
+        "examples": [
+          "rust-exercise-jobs",
+          "AEOLUS-BASE",
+          "jenkins/job/path"
+        ]
+      },
       "description": {
         "description": "Description of what this list of actions is supposed to achieve",
         "type": "string",

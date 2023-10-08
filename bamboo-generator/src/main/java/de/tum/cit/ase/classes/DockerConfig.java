@@ -32,35 +32,35 @@ public class DockerConfig {
         return dockerConfig;
     }
 
-    private void setImage(String image) {
-        this.image = image;
-    }
-
-    private void setTag(String tag) {
-        this.tag = tag;
-    }
-
-    private void setVolumes(Map<String, String> volumes) {
-        this.volumes = volumes;
-    }
-
-    private void setParameters(List<String> parameters) {
-        this.parameters = parameters;
-    }
-
     public String getImage() {
         return image;
+    }
+
+    private void setImage(String image) {
+        this.image = image;
     }
 
     public String getTag() {
         return tag;
     }
 
+    private void setTag(String tag) {
+        this.tag = tag;
+    }
+
     public Map<String, String> getVolumes() {
         return volumes;
     }
 
+    private void setVolumes(Map<String, String> volumes) {
+        this.volumes = volumes;
+    }
+
     public List<String> getParameters() {
         return parameters;
+    }
+
+    private void setParameters(List<String> parameters) {
+        this.parameters = parameters;
     }
 }

@@ -36,19 +36,13 @@ public class BuildPlanService {
 
     public List<Task<?, ?>> handleSpecialAction(PlatformAction action) {
         var tasks = new ArrayList<Task<?, ?>>();
-        var envs = Arrays.stream(action.getEnvironment().entrySet().stream()
-                .map(entry -> entry.getKey() + "=" + entry.getValue())
-                .toArray(String[]::new)).reduce((a, b) -> a + ";" + b).orElse("");
-        var params = Arrays.stream(action.getParameters().entrySet().stream()
-                .map(entry -> entry.getKey() + "=" + entry.getValue())
-                .toArray(String[]::new)).reduce((a, b) -> a + ";" + b).orElse("");
 
         String type = action.getKind();
         switch (type) {
             case "junit": {
                 TestParserTask task = TestParserTask.createJUnitParserTask()
                         .description(action.getName())
-                        .resultDirectories(action.getParameters().get("test_results"));
+                        .resultDirectories(String.valueOf(action.getParameters().get("test_results")));
                 tasks.add(task);
                 break;
             }

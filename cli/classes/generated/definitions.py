@@ -185,6 +185,11 @@ class WindfileMetadata(BaseModel):
     """
 
     name: str = Field(..., description='The name of the windfile.', examples=['rust-exercise-jobs'])
+    id: Optional[str] = Field(
+        None,
+        description='The id of the resulting job in the CI system.',
+        examples=['rust-exercise-jobs', 'AEOLUS-BASE', 'jenkins/job/path'],
+    )
     description: str = Field(
         ...,
         description='Description of what this list of actions is supposed to achieve',

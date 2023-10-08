@@ -58,8 +58,8 @@ def add_argparse() -> argparse.ArgumentParser:
     generator_parser = subparsers.add_parser(name="generate")
     Generate.add_arg_parser(parser=generator_parser)
 
-    bambootranslator_parser = subparsers.add_parser(name="translate")
-    Translate.add_arg_parser(parser=bambootranslator_parser)
+    bamboo_translator_parser = subparsers.add_parser(name="translate")
+    Translate.add_arg_parser(parser=bamboo_translator_parser)
     return arg_parser
 
 
@@ -79,7 +79,9 @@ if __name__ == "__main__":
     if args.command is None:
         parser.print_help()
         sys.exit(0)
-    output_settings: OutputSettings = OutputSettings(verbose=args.verbose, debug=args.debug, emoji=args.emoji)
+    output_settings: OutputSettings = OutputSettings(
+        verbose=args.verbose, debug=args.debug, emoji=args.emoji, ci_url=None, ci_token=None
+    )
     file_path: str = args.key if "translate" == args.command else args.input.name
     file: typing.Optional[TextIOWrapper] = None if "translate" == args.command else args.input
     input_settings: InputSettings = InputSettings(file_path=file_path, file=file)
@@ -99,6 +101,17 @@ if __name__ == "__main__":
         )
         merger.merge()
     if args.command == "generate":
+        if args.publish:
+            if not args.url or not args.token:
+                logger.error(
+                    "❌ ",
+                    "Publishing requires a CI URL and a token",
+                    output_settings.emoji,
+                )
+                raise ValueError("Publishing requires a Bamboo URL and a token")
+            output_settings.ci_url = args.url
+            output_settings.ci_token = args.token
+
         generator: Generate = Generate(
             input_settings=input_settings,
             output_settings=output_settings,

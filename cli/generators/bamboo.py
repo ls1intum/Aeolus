@@ -60,6 +60,8 @@ class BambooGenerator(BaseGenerator):
         :param base64_str: windfile definition as base64 encoded string
         """
         command: List[str] = ["java", "-jar", "bamboo-generator.jar", "--base64", base64_str]
+        if self.output_settings.ci_url and self.output_settings.ci_token:
+            command += ["--server", self.output_settings.ci_url, "--token", self.output_settings.ci_token]
         process: subprocess.CompletedProcess = subprocess.run(command, text=True, capture_output=True, check=True)
         error_logs: str = process.stderr.split("\n")
         for error_log in error_logs:
@@ -80,9 +82,12 @@ class BambooGenerator(BaseGenerator):
         """
         client: DockerClient = DockerClient.from_env()
         container_name: str = "bambeolus"
+        command: str = f"--base64 {base64_str}"
+        if self.output_settings.ci_url and self.output_settings.ci_token:
+            command += f" --publish --server {self.output_settings.ci_url} --token {self.output_settings.ci_token}"
         client.containers.run(
-            image="ghcr.io/ls1intum/aeolus/bamboo-generator:nightly",
-            command=f"--base64 {base64_str}",
+            image="bambeolus",
+            command=f"{command}",
             auto_remove=False,
             name=container_name,
             detach=True,

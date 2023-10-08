@@ -3,7 +3,7 @@ metadata:
   name: ARTEMISTESTUSER1
   description: Build plan for exercise BAMBOOEX3
   author: bamboo
-  gitCredentials: artemis_admin
+  gitCredentials: artemis_gitlab_admin_credentials
   docker:
     image: ls1tum/artemis-maven-template
     tag: java17-20
@@ -34,7 +34,7 @@ actions:
     always: false
   JOB12:
     parameters:
-      ignore_time: 0.0
+      ignore_time: false
       test_results: '**/test-results/test/*.xml'
     platform: bamboo
     kind: junit

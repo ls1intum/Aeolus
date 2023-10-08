@@ -122,7 +122,8 @@ class Merger(PassSettings):
         """
         logger.info("🏠 ", "Merging internal actions", self.output_settings.emoji)
         actions: List[tuple[str, Action]] = get_internal_actions_with_names(self.windfile)
-        print(actions)
+        for action in actions:
+            merge_docker(self.windfile.metadata.docker, self.windfile.actions[action[0]])
         self.set_original_types(names=[action_tuple[0] for action_tuple in actions], key="internal")
         self.set_original_names(names=[action_tuple[0] for action_tuple in actions])
         return True

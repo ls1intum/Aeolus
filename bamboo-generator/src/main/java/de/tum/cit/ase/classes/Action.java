@@ -8,7 +8,7 @@ import java.util.Map;
 public abstract class Action {
 
     private String name;
-    private Map<String, String> parameters;
+    private Map<String, Object> parameters;
     private Map<String, String> environment;
     private List<String> excludeDuring;
     private DockerConfig docker;
@@ -32,11 +32,11 @@ public abstract class Action {
         this.name = name;
     }
 
-    public Map<String, String> getParameters() {
+    public Map<String, Object> getParameters() {
         return parameters;
     }
 
-    protected void setParameters(Map<String, String> parameters) {
+    protected void setParameters(Map<String, Object> parameters) {
         this.parameters = parameters;
     }
 
