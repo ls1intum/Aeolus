@@ -66,7 +66,7 @@ class BambooClient:
 
     credentials: CICredentials
 
-    def __init__(self, credentials: BambooCredentials):
+    def __init__(self, credentials: CICredentials):
         self.credentials = credentials
 
     def parse_condition(self, conditions: Optional[list[str] | list[dict[str, Any]]]) -> Optional[BambooCondition]:

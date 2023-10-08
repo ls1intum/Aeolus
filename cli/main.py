@@ -118,7 +118,7 @@ if __name__ == "__main__":
         )
         generator.generate()
     if args.command == "translate":
-        credentials: BambooCredentials = BambooCredentials(url=args.url, token=args.token)
+        credentials: CICredentials = CICredentials(url=args.url, token=args.token)
         translator: Translate = Translate(
             input_settings=input_settings, output_settings=output_settings, credentials=credentials, args=args
         )
