@@ -144,15 +144,7 @@ public class Main {
     private static void generateBuildPlan(String[] args) {
 
         WindFile windFile = getInput(args);
-//        if (args.length == 2) {
-//            String metadataPath = args[1];
-//            Gson gson = new Gson();
-//            Type mapType = new TypeToken<Map<String, Map<String, Map<String, String>>>>() {
-//            }.getType();
-//            JsonReader reader = new JsonReader(new FileReader(metadataPath));
-//            Map<String, Map<String, Map<String, String>>> metamap = gson.fromJson(reader, mapType);
-//            windFile.setPreProcessingMetadata(metamap);
-//        }
+
         BuildPlanService buildPlanService = new BuildPlanService();
         Project project = new Project().key("AEOLUS").name("AEOLUS").description("aeolus");
         Plan plan = new Plan(project, windFile.getMetadata().getName(), "BASE1")
@@ -173,15 +165,26 @@ public class Main {
             if (action instanceof ExternalAction) {
                 continue;
             }
-            InternalAction internalAction = (InternalAction) action;
-            var keyInput = internalAction.getName().toUpperCase().replaceAll("-", "").replaceAll("_", "") + stageList.size();
-            var key = new BambooKey(keyInput);
-            var tasks = buildPlanService.handleAction(internalAction);
-            Stage stage = new Stage(internalAction.getName()).jobs(
-                    new Job(internalAction.getName(), key).tasks(
-                            tasks.toArray(new Task[]{})
-                    ));
-            stageList.add(stage);
+            if (action instanceof InternalAction internalAction) {
+                var keyInput = internalAction.getName().toUpperCase().replaceAll("-", "").replaceAll("_", "") + stageList.size();
+                var key = new BambooKey(keyInput);
+                var tasks = buildPlanService.handleAction(internalAction);
+                Stage stage = new Stage(internalAction.getName()).jobs(
+                        new Job(internalAction.getName(), key).tasks(
+                                tasks.toArray(new Task[]{})
+                        ));
+                stageList.add(stage);
+            }
+            if (action instanceof PlatformAction platformAction) {
+                var keyInput = platformAction.getName().toUpperCase().replaceAll("-", "").replaceAll("_", "") + stageList.size();
+                var key = new BambooKey(keyInput);
+                var tasks = buildPlanService.handleSpecialAction(platformAction);
+                Stage stage = new Stage(platformAction.getName()).jobs(
+                        new Job(platformAction.getName(), key).tasks(
+                                tasks.toArray(new Task[]{})
+                        ).dockerConfiguration(action.convertDockerConfig()));
+                stageList.add(stage);
+            }
         }
         plan = plan.stages(stageList.toArray(new Stage[0]));
         final String yaml = BambooSpecSerializer.dump(plan);

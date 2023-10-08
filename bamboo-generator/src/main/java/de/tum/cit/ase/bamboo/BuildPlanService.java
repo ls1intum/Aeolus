@@ -8,10 +8,16 @@ import com.atlassian.bamboo.specs.api.builders.repository.VcsChangeDetection;
 import com.atlassian.bamboo.specs.api.builders.task.Task;
 import com.atlassian.bamboo.specs.builders.repository.git.GitRepository;
 import com.atlassian.bamboo.specs.builders.task.ScriptTask;
+import com.atlassian.bamboo.specs.builders.task.TestParserTask;
+import com.atlassian.bamboo.specs.model.task.TestParserTaskProperties;
 import de.tum.cit.ase.classes.InternalAction;
+import de.tum.cit.ase.classes.PlatformAction;
 import de.tum.cit.ase.classes.Repository;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class BuildPlanService {
@@ -26,6 +32,28 @@ public class BuildPlanService {
                 .shallowClonesEnabled(true)
                 .remoteAgentCacheEnabled(false)
                 .changeDetection(new VcsChangeDetection());
+    }
+
+    public List<Task<?, ?>> handleSpecialAction(PlatformAction action) {
+        var tasks = new ArrayList<Task<?, ?>>();
+        var envs = Arrays.stream(action.getEnvironment().entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .toArray(String[]::new)).reduce((a, b) -> a + ";" + b).orElse("");
+        var params = Arrays.stream(action.getParameters().entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .toArray(String[]::new)).reduce((a, b) -> a + ";" + b).orElse("");
+
+        String type = action.getKind();
+        switch (type) {
+            case "junit": {
+                TestParserTask task = TestParserTask.createJUnitParserTask()
+                        .description(action.getName())
+                        .resultDirectories(action.getParameters().get("test_results"));
+                tasks.add(task);
+                break;
+            }
+        }
+        return tasks;
     }
 
     public List<Task<?, ?>> handleAction(InternalAction action) {
@@ -50,7 +78,7 @@ public class BuildPlanService {
             var condMap = new HashMap<String, String>();
             condMap.put("operation", "matches");
             condMap.put("variable", "lifecycle_stage");
-            var regex = action.getExcludeDuring().stream().map( stage -> "[^(" + stage + ")]").collect(Collectors.joining());
+            var regex = action.getExcludeDuring().stream().map(stage -> "[^(" + stage + ")]").collect(Collectors.joining());
             condMap.put("value", "^.*" + regex + ".*");
             var condition = new AnyTaskCondition(
                     new AtlassianModule(

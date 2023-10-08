@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 from typing import List, Optional
 
-from classes.generated.definitions import InternalAction, Action, Repository
+from classes.generated.definitions import InternalAction, Repository
 from generators.base import BaseGenerator
 from utils import logger
 
@@ -51,12 +51,11 @@ class CliGenerator(BaseGenerator):
         :return: CI action
         """
         self.result.append("\n# always steps")
-        self.result.append(f"final_aeolus_post_action () " + "{")
+        self.result.append("final_aeolus_post_action () " + "{")
         self.result.append("  echo '⚙️ executing final_aeolus_post_action'")
         for step in steps:
             self.result.append(f"  {step} $_current_lifecycle")
         self.result.append("}")
-        return None
 
     def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
         """

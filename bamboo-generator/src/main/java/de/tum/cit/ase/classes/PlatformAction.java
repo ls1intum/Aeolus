@@ -5,14 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class InternalAction extends Action {
+public class PlatformAction extends Action {
 
-    private String script;
+    private String kind;
 
-    public static Action fromMap(String name, Map<String, Object> map) {
-        InternalAction action = new InternalAction();
+    public static PlatformAction fromMap(String name, Map<String, Object> map) {
+        PlatformAction action = new PlatformAction();
         action.setName(name);
-        action.setScript((String) map.get("script"));
+        action.setKind((String) map.get("kind"));
         action.setParameters((Map<String, String>) map.getOrDefault("parameters", new HashMap<>()));
         action.setEnvironment((Map<String, String>) map.getOrDefault("environment", new HashMap<>()));
         action.setExcludeDuring((List<String>) map.getOrDefault("excludeDuring", new ArrayList<>()));
@@ -21,11 +21,11 @@ public class InternalAction extends Action {
         return action;
     }
 
-    public String getScript() {
-        return script;
+    public String getKind() {
+        return kind;
     }
 
-    private void setScript(String script) {
-        this.script = script;
+    private void setKind(String kind) {
+        this.kind = kind;
     }
 }

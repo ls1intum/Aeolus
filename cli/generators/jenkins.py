@@ -67,13 +67,13 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append("        '''")
         self.result.append("      }")
         self.result.append("    }")
-        return None
 
-    def handle_step(self, name: str, step: InternalAction) -> None:
+    def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
         """
         Translate a step into a CI action.
         :param name: Name of the step to handle
         :param step: to translate
+        :param call: whether to call the step or not
         :return: CI action
         """
         original_name: Optional[str] = self.metadata.get_original_name_of(name)

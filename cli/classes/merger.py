@@ -17,6 +17,7 @@ from classes.generated.definitions import (
     FileAction,
     ExternalAction,
     InternalAction,
+    Docker,
 )
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
@@ -73,6 +74,17 @@ def merge_lifecycle(lifecycle: List[Lifecycle] | None, action: Action) -> None:
         lifecycle_list: list = action.root.excludeDuring if action.root.excludeDuring else []
         lifecycle_list.extend(lifecycle)
         action.root.excludeDuring = list(set(lifecycle_list))
+
+
+def merge_docker(docker: Docker | None, action: Action) -> None:
+    """
+    Merges the given docker configuration into the
+    docker configuration of the action.
+    :param docker: docker configuration to merge
+    :param action: action to merge the docker configuration into
+    """
+    if docker and action.root.docker is None:
+        action.root.docker = docker
 
 
 class Merger(PassSettings):
@@ -237,7 +249,7 @@ class Merger(PassSettings):
         """
         Traverses the given list of external actions and inlines them into the windfile.
         :param external_actions: list of external actions
-        :return:
+        :return: True if the external actions could be traversed, False otherwise
         """
         if not self.windfile:
             logger.error(
@@ -251,33 +263,37 @@ class Merger(PassSettings):
                 name: str = entry[0]
                 action: Action = entry[1]
                 path: Optional[str] = None
-                if isinstance(action, (FileAction, PlatformAction)):
-                    path = action.file
-                elif isinstance(action, ExternalAction):
-                    path = action.use
-                if not path:
-                    logger.error("❌ ", f"{path} not found", self.output_settings.emoji)
-                    return False
                 converted: Optional[
                     typing.Tuple[
                         typing.List[str],
                         typing.List[Action],
                     ]
-                ] = self.convert_external_action_to_internal(
-                    external_file=path,
-                    action=action,
-                )
-                if not converted and isinstance(action, ExternalAction):
-                    # try to pull the action from GitHub
-                    converted = self.pull_external_action(action=action)
-                if not converted:
-                    logger.error(
-                        "❌ ",
-                        f"{path} could not be converted",
-                        self.output_settings.emoji,
+                ] = None
+                if isinstance(action, PlatformAction):
+                    if action.file is not None:
+                        path = action.file
+                    else:
+                        converted = ([name], [Action(root=action)])
+                if isinstance(action, FileAction):
+                    path = action.file
+                elif isinstance(action, ExternalAction):
+                    path = action.use
+                if path:
+                    converted = self.convert_external_action_to_internal(
+                        external_file=path,
+                        action=action,
                     )
-                    return False
-                logger.info("📄 ", f"{path} converted", self.output_settings.emoji)
+                    if not converted and isinstance(action, ExternalAction):
+                        # try to pull the action from GitHub
+                        converted = self.pull_external_action(action=action)
+                    if not converted:
+                        logger.error(
+                            "❌ ",
+                            f"{path} could not be converted",
+                            self.output_settings.emoji,
+                        )
+                        return False
+                    logger.info("📄 ", f"{path} converted", self.output_settings.emoji)
 
                 if converted:
                     self.inline_actions(name=name, actions=converted)
@@ -335,6 +351,7 @@ class Merger(PassSettings):
                 self.windfile.actions[name].root.excludeDuring,
                 action,
             )
+            merge_docker(self.windfile.metadata.docker, action)
             logger.info(
                 "➕",
                 f"adding action {action}",
