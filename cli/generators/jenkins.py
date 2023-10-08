@@ -182,9 +182,9 @@ class JenkinsGenerator(BaseGenerator):
         if self.has_always_actions():
             self.result.append("  post {")
             for name in self.windfile.actions:
-                step: Action = self.windfile.actions[name]
-                if isinstance(step.root, InternalAction) and step.root.always:
-                    self.handle_always_step(name=name, step=step.root)
+                post_step: Action = self.windfile.actions[name]
+                if isinstance(post_step.root, InternalAction) and post_step.root.always:
+                    self.handle_always_step(name=name, step=post_step.root)
         self.add_postfix()
         return super().generate()
 
