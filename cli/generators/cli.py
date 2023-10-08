@@ -37,16 +37,33 @@ class CliGenerator(BaseGenerator):
         self.result.append("# main function")
         self.result.append("main () " + "{")
         self.result.append('  local _current_lifecycle="${1}"')
+        if self.has_always_actions():
+            self.result.append("  trap final_aeolus_post_action EXIT")
         for function in self.functions:
             self.result.append(f"  {function} $_current_lifecycle")
         self.result.append("}\n")
         self.result.append("main $@")
 
-    def handle_step(self, name: str, step: InternalAction) -> None:
+    def handle_always_steps(self, steps: list[str]) -> None:
+        """
+        Translate a step into a CI post action.
+        :param steps: to call always
+        :return: CI action
+        """
+        self.result.append("\n# always steps")
+        self.result.append(f"final_aeolus_post_action () " + "{")
+        self.result.append("  echo '⚙️ executing final_aeolus_post_action'")
+        for step in steps:
+            self.result.append(f"  {step} $_current_lifecycle")
+        self.result.append("}")
+        return None
+
+    def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
         """
         Translate a step into a CI action.
         :param name: Name of the step to handle
         :param step: to translate
+        :param call: whether to call the step or not
         :return: CI action
         """
         original_name: Optional[str] = self.metadata.get_original_name_of(name)
@@ -61,7 +78,8 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"# step {name}")
         self.result.append(f"# generated from step {original_name}")
         self.result.append(f"# original type was {original_type}")
-        self.functions.append(name)
+        if call:
+            self.functions.append(name)
         self.result.append(f"{name} () " + "{")
         if step.excludeDuring is not None:
             # we don't need the local variable if there are no exclusions
@@ -73,7 +91,7 @@ class CliGenerator(BaseGenerator):
                 self.result.append("    return 0")
                 self.result.append("  fi")
 
-        self.result.append(f"  echo '⚙️  executing {name}'")
+        self.result.append(f"  echo '⚙️ executing {name}'")
         if step.environment:
             for env_var in step.environment.root.root:
                 self.result.append(f'  export {env_var}="' f'{step.environment.root.root[env_var]}"')
@@ -143,10 +161,15 @@ class CliGenerator(BaseGenerator):
             for name in self.windfile.repositories:
                 repository: Repository = self.windfile.repositories[name]
                 self.handle_clone(name, repository)
-        for name in self.windfile.actions:
-            step: Action = self.windfile.actions[name]
+        for name, step in self.windfile.actions.items():
             if isinstance(step.root, InternalAction):
-                self.handle_step(name=name, step=step.root)
+                self.handle_step(name=name, step=step.root, call=not step.root.always)
 
+        if self.has_always_actions():
+            always_actions: list[str] = []
+            for name, step in self.windfile.actions.items():
+                if isinstance(step.root, InternalAction) and step.root.always:
+                    always_actions.append(name)
+            self.handle_always_steps(steps=always_actions)
         self.add_postfix()
         return super().generate()

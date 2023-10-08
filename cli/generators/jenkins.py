@@ -40,8 +40,34 @@ class JenkinsGenerator(BaseGenerator):
         """
         Add the postfix to the pipeline
         """
-        self.result.append("  }")
         self.result.append("}")
+
+    def handle_always_step(self, name: str, step: InternalAction) -> None:
+        """
+        Translate a step into a CI post action.
+        :param name: Name of the step to handle
+        :param step: to translate
+        :return: CI action
+        """
+        original_name: Optional[str] = self.metadata.get_original_name_of(name)
+        original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
+
+        self.result.append(f"    // step {name}")
+        self.result.append(f"    // generated from step {original_name}")
+        self.result.append(f"    // original type was {original_type}")
+        self.result.append("      always " + "{")
+        self.result.append(f"        echo '⚙️ executing {name}'")
+        # for now, we assume that all file actions are shell scripts
+        if original_type in ("file", "internal"):
+            self.result.append("        sh '''")
+        for line in step.script.split("\n"):
+            if line:
+                self.result.append(f"         {line}")
+        if original_type in ("file", "internal"):
+            self.result.append("        '''")
+        self.result.append("      }")
+        self.result.append("    }")
+        return None
 
     def handle_step(self, name: str, step: InternalAction) -> None:
         """
@@ -150,9 +176,15 @@ class JenkinsGenerator(BaseGenerator):
                 self.handle_clone(name=name, repository=repository)
         for name in self.windfile.actions:
             step: Action = self.windfile.actions[name]
-            if isinstance(step.root, InternalAction):
+            if isinstance(step.root, InternalAction) and not step.root.always:
                 self.handle_step(name=name, step=step.root)
-
+        self.result.append("  }")
+        if self.has_always_actions():
+            self.result.append("  post {")
+            for name in self.windfile.actions:
+                step: Action = self.windfile.actions[name]
+                if isinstance(step.root, InternalAction) and step.root.always:
+                    self.handle_always_step(name=name, step=step.root)
         self.add_postfix()
         return super().generate()
 
