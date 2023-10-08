@@ -13,6 +13,7 @@ from commands.generate import Generate
 from commands.merge import Merge
 from commands.translate import Translate
 from commands.validate import Validate
+from utils import utils
 
 
 def add_argparse() -> argparse.ArgumentParser:
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     if args.command == "generate":
         if args.publish:
             if not args.url or not args.token:
-                logger.error(
+                utils.logger.error(
                     "❌ ",
                     "Publishing requires a CI URL and a token",
                     output_settings.emoji,
