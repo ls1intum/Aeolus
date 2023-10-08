@@ -2,7 +2,6 @@ from typing import Optional, Tuple, Any
 import re
 import yaml
 
-from classes.bamboo_credentials import BambooCredentials
 from classes.bamboo_specs import (
     BambooSpecs,
     BambooPlan,
@@ -206,6 +205,7 @@ class BambooTranslator(PassSettings):
             name=plan.name,
             description=plan.description,
             author=Author(root="bamboo"),
+            id=plan_key,
             docker=None,
             targets=None,
             gitCredentials=specs.repositories[list(specs.repositories.keys())[0]].shared_credentials,

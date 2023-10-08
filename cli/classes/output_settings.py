@@ -18,7 +18,7 @@ class OutputSettings:
         verbose: bool = False,
         debug: bool = False,
         emoji: bool = False,
-        ci_credentials: Optional[str] = None,
+        ci_credentials: Optional[CICredentials] = None,
     ):
         self.verbose = verbose
         self.debug = debug

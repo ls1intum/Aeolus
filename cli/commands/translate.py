@@ -2,7 +2,6 @@ import typing
 
 import argparse
 
-from classes.bamboo_credentials import BambooCredentials
 from classes.translator import BambooTranslator
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings

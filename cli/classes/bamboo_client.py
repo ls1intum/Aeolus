@@ -4,7 +4,6 @@ from xml.dom.minidom import parseString, Document, Text, Node
 import requests
 import yaml
 
-from classes.bamboo_credentials import BambooCredentials
 from classes.bamboo_specs import (
     BambooSpecs,
     BambooPlan,
@@ -18,6 +17,7 @@ from classes.bamboo_specs import (
     BambooDockerConfig,
     BambooSpecialTask,
 )
+from classes.ci_credentials import CICredentials
 
 
 def handle_final_tasks(
@@ -64,7 +64,7 @@ class BambooClient:
     Client for the Bamboo REST API.
     """
 
-    credentials: BambooCredentials
+    credentials: CICredentials
 
     def __init__(self, credentials: BambooCredentials):
         self.credentials = credentials

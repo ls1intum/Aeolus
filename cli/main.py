@@ -6,7 +6,6 @@ from io import TextIOWrapper
 import argparse
 import sys
 
-from classes.bamboo_credentials import BambooCredentials
 from classes.ci_credentials import CICredentials
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
