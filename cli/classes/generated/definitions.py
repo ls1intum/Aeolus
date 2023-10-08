@@ -18,7 +18,22 @@ class Api(RootModel):
 
 
 class Dictionary(RootModel):
-    root: Dict[constr(pattern=r'.+'), Optional[Union[str, float]]]
+    root: Dict[constr(pattern=r'.+'), Optional[Union[str, float, bool]]]
+
+
+class Docker(BaseModel):
+    """
+    Docker configuration that is used to execute the actions
+    """
+
+    image: str = Field(..., description='The docker image that is used to execute the action', examples=['rust:latest'])
+    tag: Optional[str] = Field(
+        'latest', description='The tag of the docker image that is used to execute the action', examples=['latest']
+    )
+    volumes: Optional[List[str]] = Field(None, description='The volumes that are mounted into the docker container')
+    parameters: Optional[List[str]] = Field(
+        None, description='The parameters that are passed to the docker daemon, e.g. --cpus=2'
+    )
 
 
 class Lifecycle(Enum):
@@ -101,6 +116,10 @@ class FileAction(BaseModel):
         None,
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
 
 
 class InternalAction(BaseModel):
@@ -123,6 +142,10 @@ class InternalAction(BaseModel):
         None,
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
 
 
 class PlatformAction(BaseModel):
@@ -133,8 +156,7 @@ class PlatformAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
-    for_: Target = Field(..., alias='for', description='The platform that this action is defined for.')
-    file: str = Field(..., description='The file of the platform action. Written in Python')
+    file: Optional[str] = Field(None, description='The file of the platform action. Written in Python')
     parameters: Optional[Parameters] = None
     function: Optional[constr(pattern=r'^[a-zA-Z0-9._-]+$')] = Field(
         'run', description='The function of the platform action.', examples=['run']
@@ -146,6 +168,11 @@ class PlatformAction(BaseModel):
     )
     environment: Optional[Environment] = Field(None, description='Environment variables for this platform action.')
     platform: Optional[Target] = Field(None, description='Ignored for this action.')
+    kind: Optional[str] = Field(None, description='The kind of the platform action.', examples=['junit'])
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
 
 
 class Author(RootModel):
@@ -158,6 +185,11 @@ class WindfileMetadata(BaseModel):
     """
 
     name: str = Field(..., description='The name of the windfile.', examples=['rust-exercise-jobs'])
+    id: Optional[str] = Field(
+        None,
+        description='The id of the resulting job in the CI system.',
+        examples=['rust-exercise-jobs', 'AEOLUS-BASE', 'jenkins/job/path'],
+    )
     description: str = Field(
         ...,
         description='Description of what this list of actions is supposed to achieve',
@@ -168,6 +200,7 @@ class WindfileMetadata(BaseModel):
     gitCredentials: Optional[Union[str, GitCredentials]] = Field(
         None, description='The git credentials that are used to clone the repositories'
     )
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the actions')
 
 
 class ExternalAction(BaseModel):
@@ -189,6 +222,10 @@ class ExternalAction(BaseModel):
     platform: Optional[Target] = Field(
         None,
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+    )
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
     )
 
 

@@ -18,13 +18,10 @@ from utils import logger
 class Generator(PassSettings):
     check_syntax: bool
     target: Target
+    publish: bool
 
     def __init__(
-        self,
-        input_settings: InputSettings,
-        output_settings: OutputSettings,
-        target: Target,
-        check_syntax: bool,
+        self, input_settings: InputSettings, output_settings: OutputSettings, target: Target, check_syntax: bool
     ):
         validator: Validator = Validator(output_settings=output_settings, input_settings=input_settings)
         validated: Optional[WindFile] = validator.validate_wind_file()
@@ -47,29 +44,19 @@ class Generator(PassSettings):
             windfile=windfile,
             metadata=merger.metadata,
         )
+
         self.target = target
         self.check_syntax = check_syntax
 
     def generate(self) -> None:
+        """
+        Generates the CI file from the given windfile.
+        :return:
+        """
         if not self.windfile:
             logger.error("❌ ", "Merging failed. Aborting.", self.output_settings.emoji)
             return None
-        # current_action: FileAction | InternalAction | PlatformAction |
-        # ExternalAction = self.windfile.actions[
-        #     "hello-world_0"
-        # ].root
-        # if not isinstance(current_action, InternalAction):
-        #     logger.error(
-        #         "❌",
-        #         "Merging did not result in all internal actions",
-        #         self.output_settings.emoji,
-        #     )
-        #     return
-        # action: InternalAction = current_action
-        # code: str = action.script
-        # print(code)
-        # print("calling:")
-        # execute_arbitrary_code(code, "build", "hello-world_0")
+
         actual_generator: Optional[CliGenerator | JenkinsGenerator | BambooGenerator] = None
         if self.target == Target.cli.name:
             actual_generator = CliGenerator(

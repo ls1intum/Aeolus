@@ -11,3 +11,4 @@ pytest
 pydantic
 coverage
 gitpython
+types-requests

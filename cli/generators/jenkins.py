@@ -40,14 +40,40 @@ class JenkinsGenerator(BaseGenerator):
         """
         Add the postfix to the pipeline
         """
-        self.result.append("  }")
         self.result.append("}")
 
-    def handle_step(self, name: str, step: InternalAction) -> None:
+    def handle_always_step(self, name: str, step: InternalAction) -> None:
+        """
+        Translate a step into a CI post action.
+        :param name: Name of the step to handle
+        :param step: to translate
+        :return: CI action
+        """
+        original_name: Optional[str] = self.metadata.get_original_name_of(name)
+        original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
+
+        self.result.append(f"    // step {name}")
+        self.result.append(f"    // generated from step {original_name}")
+        self.result.append(f"    // original type was {original_type}")
+        self.result.append("      always " + "{")
+        self.result.append(f"        echo '⚙️ executing {name}'")
+        # for now, we assume that all file actions are shell scripts
+        if original_type in ("file", "internal"):
+            self.result.append("        sh '''")
+        for line in step.script.split("\n"):
+            if line:
+                self.result.append(f"         {line}")
+        if original_type in ("file", "internal"):
+            self.result.append("        '''")
+        self.result.append("      }")
+        self.result.append("    }")
+
+    def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
         """
         Translate a step into a CI action.
         :param name: Name of the step to handle
         :param step: to translate
+        :param call: whether to call the step or not
         :return: CI action
         """
         original_name: Optional[str] = self.metadata.get_original_name_of(name)
@@ -150,9 +176,15 @@ class JenkinsGenerator(BaseGenerator):
                 self.handle_clone(name=name, repository=repository)
         for name in self.windfile.actions:
             step: Action = self.windfile.actions[name]
-            if isinstance(step.root, InternalAction):
-                self.handle_step(name=name, step=step.root)
-
+            if isinstance(step.root, InternalAction) and not step.root.always:
+                self.handle_step(name=name, step=step.root, call=True)
+        self.result.append("  }")
+        if self.has_always_actions():
+            self.result.append("  post {")
+            for name in self.windfile.actions:
+                post_step: Action = self.windfile.actions[name]
+                if isinstance(post_step.root, InternalAction) and post_step.root.always:
+                    self.handle_always_step(name=name, step=post_step.root)
         self.add_postfix()
         return super().generate()
 

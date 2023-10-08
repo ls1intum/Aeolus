@@ -20,6 +20,15 @@
           "rust-exercise-jobs"
         ]
       },
+      "id": {
+        "description": "The id of the resulting job in the CI system.",
+        "type": "string",
+        "examples": [
+          "rust-exercise-jobs",
+          "AEOLUS-BASE",
+          "jenkins/job/path"
+        ]
+      },
       "description": {
         "description": "Description of what this list of actions is supposed to achieve",
         "type": "string",
@@ -51,6 +60,10 @@
             "$ref": "#/git-credentials"
           }
         ]
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the actions",
+        "$ref": "#/docker"
       }
     },
     "required": [
@@ -162,10 +175,6 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "for": {
-        "description": "The platform that this action is defined for.",
-        "$ref": "#/target"
-      },
       "file": {
         "description": "The file of the platform action. Written in Python",
         "type": "string"
@@ -197,11 +206,31 @@
       "platform": {
         "description": "Ignored for this action.",
         "$ref": "#/target"
+      },
+      "kind": {
+        "description": "The kind of the platform action.",
+        "type": "string",
+        "examples": [
+          "junit"
+        ]
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
+      },
+      "always": {
+        "description": "If this is set to true, the action is always executed, even if other actions fail.",
+        "type": "boolean",
+        "default": false
       }
     },
-    "required": [
-      "for",
-      "file"
+    "oneOff": [
+      {
+        "required": [
+          "for",
+          "file"
+        ]
+      }
     ]
   },
   "file-action": {
@@ -232,6 +261,15 @@
       "platform": {
         "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
         "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
+      },
+      "always": {
+        "description": "If this is set to true, the action is always executed, even if other actions fail.",
+        "type": "boolean",
+        "default": false
       }
     },
     "required": [
@@ -266,6 +304,15 @@
       "platform": {
         "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
         "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
+      },
+      "always": {
+        "description": "If this is set to true, the action is always executed, even if other actions fail.",
+        "type": "boolean",
+        "default": false
       }
     },
     "required": [
@@ -301,6 +348,15 @@
       "platform": {
         "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
         "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
+      },
+      "always": {
+        "description": "If this is set to true, the action is always executed, even if other actions fail.",
+        "type": "boolean",
+        "default": false
       }
     },
     "required": [
@@ -332,6 +388,7 @@
         "type": [
           "string",
           "number",
+          "boolean",
           "null"
         ]
       }
@@ -433,6 +490,52 @@
       "url",
       "branch",
       "path"
+    ]
+  },
+  "docker": {
+    "title": "Docker",
+    "description": "Docker configuration that is used to execute the actions",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "image": {
+        "description": "The docker image that is used to execute the action",
+        "type": "string",
+        "examples": [
+          "rust:latest"
+        ]
+      },
+      "tag": {
+        "description": "The tag of the docker image that is used to execute the action",
+        "type": "string",
+        "examples": [
+          "latest"
+        ],
+        "default": "latest"
+      },
+      "volumes": {
+        "description": "The volumes that are mounted into the docker container",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "examples": [
+            "/var/run/docker.sock:/var/run/docker.sock"
+          ]
+        }
+      },
+      "parameters": {
+        "description": "The parameters that are passed to the docker daemon, e.g. --cpus=2",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "examples": [
+            "--cpus=2"
+          ]
+        }
+      }
+    },
+    "required": [
+      "image"
     ]
   }
 }

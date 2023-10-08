@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
 import logging
 import typing
+from io import TextIOWrapper
 
 import argparse
 import sys
 
+from classes.ci_credentials import CICredentials
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from commands.generate import Generate
 from commands.merge import Merge
+from commands.translate import Translate
 from commands.validate import Validate
+from utils import utils
 
 
 def add_argparse() -> argparse.ArgumentParser:
@@ -54,6 +58,9 @@ def add_argparse() -> argparse.ArgumentParser:
 
     generator_parser = subparsers.add_parser(name="generate")
     Generate.add_arg_parser(parser=generator_parser)
+
+    bamboo_translator_parser = subparsers.add_parser(name="translate")
+    Translate.add_arg_parser(parser=bamboo_translator_parser)
     return arg_parser
 
 
@@ -70,8 +77,16 @@ if __name__ == "__main__":
         logging.basicConfig(encoding="utf-8", level=logging.DEBUG, format="%(message)s")
     if args.verbose:
         logging.basicConfig(encoding="utf-8", level=logging.INFO, format="%(message)s")
-    output_settings: OutputSettings = OutputSettings(verbose=args.verbose, debug=args.debug, emoji=args.emoji)
-    input_settings: InputSettings = InputSettings(file_path=args.input.name, file=args.input)
+    if args.command is None:
+        parser.print_help()
+        sys.exit(0)
+    output_settings: OutputSettings = OutputSettings(
+        verbose=args.verbose, debug=args.debug, emoji=args.emoji, ci_credentials=None
+    )
+    file_path: str = args.key if "translate" == args.command else args.input.name
+    file: typing.Optional[TextIOWrapper] = None if "translate" == args.command else args.input
+    input_settings: InputSettings = InputSettings(file_path=file_path, file=file)
+
     if args.command == "validate":
         validator: Validate = Validate(
             input_settings=input_settings,
@@ -87,11 +102,25 @@ if __name__ == "__main__":
         )
         merger.merge()
     if args.command == "generate":
+        if args.publish:
+            if not args.url or not args.token:
+                utils.logger.error(
+                    "❌ ",
+                    "Publishing requires a CI URL and a token",
+                    output_settings.emoji,
+                )
+                raise ValueError("Publishing requires a Bamboo URL and a token")
+            output_settings.ci_credentials = CICredentials(url=args.url, token=args.token)
+
         generator: Generate = Generate(
             input_settings=input_settings,
             output_settings=output_settings,
             args=args,
         )
         generator.generate()
-    if args.command is None:
-        parser.print_help()
+    if args.command == "translate":
+        credentials: CICredentials = CICredentials(url=args.url, token=args.token)
+        translator: Translate = Translate(
+            input_settings=input_settings, output_settings=output_settings, credentials=credentials, args=args
+        )
+        translator.translate(plan_key=args.key)

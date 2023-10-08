@@ -166,13 +166,15 @@ def read_file(
         return None
 
 
-def read_windfile(file: TextIOWrapper, output_settings: OutputSettings) -> Optional[WindFile]:
+def read_windfile(file: Optional[TextIOWrapper], output_settings: OutputSettings) -> Optional[WindFile]:
     """
     Validates the given file. If the file is valid, the windfile is returned.
     :param file: file to read
     :param output_settings: OutputSettings
     :return: Windfile or None
     """
+    if file is None:
+        return None
     # this shuts mypy up about the type
     windfile: type[WindFile] | None = read_file(filetype=WindFile, file=file, output_settings=output_settings)
     if isinstance(windfile, WindFile):
@@ -180,7 +182,7 @@ def read_windfile(file: TextIOWrapper, output_settings: OutputSettings) -> Optio
     return None
 
 
-def read_action_file(file: TextIOWrapper, output_settings: OutputSettings) -> Optional[ActionFile]:
+def read_action_file(file: Optional[TextIOWrapper], output_settings: OutputSettings) -> Optional[ActionFile]:
     """
     Validates the given file. If the file is valid,
     the ActionFile is returned.
@@ -189,6 +191,8 @@ def read_action_file(file: TextIOWrapper, output_settings: OutputSettings) -> Op
     :return: ActionFile or None
     """
     # this shuts mypy up about the type
+    if file is None:
+        return None
     action_file: type[ActionFile] | None = read_file(filetype=ActionFile, file=file, output_settings=output_settings)
     if isinstance(action_file, ActionFile):
         return action_file

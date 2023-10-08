@@ -32,11 +32,21 @@ class BaseGenerator:
         self.metadata = metadata
         self.result = []
 
-    def handle_step(self, name: str, step: InternalAction) -> None:
+    def has_always_actions(self) -> bool:
+        """
+        Check if there are always actions in the windfile.
+        """
+        for _, action in self.windfile.actions.items():
+            if action.root.always:
+                return True
+        return False
+
+    def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
         """
         Translate a step into a CI action.
         :param name: name of the step to handle
         :param step: step to translate
+        :param call: whether to call the step or not
         :return: CI action
         """
         raise NotImplementedError("handle_step() not implemented")

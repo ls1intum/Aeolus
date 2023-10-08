@@ -17,6 +17,7 @@ from classes.generated.definitions import (
     FileAction,
     ExternalAction,
     InternalAction,
+    Docker,
 )
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
@@ -75,6 +76,17 @@ def merge_lifecycle(lifecycle: List[Lifecycle] | None, action: Action) -> None:
         action.root.excludeDuring = list(set(lifecycle_list))
 
 
+def merge_docker(docker: Docker | None, action: Action) -> None:
+    """
+    Merges the given docker configuration into the
+    docker configuration of the action.
+    :param docker: docker configuration to merge
+    :param action: action to merge the docker configuration into
+    """
+    if docker and action.root.docker is None:
+        action.root.docker = docker
+
+
 class Merger(PassSettings):
     """
     Merger class. Merges external actions into the
@@ -108,9 +120,12 @@ class Merger(PassSettings):
         Mainly sets metadata needed for the generation process.
         :return: True if the internal actions could be merged, False otherwise
         """
+        if self.windfile is None:
+            return False
         logger.info("🏠 ", "Merging internal actions", self.output_settings.emoji)
         actions: List[tuple[str, Action]] = get_internal_actions_with_names(self.windfile)
-        print(actions)
+        for action in actions:
+            merge_docker(self.windfile.metadata.docker, self.windfile.actions[action[0]])
         self.set_original_types(names=[action_tuple[0] for action_tuple in actions], key="internal")
         self.set_original_names(names=[action_tuple[0] for action_tuple in actions])
         return True
@@ -237,7 +252,7 @@ class Merger(PassSettings):
         """
         Traverses the given list of external actions and inlines them into the windfile.
         :param external_actions: list of external actions
-        :return:
+        :return: True if the external actions could be traversed, False otherwise
         """
         if not self.windfile:
             logger.error(
@@ -251,33 +266,35 @@ class Merger(PassSettings):
                 name: str = entry[0]
                 action: Action = entry[1]
                 path: Optional[str] = None
-                if isinstance(action, (FileAction, PlatformAction)):
-                    path = action.file
-                elif isinstance(action, ExternalAction):
-                    path = action.use
-                if not path:
-                    logger.error("❌ ", f"{path} not found", self.output_settings.emoji)
-                    return False
                 converted: Optional[
                     typing.Tuple[
                         typing.List[str],
                         typing.List[Action],
                     ]
-                ] = self.convert_external_action_to_internal(
-                    external_file=path,
-                    action=action,
-                )
-                if not converted and isinstance(action, ExternalAction):
-                    # try to pull the action from GitHub
-                    converted = self.pull_external_action(action=action)
-                if not converted:
-                    logger.error(
-                        "❌ ",
-                        f"{path} could not be converted",
-                        self.output_settings.emoji,
+                ] = None
+                if isinstance(action, (PlatformAction, FileAction)):
+                    path = action.file
+                    if isinstance(action, PlatformAction):
+                        if path is None:
+                            converted = ([name], [Action(root=action)])
+                elif isinstance(action, ExternalAction):
+                    path = action.use
+                if path:
+                    converted = self.convert_external_action_to_internal(
+                        external_file=path,
+                        action=action,
                     )
-                    return False
-                logger.info("📄 ", f"{path} converted", self.output_settings.emoji)
+                    if not converted and isinstance(action, ExternalAction):
+                        # try to pull the action from GitHub
+                        converted = self.pull_external_action(action=action)
+                    if not converted:
+                        logger.error(
+                            "❌ ",
+                            f"{path} could not be converted",
+                            self.output_settings.emoji,
+                        )
+                        return False
+                    logger.info("📄 ", f"{path} converted", self.output_settings.emoji)
 
                 if converted:
                     self.inline_actions(name=name, actions=converted)
@@ -335,6 +352,7 @@ class Merger(PassSettings):
                 self.windfile.actions[name].root.excludeDuring,
                 action,
             )
+            merge_docker(self.windfile.metadata.docker, action)
             logger.info(
                 "➕",
                 f"adding action {action}",
@@ -378,17 +396,20 @@ class Merger(PassSettings):
                             environment=internals.root.environment,
                             parameters=internals.root.parameters,
                             platform=internals.root.platform,
+                            docker=internals.root.docker,
+                            always=internals.root.always,
                         )
                     )
 
                 elif isinstance(internals.root, PlatformAction):
                     original_types.append("platform")
-                    content = get_content_of(
-                        file=os.path.join(
-                            os.path.dirname(absolute_path),
-                            internals.root.file,
+                    if internals.root.file:
+                        content = get_content_of(
+                            file=os.path.join(
+                                os.path.dirname(absolute_path),
+                                internals.root.file,
+                            )
                         )
-                    )
                 elif isinstance(internals.root, FileAction):
                     original_types.append("file")
                     content = get_content_of(
@@ -418,6 +439,8 @@ class Merger(PassSettings):
                         environment=internals.root.environment,
                         parameters=internals.root.parameters,
                         platform=internals.root.platform,
+                        docker=internals.root.docker,
+                        always=internals.root.always,
                     )
                 )
                 if internal:
@@ -456,6 +479,8 @@ class Merger(PassSettings):
                         environment=action.environment,
                         parameters=action.parameters,
                         platform=action.platform,
+                        docker=action.docker,
+                        always=action.always,
                     )
                 )
                 original_types.append("file")
