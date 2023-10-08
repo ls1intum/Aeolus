@@ -2,6 +2,7 @@ import typing
 
 import argparse
 
+from classes.ci_credentials import CICredentials
 from classes.translator import BambooTranslator
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -21,7 +22,7 @@ class Translate(Subcommand):
         self,
         input_settings: InputSettings,
         output_settings: OutputSettings,
-        credentials: BambooCredentials,
+        credentials: CICredentials,
         args: typing.Any,
     ):
         super().__init__(args)

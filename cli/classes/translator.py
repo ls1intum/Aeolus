@@ -13,6 +13,7 @@ from classes.bamboo_specs import (
     BambooSpecialTask,
 )
 from classes.bamboo_client import BambooClient
+from classes.ci_credentials import CICredentials
 from classes.generated.definitions import (
     Target,
     WindfileMetadata,
@@ -161,7 +162,7 @@ class BambooTranslator(PassSettings):
     source: Target = Target.bamboo
     client: BambooClient
 
-    def __init__(self, input_settings: InputSettings, output_settings: OutputSettings, credentials: BambooCredentials):
+    def __init__(self, input_settings: InputSettings, output_settings: OutputSettings, credentials: CICredentials):
         super().__init__(input_settings=input_settings, output_settings=output_settings)
         self.client = BambooClient(credentials=credentials)
 
