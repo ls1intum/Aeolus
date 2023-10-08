@@ -219,6 +219,9 @@ class ExternalAction(BaseModel):
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
 
 
 class ActionMetadata(BaseModel):
