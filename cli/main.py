@@ -106,11 +106,11 @@ if __name__ == "__main__":
             if not args.url or not args.token:
                 utils.logger.error(
                     "❌ ",
-                    "Publishing requires a CI URL and a token",
+                    "Publishing requires a CI URL and a token, with Jenkins we also need a username",
                     output_settings.emoji,
                 )
-                raise ValueError("Publishing requires a Bamboo URL and a token")
-            output_settings.ci_credentials = CICredentials(url=args.url, token=args.token)
+                raise ValueError("Publishing requires a CI URL and a token, with Jenkins we also need a username")
+            output_settings.ci_credentials = CICredentials(url=args.url, username=args.user, token=args.token)
 
         generator: Generate = Generate(
             input_settings=input_settings,
@@ -119,7 +119,7 @@ if __name__ == "__main__":
         )
         generator.generate()
     if args.command == "translate":
-        credentials: CICredentials = CICredentials(url=args.url, token=args.token)
+        credentials: CICredentials = CICredentials(url=args.url, username=None, token=args.token)
         translator: Translate = Translate(
             input_settings=input_settings, output_settings=output_settings, credentials=credentials, args=args
         )

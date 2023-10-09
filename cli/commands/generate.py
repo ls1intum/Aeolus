@@ -72,12 +72,19 @@ class Generate(Subcommand):
 
         parser.add_argument(
             "--url",
-            help="URL of the Bamboo Server",
+            help="URL of the CI Server",
             type=str,
         )
+
+        parser.add_argument(
+            "--user",
+            help="Username to be used in the CI system",
+            type=str,
+        )
+
         parser.add_argument(
             "--token",
-            help="Auth token for the Bamboo Server",
+            help="Auth token for the CI Server",
             type=str,
         )
 
