@@ -124,9 +124,9 @@ def handle_tasks(job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooChec
     for task in job_dict:
         task = fix_keys(dictionary=task)
         task_type: str = list(task.keys())[0]
-        task_dict: dict[
-            str, Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]]
-        ] = fix_keys(dictionary=task[task_type])
+        task_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]]] = fix_keys(
+            dictionary=task[task_type]
+        )
         if task_type == "junit":
             parameters: dict[Any, int | bool | str | float | None] = {}
             for key, value in task_dict.items():
@@ -186,9 +186,7 @@ def convert_stages(plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
                 # to make the creation of the BambooSpecs object easier
                 bamboo_docker = BambooDockerConfig(
                     image=str(job_dict["docker"]["image"]),
-                    volumes=job_dict["docker"]["volumes"]
-                    if isinstance(job_dict["docker"]["volumes"], dict)
-                    else {},
+                    volumes=job_dict["docker"]["volumes"] if isinstance(job_dict["docker"]["volumes"], dict) else {},
                     docker_run_arguments=job_dict["docker"]["docker-run-arguments"]
                     if isinstance(job_dict["docker"]["docker-run-arguments"], list)
                     else [],
@@ -212,9 +210,7 @@ def convert_stages(plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
                 tasks_dict = job_dict["tasks"]
             if tasks_dict is None:
                 continue
-            tasks: list[BambooCheckoutTask | BambooTask | BambooSpecialTask] = handle_tasks(
-                job_dict=tasks_dict
-            )
+            tasks: list[BambooCheckoutTask | BambooTask | BambooSpecialTask] = handle_tasks(job_dict=tasks_dict)
             job: BambooJob = BambooJob(
                 key=str(job_dict["key"]),
                 tasks=tasks,
