@@ -12,3 +12,5 @@ pydantic
 coverage
 gitpython
 types-requests
+urllib3==2.0.6
+python-jenkins

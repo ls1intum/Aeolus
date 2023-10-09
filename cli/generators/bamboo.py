@@ -92,7 +92,7 @@ class BambooGenerator(BaseGenerator):
             command += f" --publish --server {self.output_settings.ci_credentials.url}"
             command += f"--token {self.output_settings.ci_credentials.token}"
         client.containers.run(
-            image="bambeolus",
+            image="ghcr.io/ls1intum/aeolus/bamboo-generator:nightly",
             command=f"{command}",
             auto_remove=False,
             name=container_name,

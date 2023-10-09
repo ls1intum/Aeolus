@@ -1,6 +1,8 @@
 # pylint: disable=duplicate-code
 from typing import Optional
+from xml.dom.minidom import Document, parseString, Element
 
+import jenkins
 from classes.generated.definitions import InternalAction, Action, Target, Repository
 from generators.base import BaseGenerator
 from utils import logger
@@ -164,6 +166,52 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append(f"{prefix}    }}")
         self.result.append("    }")
 
+    def publish(self) -> None:
+        """
+        Publish the pipeline to the Jenkins CI system.
+        """
+        if self.output_settings.ci_credentials is None:
+            raise ValueError("Publishing requires a CI URL and a token, with Jenkins we also need a username")
+        server = jenkins.Jenkins(
+            self.output_settings.ci_credentials.url,
+            username=self.output_settings.ci_credentials.username,
+            password=self.output_settings.ci_credentials.token,
+        )
+
+        pipeline_config: str = """
+            <flow-definition plugin="workflow-job">
+                <description/>
+                <keepDependencies>false</keepDependencies>
+                <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps">
+                <script/>
+                <sandbox>true</sandbox>
+                </definition>
+                <triggers/>
+                <disabled>false</disabled>
+            </flow-definition>
+        """
+
+        # Create the Jenkins Pipeline Job
+        job_name = self.windfile.metadata.id.replace("-", "/")
+        if "/" in job_name:
+            path: [str] = job_name.split("/")
+            for i in range(len(path) - 1):
+                server.create_folder(path[i], ignore_failures=True)
+        exists: bool = server.job_exists(job_name)
+        if exists:
+            config_xml: Document = parseString(server.get_job_config(job_name))
+        else:
+            config_xml: Document = parseString(pipeline_config)
+        script: Element = config_xml.getElementsByTagName("script")[0]
+        if exists:
+            script.removeChild(script.firstChild)
+        script.appendChild(config_xml.createTextNode(super().generate()))
+
+        server.upsert_job(job_name, config_xml.toxml())
+        if exists:
+            server.build_job(job_name, parameters={"current_lifecycle": "initial-invalid-build"})
+        server.build_job(job_name)
+
     def generate(self) -> str:
         """
         Generate the bash script to be used as a local CI system.
@@ -186,6 +234,8 @@ class JenkinsGenerator(BaseGenerator):
                 if isinstance(post_step.root, InternalAction) and post_step.root.always:
                     self.handle_always_step(name=name, step=post_step.root)
         self.add_postfix()
+        if self.output_settings.ci_credentials is not None:
+            self.publish()
         return super().generate()
 
     def check(self, content: str) -> bool:

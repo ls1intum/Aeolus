@@ -1,9 +1,10 @@
 api: v0.0.1
 metadata:
   name: ARTEMISTESTUSER1
+  id: BAMBOOEX3-ARTEMISTESTUSER1
   description: Build plan for exercise BAMBOOEX3
   author: bamboo
-  gitCredentials: artemis_gitlab_admin_credentials
+  gitCredentials: artemis_admin
   docker:
     image: ls1tum/artemis-maven-template
     tag: java17-20
