@@ -2,7 +2,7 @@
 from typing import Optional, List
 from xml.dom.minidom import Document, parseString, Element
 
-import jenkins # type: ignore
+import jenkins  # type: ignore
 from classes.generated.definitions import InternalAction, Action, Target, Repository
 from generators.base import BaseGenerator
 from utils import logger
