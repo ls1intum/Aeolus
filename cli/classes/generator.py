@@ -100,4 +100,7 @@ class Generator(PassSettings):
                         "Syntax check failed",
                         self.output_settings.emoji,
                     )
+            if self.output_settings.run_settings is not None:
+                logger.info("🐳", "Running pipeline...", self.output_settings.emoji)
+                actual_generator.run()
         return None

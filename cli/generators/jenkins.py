@@ -166,6 +166,23 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append(f"{prefix}    }}")
         self.result.append("    }")
 
+    def run(self) -> None:
+        """
+        Run the pipeline in the Jenkins CI system.
+        :return: None
+        """
+        if self.windfile.metadata.id is None or self.output_settings.run_settings is None:
+            raise ValueError("Publishing requires an id")
+        if self.output_settings.ci_credentials is None:
+            raise ValueError("Publishing requires a CI URL and a token, with Jenkins we also need a username")
+        server = jenkins.Jenkins(
+            self.output_settings.ci_credentials.url,
+            username=self.output_settings.ci_credentials.username,
+            password=self.output_settings.ci_credentials.token,
+        )
+        job_name: str = self.windfile.metadata.id.replace("-", "/")
+        server.build_job(job_name, parameters={"current_lifecycle": self.output_settings.run_settings.stage})
+
     def publish(self) -> None:
         """
         Publish the pipeline to the Jenkins CI system.

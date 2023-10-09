@@ -2,6 +2,7 @@ import typing
 
 import argparse
 
+from classes.generated.definitions import Lifecycle
 from classes.generator import Generator
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -86,6 +87,10 @@ class Generate(Subcommand):
             "--token",
             help="Auth token for the CI Server",
             type=str,
+        )
+
+        parser.add_argument(
+            "--run", "-r", help="Run the generated file on the CI system", choices=Lifecycle.__members__.keys()
         )
 
     def generate(self) -> None:
