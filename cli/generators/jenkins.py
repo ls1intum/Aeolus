@@ -2,7 +2,7 @@
 from typing import Optional, List
 from xml.dom.minidom import Document, parseString, Element
 
-import jenkins
+import jenkins # type: ignore
 from classes.generated.definitions import InternalAction, Action, Target, Repository
 from generators.base import BaseGenerator
 from utils import logger
@@ -167,11 +167,11 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append("    }")
 
     def publish(self) -> None:
-        if self.windfile.metadata.id is None:
-            raise ValueError("Publishing requires an id")
         """
         Publish the pipeline to the Jenkins CI system.
         """
+        if self.windfile.metadata.id is None:
+            raise ValueError("Publishing requires an id")
         if self.output_settings.ci_credentials is None:
             raise ValueError("Publishing requires a CI URL and a token, with Jenkins we also need a username")
         server = jenkins.Jenkins(
