@@ -1,5 +1,5 @@
 # pylint: disable=duplicate-code
-from typing import Optional
+from typing import Optional, List
 from xml.dom.minidom import Document, parseString, Element
 
 import jenkins
@@ -167,6 +167,8 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append("    }")
 
     def publish(self) -> None:
+        if self.windfile.metadata.id is None:
+            raise ValueError("Publishing requires an id")
         """
         Publish the pipeline to the Jenkins CI system.
         """
@@ -192,16 +194,15 @@ class JenkinsGenerator(BaseGenerator):
         """
 
         # Create the Jenkins Pipeline Job
-        job_name = self.windfile.metadata.id.replace("-", "/")
+        job_name: str = self.windfile.metadata.id.replace("-", "/")
         if "/" in job_name:
-            path: [str] = job_name.split("/")
+            path: List[str] = job_name.split("/")
             for i in range(len(path) - 1):
                 server.create_folder(path[i], ignore_failures=True)
         exists: bool = server.job_exists(job_name)
-        if exists:
-            config_xml: Document = parseString(server.get_job_config(job_name))
-        else:
-            config_xml: Document = parseString(pipeline_config)
+
+        config_xml: Document = parseString(server.get_job_config(job_name) if exists else pipeline_config)
+
         script: Element = config_xml.getElementsByTagName("script")[0]
         if exists:
             script.removeChild(script.firstChild)
