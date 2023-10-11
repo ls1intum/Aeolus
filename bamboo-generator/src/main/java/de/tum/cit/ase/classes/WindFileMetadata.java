@@ -19,7 +19,7 @@ public class WindFileMetadata {
         metadata.setDescription((String) map.get("description"));
         Object author = map.get("author");
         metadata.setAuthor(Author.fromObject(author));
-        metadata.setGitCredentials(Optional.ofNullable((String) map.get("gitCredentials")));
+        metadata.setGitCredentials(Optional.ofNullable((String) map.getOrDefault("gitCredentials", null)));
         metadata.setId((String) map.get("id"));
         metadata.setDocker(DockerConfig.fromMap((Map<String, Object>) map.getOrDefault("docker", null)));
         return metadata;

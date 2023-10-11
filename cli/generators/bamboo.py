@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
 import base64
+import os
 import subprocess
 from typing import List
 from utils import logger
@@ -89,10 +90,10 @@ class BambooGenerator(BaseGenerator):
         container_name: str = "bambeolus"
         command: str = f"--base64 {base64_str}"
         if self.output_settings.ci_credentials is not None:
-            command += f" --publish --server {self.output_settings.ci_credentials.url}"
+            command += f" --publish --server {self.output_settings.ci_credentials.url} "
             command += f"--token {self.output_settings.ci_credentials.token}"
         client.containers.run(
-            image="ghcr.io/ls1intum/aeolus/bamboo-generator:nightly",
+            image=os.getenv("BAMBOO_GENERATOR_IMAGE", "ghcr.io/ls1intum/bamboo-generator:nightly"),
             command=f"{command}",
             auto_remove=False,
             name=container_name,

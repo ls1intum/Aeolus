@@ -147,20 +147,38 @@ public class Main {
 
         BuildPlanService buildPlanService = new BuildPlanService();
         Project project = getEmptyProject(windFile.getMetadata());
-        Plan plan = new Plan(project, windFile.getMetadata().getName(), windFile.getMetadata().getPlanName())
-                .description("Plan created from " + windFile.getFilePath())
-                .variables(new Variable("lifecycle_stage", "evaluation"));
+        Plan plan = new Plan(project, windFile.getMetadata().getName(), windFile.getMetadata().getPlanName()).description("Plan created from " + windFile.getFilePath()).variables(new Variable("lifecycle_stage", "evaluation"));
+        boolean oneGlobalDockerConfig = windFile.getMetadata().getDocker() != null;
+
+        Stage defaultStage = new Stage("Default Stage");
+        Job defaultJob = new Job("Default Job", new BambooKey("JOB1"));
+        if (oneGlobalDockerConfig) {
+            defaultJob.dockerConfiguration(BuildPlanService.convertDockerConfig(windFile.getMetadata().getDocker()));
+        }
+
         List<Stage> stageList = new ArrayList<>();
         List<GitRepository> repos = new ArrayList<>();
+
         if (!windFile.getRepositories().isEmpty()) {
-            List<VcsCheckoutTask> checkoutTasks = new ArrayList<>();
+            List<CheckoutItem> checkoutItems = new ArrayList<>();
+
             for (Repository repository : windFile.getRepositories()) {
-                repos.add(buildPlanService.addRepository(repository, windFile.getMetadata().getGitCredentials().orElseThrow()));
-                checkoutTasks.add(new VcsCheckoutTask().checkoutItems(new CheckoutItem().repository(repository.getName()).path(repository.getPath())));
+                repos.add(buildPlanService.addRepository(repository, windFile.getMetadata().getGitCredentials().orElse(null)));
+                checkoutItems.add(new CheckoutItem().repository(repository.getName()).path(repository.getPath()));
             }
+            VcsCheckoutTask checkoutTask = new VcsCheckoutTask().description("Checkout Default Repository").checkoutItems(checkoutItems.toArray(new CheckoutItem[]{})).cleanCheckout(true);
             plan = plan.planRepositories(repos.toArray(new VcsRepository[]{}));
-            stageList.add(new Stage("Checkout").jobs(new Job("Checkout", "CHECKOUT1").tasks(checkoutTasks.toArray(new Task[]{}))));
+            if (oneGlobalDockerConfig) {
+                defaultJob.tasks(checkoutTask);
+            } else {
+                stageList.add(new Stage("Checkout").jobs(new Job("Checkout", "CHECKOUT1").tasks(checkoutTask)));
+            }
         }
+        /*
+         * If we have one global docker configuration, we run every single task in the same docker container
+         * this means we need only one stage and one job with all tasks in it
+         */
+        List<Task<?, ?>> defaultTasks = new ArrayList<>();
         for (Action action : windFile.getActions()) {
             if (action instanceof ExternalAction) {
                 continue;
@@ -169,22 +187,29 @@ public class Main {
                 var keyInput = internalAction.getName().toUpperCase().replaceAll("-", "").replaceAll("_", "") + stageList.size();
                 var key = new BambooKey(keyInput);
                 var tasks = buildPlanService.handleAction(internalAction);
-                Stage stage = new Stage(internalAction.getName()).jobs(
-                        new Job(internalAction.getName(), key).dockerConfiguration(internalAction.convertDockerConfig()).tasks(
-                                tasks.toArray(new Task[]{})
-                        ));
-                stageList.add(stage);
+                if (oneGlobalDockerConfig) {
+                    defaultTasks.addAll(tasks);
+                } else {
+                    Stage stage = new Stage(internalAction.getName()).jobs(new Job(internalAction.getName(), key).dockerConfiguration(BuildPlanService.convertDockerConfig(internalAction.getDocker())).tasks(tasks.toArray(new Task[]{})));
+                    stageList.add(stage);
+                }
             }
             if (action instanceof PlatformAction platformAction) {
                 var keyInput = platformAction.getName().toUpperCase().replaceAll("-", "").replaceAll("_", "") + stageList.size();
                 var key = new BambooKey(keyInput);
                 var tasks = buildPlanService.handleSpecialAction(platformAction);
-                Stage stage = new Stage(platformAction.getName()).jobs(
-                        new Job(platformAction.getName(), key).dockerConfiguration(platformAction.convertDockerConfig()).tasks(
-                                tasks.toArray(new Task[]{})
-                        ).dockerConfiguration(action.convertDockerConfig()));
-                stageList.add(stage);
+                if (oneGlobalDockerConfig) {
+                    defaultTasks.addAll(tasks);
+                } else {
+                    Stage stage = new Stage(platformAction.getName()).jobs(new Job(platformAction.getName(), key).dockerConfiguration(BuildPlanService.convertDockerConfig(platformAction.getDocker())).tasks(tasks.toArray(new Task[]{})));
+                    stageList.add(stage);
+                }
             }
+        }
+        if (oneGlobalDockerConfig) {
+            defaultJob.tasks(defaultTasks.toArray(new Task[]{}));
+            defaultStage.jobs(defaultJob);
+            stageList.add(defaultStage);
         }
         plan = plan.stages(stageList.toArray(new Stage[0]));
         final String yaml = BambooSpecSerializer.dump(plan);
