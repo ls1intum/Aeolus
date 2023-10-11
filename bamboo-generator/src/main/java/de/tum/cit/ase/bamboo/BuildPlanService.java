@@ -77,12 +77,12 @@ public class BuildPlanService {
         ScriptTask task = new ScriptTask()
                 .description(action.getName())
                 .inlineBody(action.getScript());
-        String postfix = action.getExcludeDuring().isEmpty() ? "" : " if stage is correct";
-        String dummyTask = "echo \"⚙️ Executing " + action.getName() + postfix + "\"";
-        tasks.add(new ScriptTask().description("dummy task to prevent wrong result of build plan run")
-                .inlineBody(dummyTask));
 
         if (!action.getExcludeDuring().isEmpty()) {
+            String postfix = action.getExcludeDuring().isEmpty() ? "" : " if stage is correct";
+            String dummyTask = "echo \"⚙️ Executing " + action.getName() + postfix + "\"";
+            tasks.add(new ScriptTask().description("dummy task to prevent wrong result of build plan run")
+                    .inlineBody(dummyTask));
             var condMap = new HashMap<String, String>();
             condMap.put("operation", "matches");
             condMap.put("variable", "lifecycle_stage");

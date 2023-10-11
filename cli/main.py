@@ -139,6 +139,7 @@ if __name__ == "__main__":
             args=args,
         )
         generator.generate()
+
     if args.command == "translate":
         credentials: CICredentials = CICredentials(url=args.url, username=None, token=args.token)
         translator: Translate = Translate(

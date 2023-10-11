@@ -24,7 +24,7 @@ class JenkinsGenerator(BaseGenerator):
         # to respect the exclusion during different parts of the lifecycle
         # we need a parameter that holds the current lifecycle
         self.result.append("  parameters {")
-        # we set it to working_time by default, as this is the most common case and we want to avoid
+        # we set it to working_time by default, as this is the most common case, and we want to avoid
         # that the job does not execute stages only meant to be executed during evaluation (e.g. hidden tests)
         self.result.append(
             "    string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current lifecycle')"
@@ -139,7 +139,7 @@ class JenkinsGenerator(BaseGenerator):
     def handle_clone(self, name: str, repository: Repository) -> None:
         """
         Handles the clone step.
-        :param name: Name of the repository
+        :param name: Name of the repository to clone
         :param repository: Repository ot checkout
         """
         prefix: str = ""
@@ -166,13 +166,12 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append(f"{prefix}    }}")
         self.result.append("    }")
 
-    def run(self) -> None:
+    def run(self, job_id: str) -> None:
         """
         Run the pipeline in the Jenkins CI system.
+        :param job_id: ID of the job to run
         :return: None
         """
-        if self.windfile.metadata.id is None or self.output_settings.run_settings is None:
-            raise ValueError("Publishing requires an id")
         if self.output_settings.ci_credentials is None:
             raise ValueError("Publishing requires a CI URL and a token, with Jenkins we also need a username")
         server = jenkins.Jenkins(
@@ -180,8 +179,10 @@ class JenkinsGenerator(BaseGenerator):
             username=self.output_settings.ci_credentials.username,
             password=self.output_settings.ci_credentials.token,
         )
-        job_name: str = self.windfile.metadata.id.replace("-", "/")
-        server.build_job(job_name, parameters={"current_lifecycle": self.output_settings.run_settings.stage})
+        job_name: str = job_id.replace("-", "/")
+        logger.info("🔨", f"Triggering Jenkins build for {job_name}", self.output_settings.emoji)
+        if self.output_settings.run_settings is not None:
+            server.build_job(job_name, parameters={"current_lifecycle": self.output_settings.run_settings.stage})
 
     def publish(self) -> None:
         """
@@ -228,7 +229,8 @@ class JenkinsGenerator(BaseGenerator):
         server.upsert_job(job_name, config_xml.toxml())
         if exists:
             server.build_job(job_name, parameters={"current_lifecycle": "initial-invalid-build"})
-        server.build_job(job_name)
+        else:
+            server.build_job(job_name)
 
     def generate(self) -> str:
         """

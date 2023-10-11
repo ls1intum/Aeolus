@@ -154,7 +154,7 @@ class CliGenerator(BaseGenerator):
         self.result.append("}")
         self.functions.append(clone_method)
 
-    def run(self) -> None:
+    def run(self, job_id: str) -> None:
         """
         Run the generated bash script.
         """
@@ -169,9 +169,14 @@ class CliGenerator(BaseGenerator):
             temp.flush()
             client: DockerClient = DockerClient.from_env()
             container_name: str = "aeolus-worker"
+            container_image: str = os.getenv("AEOLUS_WORKER_IMAGE", "ghcr.io/ls1intum/aeolus/worker:nightly")
+            if self.windfile.metadata.docker is not None:
+                container_image = self.windfile.metadata.docker.image + (
+                    (":" + self.windfile.metadata.docker.tag) if self.windfile.metadata.docker.tag else ""
+                )
             client.containers.run(
-                image="ghcr.io/ls1intum/aeolus/worker:nightly",
-                command=f"{self.output_settings.run_settings.stage}",
+                image=container_image,
+                command=f"bash /entrypoint.sh {self.output_settings.run_settings.stage}",
                 volumes={temp.name: {"bind": "/entrypoint.sh", "mode": "ro"}},
                 auto_remove=False,
                 name=container_name,

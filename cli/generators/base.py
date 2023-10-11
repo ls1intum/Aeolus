@@ -65,7 +65,7 @@ class BaseGenerator:
         self.final_result = "\n".join(self.result)
         return self.final_result
 
-    def run(self) -> None:
+    def run(self, job_id: str) -> None:
         """
         Run the resulting script.
         """

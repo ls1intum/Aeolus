@@ -100,7 +100,19 @@ class Generator(PassSettings):
                         "Syntax check failed",
                         self.output_settings.emoji,
                     )
-            if self.output_settings.run_settings is not None:
-                logger.info("🐳", "Running pipeline...", self.output_settings.emoji)
-                actual_generator.run()
+            if (
+                self.output_settings.run_settings is not None
+                and self.windfile is not None
+                and self.windfile.metadata is not None
+                and self.windfile.metadata.id is not None
+            ):
+                actual_generator.run(job_id=self.windfile.metadata.id)
         return None
+
+    def run(self, job_id: str) -> None:
+        """
+        Run the generated CI file.
+        :param job_id: ID of the job to run
+        :return: None
+        """
+        raise NotImplementedError("run() not implemented")

@@ -147,7 +147,7 @@ public class Main {
 
         BuildPlanService buildPlanService = new BuildPlanService();
         Project project = getEmptyProject(windFile.getMetadata());
-        Plan plan = new Plan(project, windFile.getMetadata().getName(), windFile.getMetadata().getPlanName()).description("Plan created from " + windFile.getFilePath()).variables(new Variable("lifecycle_stage", "evaluation"));
+        Plan plan = new Plan(project, windFile.getMetadata().getName(), windFile.getMetadata().getPlanName()).description("Plan created from " + windFile.getFilePath()).variables(new Variable("lifecycle_stage", "working_time"));
         boolean oneGlobalDockerConfig = windFile.getMetadata().getDocker() != null;
 
         Stage defaultStage = new Stage("Default Stage");

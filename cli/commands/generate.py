@@ -98,3 +98,10 @@ class Generate(Subcommand):
         Generate the CI file.
         """
         self.generator.generate()
+
+    def run(self, job_id: str) -> None:
+        """
+        Run the generated CI file on the CI system.
+        :param job_id: ID of the job to run
+        """
+        self.generator.run(job_id=job_id)
