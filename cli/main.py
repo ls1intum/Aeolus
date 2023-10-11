@@ -9,6 +9,7 @@ import sys
 from classes.ci_credentials import CICredentials
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
+from classes.run_settings import RunSettings
 from commands.generate import Generate
 from commands.merge import Merge
 from commands.translate import Translate
@@ -17,6 +18,10 @@ from utils import utils
 
 
 def add_argparse() -> argparse.ArgumentParser:
+    """
+    Add arguments and subcommands to the argparser of the tool.
+    :return: argparser with arguments and subcommands
+    """
     arg_parser: argparse.ArgumentParser = argparse.ArgumentParser(
         prog="aeolus",
         description="Aeolus is a tool to manage your CI jobs. "
@@ -65,6 +70,11 @@ def add_argparse() -> argparse.ArgumentParser:
 
 
 def parse_args(arguments: list[str]) -> typing.Any:
+    """
+    Parse the given arguments.
+    :param arguments:
+    :return:
+    """
     argument_parser: argparse.ArgumentParser = add_argparse()
     return argument_parser.parse_args(arguments)
 
@@ -112,12 +122,24 @@ if __name__ == "__main__":
                 raise ValueError("Publishing requires a CI URL and a token, with Jenkins we also need a username")
             output_settings.ci_credentials = CICredentials(url=args.url, username=args.user, token=args.token)
 
+        if args.run is not None:
+            if args.target != "cli" and (not args.url or not args.token):
+                utils.logger.error(
+                    "❌ ",
+                    "Running is only supported for Jenkins and Bamboo"
+                    " if you use also pass a ci url (--url) and token (--token)",
+                    output_settings.emoji,
+                )
+                raise ValueError("Running is only supported with the CLI target")
+            output_settings.run_settings = RunSettings(stage=args.run)
+
         generator: Generate = Generate(
             input_settings=input_settings,
             output_settings=output_settings,
             args=args,
         )
         generator.generate()
+
     if args.command == "translate":
         credentials: CICredentials = CICredentials(url=args.url, username=None, token=args.token)
         translator: Translate = Translate(

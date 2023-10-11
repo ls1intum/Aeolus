@@ -4,30 +4,44 @@ import com.atlassian.bamboo.specs.api.builders.AtlassianModule;
 import com.atlassian.bamboo.specs.api.builders.condition.AnyTaskCondition;
 import com.atlassian.bamboo.specs.api.builders.credentials.SharedCredentialsIdentifier;
 import com.atlassian.bamboo.specs.api.builders.credentials.SharedCredentialsScope;
+import com.atlassian.bamboo.specs.api.builders.docker.DockerConfiguration;
 import com.atlassian.bamboo.specs.api.builders.repository.VcsChangeDetection;
 import com.atlassian.bamboo.specs.api.builders.task.Task;
 import com.atlassian.bamboo.specs.builders.repository.git.GitRepository;
 import com.atlassian.bamboo.specs.builders.task.ScriptTask;
 import com.atlassian.bamboo.specs.builders.task.TestParserTask;
-import com.atlassian.bamboo.specs.model.task.TestParserTaskProperties;
+import de.tum.cit.ase.classes.DockerConfig;
 import de.tum.cit.ase.classes.InternalAction;
 import de.tum.cit.ase.classes.PlatformAction;
 import de.tum.cit.ase.classes.Repository;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BuildPlanService {
 
+    public static DockerConfiguration convertDockerConfig(DockerConfig docker) {
+        if (docker == null) {
+            return null;
+        }
+        DockerConfiguration configuration = new DockerConfiguration()
+                .image(docker.getImage() + ":" + docker.getTag())
+                .dockerRunArguments(docker.getParameters().toArray(new String[0]));
+        for (Map.Entry<String, String> entry : docker.getVolumes().entrySet()) {
+            configuration.volume(entry.getKey(), entry.getValue());
+        }
+        return configuration;
+    }
+
     public GitRepository addRepository(Repository repository, String credentialsName) {
+        GitRepository repo = new GitRepository();
+        if (credentialsName != null) {
+            repo.authentication(new SharedCredentialsIdentifier(credentialsName)
+                    .scope(SharedCredentialsScope.GLOBAL));
+        }
         return new GitRepository()
                 .name(repository.getName())
                 .branch(repository.getBranch())
-                .authentication(new SharedCredentialsIdentifier(credentialsName)
-                        .scope(SharedCredentialsScope.GLOBAL))
                 .url(repository.getUrl())
                 .shallowClonesEnabled(true)
                 .remoteAgentCacheEnabled(false)
@@ -63,12 +77,12 @@ public class BuildPlanService {
         ScriptTask task = new ScriptTask()
                 .description(action.getName())
                 .inlineBody(action.getScript());
-        String postfix = action.getExcludeDuring().isEmpty() ? "" : " if stage is correct";
-        String dummyTask = "echo \"⚙️ Executing " + action.getName() + postfix + "\"";
-        tasks.add(new ScriptTask().description("dummy task to prevent wrong result of build plan run")
-                .inlineBody(dummyTask));
 
         if (!action.getExcludeDuring().isEmpty()) {
+            String postfix = action.getExcludeDuring().isEmpty() ? "" : " if stage is correct";
+            String dummyTask = "echo \"⚙️ Executing " + action.getName() + postfix + "\"";
+            tasks.add(new ScriptTask().description("dummy task to prevent wrong result of build plan run")
+                    .inlineBody(dummyTask));
             var condMap = new HashMap<String, String>();
             condMap.put("operation", "matches");
             condMap.put("variable", "lifecycle_stage");

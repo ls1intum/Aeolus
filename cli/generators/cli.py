@@ -1,4 +1,5 @@
 # pylint: disable=duplicate-code
+import os
 import subprocess
 import tempfile
 from typing import List, Optional
@@ -6,6 +7,9 @@ from typing import List, Optional
 from classes.generated.definitions import InternalAction, Repository
 from generators.base import BaseGenerator
 from utils import logger
+from docker.models.containers import Container  # type: ignore
+from docker.client import DockerClient  # type: ignore
+from docker.types.daemon import CancellableStream  # type: ignore
 
 
 class CliGenerator(BaseGenerator):
@@ -149,6 +153,49 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"  git clone {repository.url} --branch {repository.branch} {directory}")
         self.result.append("}")
         self.functions.append(clone_method)
+
+    def run(self, job_id: str) -> None:
+        """
+        Run the generated bash script.
+        """
+        if self.output_settings.run_settings is None:
+            return
+        if self.final_result is None:
+            self.generate()
+        if self.final_result is None:
+            return
+        with tempfile.NamedTemporaryFile(delete=False) as temp:
+            temp.write(self.generate().encode())
+            temp.flush()
+            client: DockerClient = DockerClient.from_env()
+            container_name: str = "aeolus-worker"
+            container_image: str = os.getenv("AEOLUS_WORKER_IMAGE", "ghcr.io/ls1intum/aeolus/worker:nightly")
+            if self.windfile.metadata.docker is not None:
+                container_image = self.windfile.metadata.docker.image + (
+                    (":" + self.windfile.metadata.docker.tag) if self.windfile.metadata.docker.tag else ""
+                )
+            client.containers.run(
+                image=container_image,
+                command=f"bash /entrypoint.sh {self.output_settings.run_settings.stage}",
+                volumes={temp.name: {"bind": "/entrypoint.sh", "mode": "ro"}},
+                auto_remove=False,
+                name=container_name,
+                detach=True,
+            )
+            container: Container = client.containers.get(container_name)
+            logs: CancellableStream = container.logs(stream=True, stdout=True, stderr=True)
+            lines: List[str] = logs.next().decode("utf-8").split("\n")
+            while container.status == "running" or lines:
+                try:
+                    for line in lines:
+                        if line:
+                            print(line)
+                    lines = logs.next().decode("utf-8").split("\n")
+                except StopIteration:
+                    break
+            container.remove()
+            os.unlink(temp.name)
+        return
 
     def generate(self) -> str:
         """

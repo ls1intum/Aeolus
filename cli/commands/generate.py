@@ -2,6 +2,7 @@ import typing
 
 import argparse
 
+from classes.generated.definitions import Lifecycle
 from classes.generator import Generator
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -88,8 +89,19 @@ class Generate(Subcommand):
             type=str,
         )
 
+        parser.add_argument(
+            "--run", "-r", help="Run the generated file on the CI system", choices=Lifecycle.__members__.keys()
+        )
+
     def generate(self) -> None:
         """
         Generate the CI file.
         """
         self.generator.generate()
+
+    def run(self, job_id: str) -> None:
+        """
+        Run the generated CI file on the CI system.
+        :param job_id: ID of the job to run
+        """
+        self.generator.run(job_id=job_id)

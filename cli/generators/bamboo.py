@@ -1,9 +1,11 @@
 # pylint: disable=duplicate-code
 import base64
+import os
 import subprocess
 from typing import List
 from utils import logger
 
+import requests
 from generators.base import BaseGenerator
 from docker.models.containers import Container  # type: ignore
 from docker.client import DockerClient  # type: ignore
@@ -89,10 +91,10 @@ class BambooGenerator(BaseGenerator):
         container_name: str = "bambeolus"
         command: str = f"--base64 {base64_str}"
         if self.output_settings.ci_credentials is not None:
-            command += f" --publish --server {self.output_settings.ci_credentials.url}"
+            command += f" --publish --server {self.output_settings.ci_credentials.url} "
             command += f"--token {self.output_settings.ci_credentials.token}"
         client.containers.run(
-            image="ghcr.io/ls1intum/aeolus/bamboo-generator:nightly",
+            image=os.getenv("BAMBOO_GENERATOR_IMAGE", "ghcr.io/ls1intum/aeolus/bamboo-generator:nightl"),
             command=f"{command}",
             auto_remove=False,
             name=container_name,
@@ -116,3 +118,29 @@ class BambooGenerator(BaseGenerator):
 
     def check(self, content: str) -> bool:
         raise NotImplementedError("check_syntax() not implemented")
+
+    def run(self, job_id: str) -> None:
+        if self.output_settings.run_settings is None or self.output_settings.ci_credentials is None:
+            return
+        if self.final_result is None:
+            return
+        build_id: str = job_id.replace("/", "-")
+        logger.info("🔨", f"Triggering Bamboo build for {build_id}", self.output_settings.emoji)
+
+        # Endpoint to trigger the build
+        endpoint: str = f"{self.output_settings.ci_credentials.url}/rest/api/latest/queue/{build_id}"
+
+        # Make the request
+        headers: dict[str, str] = {"Authorization": f"Bearer {self.output_settings.ci_credentials.token}"}
+        params: dict[str, str] = {"bamboo.variable.lifecycle_stage": str(self.output_settings.run_settings.stage)}
+        response = requests.post(endpoint, headers=headers, params=params, timeout=30)
+
+        # Check the response
+        if response.status_code == 200:
+            logger.info("🔨", f"Triggered Bamboo build for {build_id} successfully", self.output_settings.emoji)
+        else:
+            logger.error(
+                "❌",
+                f"Failed to trigger Bamboo build for {build_id}, got {response.status_code}",
+                self.output_settings.emoji,
+            )

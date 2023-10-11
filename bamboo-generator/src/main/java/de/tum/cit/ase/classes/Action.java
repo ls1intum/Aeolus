@@ -71,17 +71,4 @@ public abstract class Action {
     protected void setDocker(DockerConfig docker) {
         this.docker = docker;
     }
-
-    public DockerConfiguration convertDockerConfig() {
-        if (docker == null) {
-            return null;
-        }
-        DockerConfiguration configuration = new DockerConfiguration()
-                .image(docker.getImage() + ":" + docker.getTag())
-                .dockerRunArguments(docker.getParameters().toArray(new String[0]));
-        for (Map.Entry<String, String> entry : docker.getVolumes().entrySet()) {
-            configuration.volume(entry.getKey(), entry.getValue());
-        }
-        return configuration;
-    }
 }

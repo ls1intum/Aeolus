@@ -18,6 +18,7 @@ class BaseGenerator:
     output_settings: OutputSettings
     metadata: PassMetadata
     result: typing.List[str]
+    final_result: typing.Optional[str]
 
     def __init__(
         self,
@@ -61,4 +62,11 @@ class BaseGenerator:
         """
         Generate the CI file.
         """
-        return "\n".join(self.result)
+        self.final_result = "\n".join(self.result)
+        return self.final_result
+
+    def run(self, job_id: str) -> None:
+        """
+        Run the resulting script.
+        """
+        raise NotImplementedError("run() not implemented")
