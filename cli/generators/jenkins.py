@@ -156,9 +156,9 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append(f"{prefix}          submoduleCfg: [],")
         self.result.append(f"{prefix}          userRemoteConfigs: [[")
         if self.windfile.metadata.gitCredentials:
-            self.result.append(f"{prefix}             credentialsId: '{self.windfile.metadata.gitCredentials}',")
-        self.result.append(f"{prefix}             name: '{name}',")
-        self.result.append(f"{prefix}             url: '{repository.url}'")
+            self.result.append(f"{prefix}           credentialsId: '{self.windfile.metadata.gitCredentials}',")
+        self.result.append(f"{prefix}           name: '{name}',")
+        self.result.append(f"{prefix}           url: '{repository.url}'")
         self.result.append(f"{prefix}          ]]")
         self.result.append(f"{prefix}        ])")
         self.result.append(f"{prefix}      }}")

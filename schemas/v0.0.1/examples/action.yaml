@@ -9,10 +9,6 @@ metadata:
   environment:
     - RUST_BACKTRACE: 1
 steps:
-  clone:
-    file: clone-default.py
-    parameters:
-      name: url
   build:
     script: |
       cargo build

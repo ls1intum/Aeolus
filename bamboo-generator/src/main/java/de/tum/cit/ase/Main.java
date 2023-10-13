@@ -95,6 +95,7 @@ public class Main {
 
     /**
      * This method is used to parse the input and returns the parsed Windfile
+     *
      * @param args the arguments passed to the application
      * @return the parsed Windfile
      */
@@ -182,6 +183,7 @@ public class Main {
      * This method is used to generate the build plan from the parsed Windfile, it creates a bamboo plan that
      * consists of a checkout task (if repsitories are specified), and a task for each action in the Windfile.
      * If the given Windfile contains a docker configuration, the tasks are run in the specified docker container.
+     *
      * @param args the arguments passed to the application
      */
     private static void generateBuildPlan(String[] args) {
@@ -227,24 +229,37 @@ public class Main {
                 continue;
             }
             if (action instanceof InternalAction internalAction) {
-                var keyInput = internalAction.getName().toUpperCase().replaceAll("-", "").replaceAll("_", "") + stageList.size();
+                var keyInput = internalAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
+                System.out.println(keyInput);
                 var key = new BambooKey(keyInput);
                 var tasks = buildPlanService.handleAction(internalAction);
                 if (oneGlobalDockerConfig) {
                     defaultTasks.addAll(tasks);
                 } else {
-                    Stage stage = new Stage(internalAction.getName()).jobs(new Job(internalAction.getName(), key).dockerConfiguration(BuildPlanService.convertDockerConfig(internalAction.getDocker())).tasks(tasks.toArray(new Task[]{})));
+                    var job = new Job(internalAction.getName(), key).tasks(tasks.toArray(new Task[]{}));
+                    var docker = BuildPlanService.convertDockerConfig(internalAction.getDocker());
+                    if (docker != null) {
+                        job = job.dockerConfiguration(docker);
+                    }
+                    Stage stage = new Stage(internalAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(
+                            job
+                    );
                     stageList.add(stage);
                 }
             }
             if (action instanceof PlatformAction platformAction) {
-                var keyInput = platformAction.getName().toUpperCase().replaceAll("-", "").replaceAll("_", "") + stageList.size();
+                var keyInput = platformAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
                 var key = new BambooKey(keyInput);
                 var tasks = buildPlanService.handleSpecialAction(platformAction);
                 if (oneGlobalDockerConfig) {
                     defaultTasks.addAll(tasks);
                 } else {
-                    Stage stage = new Stage(platformAction.getName()).jobs(new Job(platformAction.getName(), key).dockerConfiguration(BuildPlanService.convertDockerConfig(platformAction.getDocker())).tasks(tasks.toArray(new Task[]{})));
+                    var job = new Job(platformAction.getName(), key).tasks(tasks.toArray(new Task[]{}));
+                    var docker = BuildPlanService.convertDockerConfig(platformAction.getDocker());
+                    if (docker != null) {
+                        job = job.dockerConfiguration(docker);
+                    }
+                    Stage stage = new Stage(platformAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(job);
                     stageList.add(stage);
                 }
             }
@@ -294,6 +309,7 @@ public class Main {
 
     /**
      * This method is used to create a project object from the metadata of the windfile.
+     *
      * @param metadata the metadata of the windfile
      * @return a project object
      */

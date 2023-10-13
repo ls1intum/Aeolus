@@ -31,13 +31,12 @@ metadata:
   description: This is a windfile with an internal action
   author: Andreas Resch
   gitCredentials: artemis_gitlab_admin_credentials
+repositories:
+  aeolus:
+    url: https://github.com/ls1intum/Aeolus.git
+    branch: develop
+    path: aeolus
 actions:
-  clone:
-    use: clone-default
-    parameters:
-      repository: https://github.com/ls1intum/Aeolus.git
-      branch: develop
-      path: .
   internal-action:
     script: |
       echo "This is an internal action"
@@ -45,6 +44,10 @@ actions:
     use: simple-action.yml
     excludeDuring:
       - working_time
+  clean_up:
+    script: |
+      rm -rf aeolus/
+    run_always: true
 ```
 
 An actionfile looks like this:
@@ -77,36 +80,54 @@ set -e
 # generated from repository aeolus
 clone_aeolus () {
   echo '🖨️ cloning aeolus'
-  git clone https://github.com/ls1intum/Aeolus.git --branch develop .
+  git clone https://github.com/ls1intum/Aeolus.git --branch develop aeolus
 }
 # step internal-action
 # generated from step internal-action
 # original type was internal
 internal-action () {
-  echo '⚙️  executing internal-action'
+  echo '⚙️ executing internal-action'
   echo "This is an internal action"
 }
-# step external-action
+# step clean_up
+# generated from step clean_up
+# original type was internal
+clean_up () {
+  echo '⚙️ executing clean_up'
+  rm -rf aeolus/
+}
+# step external-action_0
 # generated from step external-action
 # original type was internal
-external-action () {
+external-action_0 () {
   local _current_lifecycle="${1}"
-  if [[ "${_current_lifecycle}" == "preparation" ]]; then
-    echo '⚠️  external-action is excluded during preparation'
+  if [[ "${_current_lifecycle}" == "working_time" ]]; then
+    echo '⚠️  external-action_0 is excluded during working_time'
     return 0
   fi
-  echo '⚙️  executing external-action'
+  if [[ "${_current_lifecycle}" == "preparation" ]]; then
+    echo '⚠️  external-action_0 is excluded during preparation'
+    return 0
+  fi
+  echo '⚙️ executing external-action_0'
   WHO_TO_GREET="world"
   echo "Hello ${WHO_TO_GREET}"
+}
+
+# always steps
+final_aeolus_post_action () {
+  echo '⚙️ executing final_aeolus_post_action'
+  clean_up $_current_lifecycle
 }
 
 
 # main function
 main () {
   local _current_lifecycle="${1}"
+  trap final_aeolus_post_action EXIT
   clone_aeolus $_current_lifecycle
   internal-action $_current_lifecycle
-  external-action $_current_lifecycle
+  external-action_0 $_current_lifecycle
 }
 
 main $@
@@ -126,17 +147,19 @@ pipeline {
     stage('aeolus') {
       steps {
         echo '🖨️ cloning aeolus'
-        checkout([$class: 'GitSCM',
-                  branches: [[name: 'develop']],
-                  doGenerateSubmoduleConfigurations: false,
-                  extensions: [],
-                  submoduleCfg: [],
-                  userRemoteConfigs: [[
-                          credentialsId: 'artemis_gitlab_admin_credentials',
-                          name: 'aeolus',
-                          url: 'https://github.com/ls1intum/Aeolus.git'
-                  ]]
-        ])
+        dir('aeolus') {
+          checkout([$class: 'GitSCM',
+                    branches: [[name: 'develop']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[
+                            credentialsId: 'artemis_gitlab_admin_credentials',
+                            name: 'aeolus',
+                            url: 'https://github.com/ls1intum/Aeolus.git'
+                    ]]
+          ])
+        }
       }
     }
     // step internal-action
@@ -150,27 +173,41 @@ pipeline {
         '''
       }
     }
-    // step external-action
+    // step external-action_0
     // generated from step external-action
     // original type was internal
-    stage('external-action') {
+    stage('external-action_0') {
       when {
         anyOf {
           expression { params.current_lifecycle != 'preparation' }
+          expression { params.current_lifecycle != 'working_time' }
         }
       }
       environment {
         WHO_TO_GREET = "world"
       }
       steps {
-        echo '⚙️ executing external-action'
+        echo '⚙️ executing external-action_0'
         sh '''
          echo "Hello ${WHO_TO_GREET}"
         '''
       }
     }
   }
+  post {
+    // step clean_up
+    // generated from step clean_up
+    // original type was internal
+    always {
+      echo '⚙️ executing clean_up'
+      sh '''
+         rm -rf aeolus/
+        '''
+    }
+  }
 }
+
+
 
 ```
 And the generated Bamboo YAML specs would look like this:
@@ -183,7 +220,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
   description: Plan created from stdin
   enabled: true
   key:
-    key: BASE1
+    key: WINDFILE
   name: example windfile
   oid: null
   pluginConfigurations: []
@@ -215,10 +252,12 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
     notificationStrategy: NONE
     triggeringOption: INHERITED
   project:
-    description: aeolus
+    description: |-
+      This is a windfile with an internal action
+      ---created using aeolus
     key:
-      key: AEOLUS
-    name: AEOLUS
+      key: EXAMPLE
+    name: EXAMPLE
     oid: null
     repositories: []
     repositoryStoredSpecsData: null
@@ -232,11 +271,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
         parent: null
         project: null
         repositoryViewerProperties: null
-        authenticationProperties: !!com.atlassian.bamboo.specs.model.repository.git.SharedCredentialsAuthenticationProperties
-          sharedCredentials:
-            name: artemis_gitlab_admin_credentials
-            oid: null
-            scope: GLOBAL
+        authenticationProperties: null
         branch: develop
         commandTimeout: !!java.time.Duration 'PT3H'
         fetchWholeRepository: false
@@ -282,16 +317,16 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
           tasks:
             - !!com.atlassian.bamboo.specs.model.task.VcsCheckoutTaskProperties
               conditions: []
-              description: ''
+              description: Checkout Default Repository
               enabled: true
               requirements: []
               checkoutItems:
                 - defaultRepository: false
-                  path: .
+                  path: aeolus
                   repository:
                     name: aeolus
                     oid: null
-              cleanCheckout: false
+              cleanCheckout: true
       manualStage: false
       name: Checkout
     - description: ''
@@ -317,18 +352,6 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
           tasks:
             - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
               conditions: []
-              description: dummy task to prevent wrong result of build plan run
-              enabled: true
-              requirements: []
-              argument: null
-              body: echo "⚙️ Executing internal-action"
-              environmentVariables: null
-              interpreter: SHELL
-              location: INLINE
-              path: null
-              workingSubdirectory: null
-            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
-              conditions: []
               description: internal-action
               enabled: true
               requirements: []
@@ -341,15 +364,51 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
               path: null
               workingSubdirectory: null
       manualStage: false
-      name: internal-action
+      name: internalaction
     - description: ''
       finalStage: false
       jobs:
         - description: ''
           enabled: true
           key:
-            key: EXTERNALACTION2
-          name: external-action
+            key: CLEANUP2
+          name: clean_up
+          oid: null
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
+          cleanWorkingDirectory: false
+          dockerConfiguration:
+            dockerRunArguments: []
+            enabled: false
+            image: null
+            volumes: {}
+          finalTasks: []
+          requirements: []
+          tasks:
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions: []
+              description: clean_up
+              enabled: true
+              requirements: []
+              argument: null
+              body: |
+                rm -rf aeolus/
+              environmentVariables: null
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+      manualStage: false
+      name: cleanup
+    - description: ''
+      finalStage: false
+      jobs:
+        - description: ''
+          enabled: true
+          key:
+            key: EXTERNALACTION03
+          name: external-action_0
           oid: null
           pluginConfigurations: []
           artifactSubscriptions: []
@@ -369,7 +428,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
               enabled: true
               requirements: []
               argument: null
-              body: echo "⚙️ Executing external-action if stage is correct"
+              body: echo "⚙️ Executing external-action_0 if stage is correct"
               environmentVariables: null
               interpreter: SHELL
               location: INLINE
@@ -383,8 +442,8 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
                   configuration:
                     variable: lifecycle_stage
                     operation: matches
-                    value: ^.*[^(preparation)].*
-              description: external-action
+                    value: ^.*[^(working_time)][^(preparation)].*
+              description: external-action_0
               enabled: true
               requirements: []
               argument: null
@@ -395,13 +454,14 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
               path: null
               workingSubdirectory: null
       manualStage: false
-      name: external-action
+      name: externalaction0
   triggers: []
   variables:
     - createOnly: false
       name: lifecycle_stage
-      value: evaluation
+      value: working_time
 specModelVersion: 9.3.3
+
 ...
 ```
 

@@ -1,6 +1,7 @@
 api: v0.0.1
 metadata:
   name: example windfile
+  id: example-windfile
   description: This is a windfile with an internal action
   author: Andreas Resch
   gitCredentials: artemis_gitlab_admin_credentials
@@ -8,7 +9,7 @@ repositories:
   aeolus:
     url: https://github.com/ls1intum/Aeolus.git
     branch: develop
-    path: .
+    path: aeolus
 actions:
   internal-action:
     script: |
@@ -17,3 +18,7 @@ actions:
     use: simple-action.yml
     excludeDuring:
       - working_time
+  clean_up:
+    script: |
+      rm -rf aeolus/
+    run_always: true

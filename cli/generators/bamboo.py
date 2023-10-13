@@ -77,7 +77,8 @@ class BambooGenerator(BaseGenerator):
         if process.returncode != 0:
             logger.error("❌", "Bamboo YAML Spec file generation failed", self.output_settings.emoji)
             raise ValueError("Bamboo YAML Spec file generation failed")
-        logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
+        else:
+            logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
         result_logs: str = process.stdout
         self.result.append(result_logs)
 
@@ -94,7 +95,7 @@ class BambooGenerator(BaseGenerator):
             command += f" --publish --server {self.output_settings.ci_credentials.url} "
             command += f"--token {self.output_settings.ci_credentials.token}"
         client.containers.run(
-            image=os.getenv("BAMBOO_GENERATOR_IMAGE", "ghcr.io/ls1intum/aeolus/bamboo-generator:nightl"),
+            image=os.getenv("BAMBOO_GENERATOR_IMAGE", "ghcr.io/ls1intum/aeolus/bamboo-generator:nightly"),
             command=f"{command}",
             auto_remove=False,
             name=container_name,
