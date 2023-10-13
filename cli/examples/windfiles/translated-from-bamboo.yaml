@@ -32,14 +32,14 @@ repositories:
 actions:
   JOB11:
     script: ./gradlew clean test
-    always: false
+    run_always: false
   JOB12:
     parameters:
       ignore_time: false
       test_results: '**/test-results/test/*.xml'
     platform: bamboo
     kind: junit
-    always: true
+    run_always: true
   JOB13:
     script: chmod -R 777 ${bamboo.working.directory}
-    always: true
+    run_always: true

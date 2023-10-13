@@ -45,7 +45,7 @@ class Lifecycle(Enum):
     working_time = 'working_time'
     post_deadline = 'post_deadline'
     evaluation = 'evaluation'
-    always = 'always'
+    all = 'all'
 
 
 class Parameters(RootModel):
@@ -117,7 +117,7 @@ class FileAction(BaseModel):
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    always: Optional[bool] = Field(
+    run_always: Optional[bool] = Field(
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
     )
 
@@ -143,7 +143,7 @@ class InternalAction(BaseModel):
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    always: Optional[bool] = Field(
+    run_always: Optional[bool] = Field(
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
     )
 
@@ -170,7 +170,7 @@ class PlatformAction(BaseModel):
     platform: Optional[Target] = Field(None, description='Ignored for this action.')
     kind: Optional[str] = Field(None, description='The kind of the platform action.', examples=['junit'])
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    always: Optional[bool] = Field(
+    run_always: Optional[bool] = Field(
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
     )
 
@@ -224,7 +224,7 @@ class ExternalAction(BaseModel):
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    always: Optional[bool] = Field(
+    run_always: Optional[bool] = Field(
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
     )
 

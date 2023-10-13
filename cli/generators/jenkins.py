@@ -244,14 +244,14 @@ class JenkinsGenerator(BaseGenerator):
                 self.handle_clone(name=name, repository=repository)
         for name in self.windfile.actions:
             step: Action = self.windfile.actions[name]
-            if isinstance(step.root, InternalAction) and not step.root.always:
+            if isinstance(step.root, InternalAction) and not step.root.run_always:
                 self.handle_step(name=name, step=step.root, call=True)
         self.result.append("  }")
         if self.has_always_actions():
             self.result.append("  post {")
             for name in self.windfile.actions:
                 post_step: Action = self.windfile.actions[name]
-                if isinstance(post_step.root, InternalAction) and post_step.root.always:
+                if isinstance(post_step.root, InternalAction) and post_step.root.run_always:
                     self.handle_always_step(name=name, step=post_step.root)
         self.add_postfix()
         if self.output_settings.ci_credentials is not None:

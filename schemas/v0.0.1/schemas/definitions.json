@@ -218,7 +218,7 @@
         "description": "The docker configuration that is used to execute the action",
         "$ref": "#/docker"
       },
-      "always": {
+      "run_always": {
         "description": "If this is set to true, the action is always executed, even if other actions fail.",
         "type": "boolean",
         "default": false
@@ -266,7 +266,7 @@
         "description": "The docker configuration that is used to execute the action",
         "$ref": "#/docker"
       },
-      "always": {
+      "run_always": {
         "description": "If this is set to true, the action is always executed, even if other actions fail.",
         "type": "boolean",
         "default": false
@@ -309,7 +309,7 @@
         "description": "The docker configuration that is used to execute the action",
         "$ref": "#/docker"
       },
-      "always": {
+      "run_always": {
         "description": "If this is set to true, the action is always executed, even if other actions fail.",
         "type": "boolean",
         "default": false
@@ -353,7 +353,7 @@
         "description": "The docker configuration that is used to execute the action",
         "$ref": "#/docker"
       },
-      "always": {
+      "run_always": {
         "description": "If this is set to true, the action is always executed, even if other actions fail.",
         "type": "boolean",
         "default": false
@@ -405,7 +405,7 @@
       "working_time",
       "post_deadline",
       "evaluation",
-      "always"
+      "all"
     ],
     "examples": [
       "preparation"
