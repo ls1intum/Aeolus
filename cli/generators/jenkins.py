@@ -3,7 +3,7 @@ from typing import Optional, List
 from xml.dom.minidom import Document, parseString, Element
 
 import jenkins  # type: ignore
-from classes.generated.definitions import InternalAction, Action, Target, Repository
+from classes.generated.definitions import InternalAction, Action, Target, Repository, Docker
 from generators.base import BaseGenerator
 from utils import logger
 
@@ -14,37 +14,65 @@ class JenkinsGenerator(BaseGenerator):
     to be used in the Jenkins CI system.
     """
 
+    def add_docker_config(self, config: Optional[Docker], indentation: int) -> None:
+        """
+        Add the docker configuration to the pipeline or stage
+        :param config: Docker configuration to add
+        :param indentation: indentation level
+        """
+        if config is None:
+            return
+        tag: str = config.tag if config.tag is not None else "latest"
+        self.result.append(" " * indentation + "agent {")
+        self.result.append(" " * indentation + "  docker {")
+        self.result.append(" " * indentation + "    image '" + config.image + ":" + tag + "'")
+        args: Optional[str] = None
+        if config.volumes is not None:
+            args = "-v " + ":".join(config.volumes)
+        if config.parameters is not None:
+            if args is None:
+                args = ""
+            args += " " + " ".join(config.parameters)
+        if args is not None:
+            self.result.append(" " * indentation + "    args '" + args + "'")
+        self.result.append(" " * indentation + "  }")
+        self.result.append(" " * indentation + "}")
+
     def add_prefix(self) -> None:
         """
         Add the prefix to the pipeline, e.g. the agent,
         the environment, etc.
         """
-        self.result.append("pipeline {")
+        indentation: int = 0
+        self.add_line(indentation=indentation, line="pipeline {")
+        indentation += 2
         if self.windfile.metadata.docker is None:
-            self.result.append("  agent any")
+            self.add_line(indentation=indentation, line="agent any")
         else:
-            tag: str = self.windfile.metadata.docker.tag if self.windfile.metadata.docker.tag is not None else "latest"
-            self.result.append("  agent {")
-            self.result.append("    docker {")
-            self.result.append("      image '" + self.windfile.metadata.docker.image + ":" + tag + "'")
-            self.result.append("    }")
-            self.result.append("  }")
+            self.add_docker_config(config=self.windfile.metadata.docker, indentation=indentation + 2)
         # to respect the exclusion during different parts of the lifecycle
         # we need a parameter that holds the current lifecycle
-        self.result.append("  parameters {")
+        self.add_line(indentation=indentation, line="parameters {")
         # we set it to working_time by default, as this is the most common case, and we want to avoid
         # that the job does not execute stages only meant to be executed during evaluation (e.g. hidden tests)
-        self.result.append(
-            "    string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current lifecycle')"
+        indentation += 2
+        self.add_line(
+            indentation=indentation,
+            line="string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current stage')",
         )
-        self.result.append("  }")
+        indentation -= 2
+        self.add_line(indentation=indentation, line="}")
         if self.windfile.environment:
-            self.result.append("  environment {")
+            self.add_line(indentation=indentation, line="environment {")
+            indentation += 2
             for env_var in self.windfile.environment.root.root:
-                self.result.append(f'    {env_var} = "' f'{self.windfile.environment.root.root[env_var]}"')
-            self.result.append("  }")
-
-        self.result.append("  stages {")
+                self.add_line(
+                    indentation=indentation, line=f"{env_var} = '{self.windfile.environment.root.root[env_var]}'"
+                )
+            indentation -= 2
+            self.add_line(indentation=indentation, line="}")
+        assert indentation == 2
+        self.add_line(indentation=indentation, line="stages {")
 
     def add_postfix(self) -> None:
         """
@@ -52,31 +80,48 @@ class JenkinsGenerator(BaseGenerator):
         """
         self.result.append("}")
 
-    def handle_always_step(self, name: str, step: InternalAction) -> None:
+    def handle_always_step(self, name: str, step: InternalAction, indentation: int = 4) -> None:
         """
         Translate a step into a CI post action.
         :param name: Name of the step to handle
         :param step: to translate
+        :param indentation: indentation level
         :return: CI action
         """
         original_name: Optional[str] = self.metadata.get_original_name_of(name)
         original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
 
-        self.result.append(f"    // step {name}")
-        self.result.append(f"    // generated from step {original_name}")
-        self.result.append(f"    // original type was {original_type}")
-        self.result.append("      always " + "{")
-        self.result.append(f"        echo '⚙️ executing {name}'")
-        # for now, we assume that all file actions are shell scripts
-        if original_type in ("file", "internal"):
-            self.result.append("        sh '''")
-        for line in step.script.split("\n"):
+        self.add_line(indentation=indentation, line=f"// step {name}")
+        self.add_line(indentation=indentation, line=f"// generated from step {original_name}")
+        self.add_line(indentation=indentation, line=f"// original type was {original_type}")
+        self.add_script(
+            wrapper="always", name=name, original_type=original_type, script=step.script, indentation=indentation
+        )
+        self.add_line(indentation=indentation - 2, line="}")
+
+    # pylint: disable=too-many-arguments
+    def add_script(self, wrapper: str, name: str, original_type: Optional[str], script: str, indentation: int) -> None:
+        """
+        Add a script to the pipeline.
+        :param wrapper: wrapper to use, e.g. steps, post, always etc.
+        :param name: Name of the step to handle
+        :param original_type: original type of the action
+        :param script: Script to add
+        :param indentation: indentation level
+        """
+        self.result.append(" " * indentation + f"{wrapper} " + "{")
+        indentation += 2
+        self.result.append(" " * indentation + f"echo '⚙️ executing {name}'")
+        was_internal_or_file: bool = original_type in ("file", "internal")
+        if was_internal_or_file:
+            self.result.append(" " * indentation + "sh '''")
+        for line in script.split("\n"):
             if line:
-                self.result.append(f"         {line}")
-        if original_type in ("file", "internal"):
-            self.result.append("        '''")
-        self.result.append("      }")
-        self.result.append("    }")
+                self.result.append(" " * indentation + f"{line}")
+        if was_internal_or_file:
+            self.result.append(" " * indentation + "'''")
+        indentation -= 2
+        self.result.append(" " * indentation + "}")
 
     def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
         """
@@ -107,13 +152,8 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append(f"    // generated from step {original_name}")
         self.result.append(f"    // original type was {original_type}")
         self.result.append(f"    stage('{name}') " + "{")
-        if step.docker is not None:
-            tag: str = step.docker.tag if step.docker.tag is not None else "latest"
-            self.result.append("      agent {")
-            self.result.append("        docker {")
-            self.result.append("          image '" + step.docker.image + ":" + tag + "'")
-            self.result.append("        }")
-            self.result.append("      }")
+        self.add_docker_config(config=step.docker, indentation=6)
+
         if step.excludeDuring is not None:
             self.result.append("      when {")
             self.result.append("        anyOf {")
@@ -122,17 +162,7 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append("        }")
             self.result.append("      }")
         self.add_environment_variables(step=step)
-        self.result.append("      steps " + "{")
-        self.result.append(f"        echo '⚙️ executing {name}'")
-        # for now, we assume that all file actions are shell scripts
-        if original_type in ("file", "internal"):
-            self.result.append("        sh '''")
-        for line in step.script.split("\n"):
-            if line:
-                self.result.append(f"         {line}")
-        if original_type in ("file", "internal"):
-            self.result.append("        '''")
-        self.result.append("      }")
+        self.add_script(wrapper="steps", name=name, original_type=original_type, script=step.script, indentation=6)
         self.result.append("    }")
         return None
 
@@ -151,35 +181,48 @@ class JenkinsGenerator(BaseGenerator):
                     self.result.append(f'        {env_var} = "' f'{step.environment.root.root[env_var]}"')
             self.result.append("      }")
 
-    def handle_clone(self, name: str, repository: Repository) -> None:
+    def handle_clone(self, name: str, repository: Repository, indentation: int) -> None:
         """
         Handles the clone step.
         :param name: Name of the repository to clone
         :param repository: Repository ot checkout
+        :param indentation: indentation level
         """
-        prefix: str = ""
-        self.result.append(f"    stage('{name}') {{")
-        self.result.append(f"{prefix}      steps {{")
-        self.result.append(f"{prefix}        echo '🖨️ cloning {name}'")
+        original_indentation: int = indentation
+        self.add_line(indentation=indentation, line=f"stage('{name}') " + "{")
+        indentation += 2
+        self.add_line(indentation=indentation, line="steps {")
+        indentation += 2
+        self.add_line(indentation=indentation, line=f"echo '🖨️ cloning {name}'")
         if repository.path != ".":
-            self.result.append(f"        dir('{repository.path}') {{")
-            prefix = "  "
-        self.result.append(f"{prefix}        checkout([$class: 'GitSCM',")
-        self.result.append(f"{prefix}          branches: [[name: '{repository.branch}']],")
-        self.result.append(f"{prefix}          doGenerateSubmoduleConfigurations: false,")
-        self.result.append(f"{prefix}          extensions: [],")
-        self.result.append(f"{prefix}          submoduleCfg: [],")
-        self.result.append(f"{prefix}          userRemoteConfigs: [[")
-        if self.windfile.metadata.gitCredentials:
-            self.result.append(f"{prefix}           credentialsId: '{self.windfile.metadata.gitCredentials}',")
-        self.result.append(f"{prefix}           name: '{name}',")
-        self.result.append(f"{prefix}           url: '{repository.url}'")
-        self.result.append(f"{prefix}          ]]")
-        self.result.append(f"{prefix}        ])")
-        self.result.append(f"{prefix}      }}")
+            self.add_line(indentation=indentation, line=f"dir('{repository.path}') " + "{")
+            indentation += 2
+        self.add_line(indentation=indentation, line="checkout([$class: 'GitSCM',")
+        indentation += 2
+        self.add_line(indentation=indentation, line="branches: [[name: '" + repository.branch + "']],")
+        self.add_line(indentation=indentation, line="doGenerateSubmoduleConfigurations: false,")
+        self.add_line(indentation=indentation, line="extensions: [],")
+        self.add_line(indentation=indentation, line="submoduleCfg: [],")
+        self.add_line(indentation=indentation, line="userRemoteConfigs: [[")
+        indentation += 2
+        if self.windfile.metadata.gitCredentials and isinstance(self.windfile.metadata.gitCredentials, str):
+            self.add_line(
+                indentation=indentation, line="credentialsId: '" + self.windfile.metadata.gitCredentials + "',"
+            )
+        self.add_line(indentation=indentation, line=f"name: '{name}'")
+        self.add_line(indentation=indentation, line=f"url: '{repository.url}'")
+        indentation -= 2
+        self.add_line(indentation=indentation, line="]]")
+        indentation -= 2
+        self.add_line(indentation=indentation, line="])")
+        indentation -= 2
+        self.add_line(indentation=indentation, line="}")
         if repository.path != ".":
-            self.result.append(f"{prefix}    }}")
-        self.result.append("    }")
+            indentation -= 2
+            self.add_line(indentation=indentation, line="}")
+        indentation -= 2
+        self.add_line(indentation=indentation, line="}")
+        assert indentation == original_indentation
 
     def run(self, job_id: str) -> None:
         """
@@ -252,14 +295,14 @@ class JenkinsGenerator(BaseGenerator):
         if self.windfile.repositories:
             for name in self.windfile.repositories:
                 repository: Repository = self.windfile.repositories[name]
-                self.handle_clone(name=name, repository=repository)
+                self.handle_clone(name=name, repository=repository, indentation=4)
         for name in self.windfile.actions:
             step: Action = self.windfile.actions[name]
             if isinstance(step.root, InternalAction) and not step.root.run_always:
                 self.handle_step(name=name, step=step.root, call=True)
-        self.result.append("  }")
+        self.add_line(indentation=2, line="}")
         if self.has_always_actions():
-            self.result.append("  post {")
+            self.add_line(indentation=2, line="post {")
             for name in self.windfile.actions:
                 post_step: Action = self.windfile.actions[name]
                 if isinstance(post_step.root, InternalAction) and post_step.root.run_always:

@@ -33,6 +33,14 @@ class BaseGenerator:
         self.metadata = metadata
         self.result = []
 
+    def add_line(self, indentation: int, line: str) -> None:
+        """
+        Add a line to the result.
+        :param indentation: indentation level
+        :param line: line to add
+        """
+        self.result.append(" " * indentation + line)
+
     def has_always_actions(self) -> bool:
         """
         Check if there are always actions in the windfile.
