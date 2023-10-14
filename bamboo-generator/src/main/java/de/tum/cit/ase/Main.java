@@ -292,7 +292,7 @@ public class Main {
             defaultStage.jobs(defaultJob);
             stageList.add(defaultStage);
         }
-        plan = plan.stages(stageList.toArray(new Stage[0]));
+        plan = plan.stages(stageList.toArray(new Stage[]{}));
         final String yaml = BambooSpecSerializer.dump(plan);
         System.err.println("✅ Generation done, printing result to stdout");
         System.out.println(yaml);
