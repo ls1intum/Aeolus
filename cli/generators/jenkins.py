@@ -148,15 +148,6 @@ class JenkinsGenerator(BaseGenerator):
         self.add_environment_variables(step=step)
         self.result.append("      steps " + "{")
         self.add_script(name=name, original_type=original_type, script=step.script, indentation=8)
-        # self.result.append(f"        echo '⚙️ executing {name}'")
-        # for now, we assume that all file actions are shell scripts
-        # if original_type in ("file", "internal"):
-        #     self.result.append("        sh '''")
-        # for line in step.script.split("\n"):
-        #     if line:
-        #         self.result.append(f"         {line}")
-        # if original_type in ("file", "internal"):
-        #     self.result.append("        '''")
         self.result.append("      }")
         self.result.append("    }")
         return None
