@@ -1,24 +1,28 @@
 # Aeolus: A Domain-Specific Language for Streamlining CI Job Configuration for Programming Exercises
 
-This repository will contain the work of [my](https://github.com/reschandreas) master's thesis. The goal of this thesis is to create a domain-specific language (DSL) for streamlining CI job configuration for programming exercises.
+This repository will contain the work of [my](https://github.com/reschandreas) master's thesis. The goal of this thesis
+is to create a domain-specific language (DSL) for streamlining CI job configuration for programming exercises.
 
 ## Why?
-Currently, in Artemis, it is hard to create custom CI jobs. With Aeolus we provide a standard definition that 
+
+Currently, in Artemis, it is hard to create custom CI jobs. With Aeolus we provide a standard definition that
 is able to generate code for several targets.
 
 ## How?
-The idea is to define an input language, parse and validate it and generate the CI configuration 
-for multiple platforms (e.g. CLI, Bamboo, Jenkins, ...). And therefore be able to 
+
+The idea is to define an input language, parse and validate it and generate the CI configuration
+for multiple platforms (e.g. CLI, Bamboo, Jenkins, ...). And therefore be able to
 switch the CI platform without having to rewrite the configuration.
 
 ## Development
 
 The system is still under development and not ready for use, yet. We plan on supporting the following platforms:
+
 - CLI
 - Jenkins
 - Bamboo
 
-For now, we generate the jobs/build plans/scripts in the respective platform's language from two 
+For now, we generate the jobs/build plans/scripts in the respective platform's language from two
 different input files, one for the set of jobs to be executed (called Windfile) and importable, reusable
 and shareable modular actionfiles.
 
@@ -73,6 +77,7 @@ steps:
 The generated CLI script for the above example would look like this:
 
 `python main.py -dev generate -t cli -i windfile.yaml`
+
 ```bash
 #!/usr/bin/env bash
 set -e
@@ -133,83 +138,85 @@ main () {
 main $@
 
 ```
+
 And the generated Jenkinsfile would look like this:
 
 `python main.py -dev generate -t jenkins -i windfile.yaml`
 
 ```groovy
 pipeline {
-  agent any
-  parameters {
-    string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current lifecycle')
-  }
-  stages {
-    stage('aeolus') {
-      steps {
-        echo '🖨️ cloning aeolus'
-        dir('aeolus') {
-          checkout([$class: 'GitSCM',
-                    branches: [[name: 'develop']],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [],
-                    submoduleCfg: [],
-                    userRemoteConfigs: [[
-                            credentialsId: 'artemis_gitlab_admin_credentials',
-                            name: 'aeolus',
-                            url: 'https://github.com/ls1intum/Aeolus.git'
-                    ]]
-          ])
-        }
-      }
+    agent any
+    parameters {
+        string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current lifecycle')
     }
-    // step internal-action
-    // generated from step internal-action
-    // original type was internal
-    stage('internal-action') {
-      steps {
-        echo '⚙️ executing internal-action'
-        sh '''
+    stages {
+        stage('aeolus') {
+            steps {
+                echo '🖨️ cloning aeolus'
+                dir('aeolus') {
+                    checkout([$class                           : 'GitSCM',
+                              branches                         : [[name: 'develop']],
+                              doGenerateSubmoduleConfigurations: false,
+                              extensions                       : [],
+                              submoduleCfg                     : [],
+                              userRemoteConfigs                : [[
+                                                                          credentialsId: 'artemis_gitlab_admin_credentials',
+                                                                          name         : 'aeolus',
+                                                                          url          : 'https://github.com/ls1intum/Aeolus.git'
+                                                                  ]]
+                    ])
+                }
+            }
+        }
+        // step internal-action
+        // generated from step internal-action
+        // original type was internal
+        stage('internal-action') {
+            steps {
+                echo '⚙️ executing internal-action'
+                sh '''
          echo "This is an internal action"
         '''
-      }
-    }
-    // step external-action_0
-    // generated from step external-action
-    // original type was internal
-    stage('external-action_0') {
-      when {
-        anyOf {
-          expression { params.current_lifecycle != 'preparation' }
-          expression { params.current_lifecycle != 'working_time' }
+            }
         }
-      }
-      environment {
-        WHO_TO_GREET = "world"
-      }
-      steps {
-        echo '⚙️ executing external-action_0'
-        sh '''
+        // step external-action_0
+        // generated from step external-action
+        // original type was internal
+        stage('external-action_0') {
+            when {
+                anyOf {
+                    expression { params.current_lifecycle != 'preparation' }
+                    expression { params.current_lifecycle != 'working_time' }
+                }
+            }
+            environment {
+                WHO_TO_GREET = "world"
+            }
+            steps {
+                echo '⚙️ executing external-action_0'
+                sh '''
          echo "Hello ${WHO_TO_GREET}"
         '''
-      }
+            }
+        }
     }
-  }
-  post {
-    // step clean_up
-    // generated from step clean_up
-    // original type was internal
-    always {
-      echo '⚙️ executing clean_up'
-      sh '''
+    post {
+        // step clean_up
+        // generated from step clean_up
+        // original type was internal
+        always {
+            echo '⚙️ executing clean_up'
+            sh '''
          rm -rf aeolus/
         '''
+        }
     }
-  }
 }
 
 
 
 ```
+
 And the generated Bamboo YAML specs would look like this:
 
 `python main.py -dev generate -t bamboo -i windfile.yaml`
@@ -223,15 +230,15 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
     key: WINDFILE
   name: example windfile
   oid: null
-  pluginConfigurations: []
+  pluginConfigurations: [ ]
   dependenciesProperties:
-    childPlans: []
+    childPlans: [ ]
     dependenciesConfigurationProperties:
       blockingStrategy: NONE
       enabledForBranches: true
       requireAllStagesPassing: false
-  labels: []
-  notifications: []
+  labels: [ ]
+  notifications: [ ]
   planBranchConfiguration: null
   planBranchManagementProperties:
     branchIntegrationProperties:
@@ -259,10 +266,10 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
       key: EXAMPLE
     name: EXAMPLE
     oid: null
-    repositories: []
+    repositories: [ ]
     repositoryStoredSpecsData: null
-    sharedCredentials: []
-    variables: []
+    sharedCredentials: [ ]
+    variables: [ ]
   repositories:
     - repositoryDefinition: !!com.atlassian.bamboo.specs.model.repository.git.GitRepositoryProperties
         description: null
@@ -284,14 +291,14 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
         vcsChangeDetection:
           changesetFilterPatternRegex: null
           commitIsolationEnabled: false
-          configuration: {}
+          configuration: { }
           filterFilePatternOption: NONE
           filterFilePatternRegex: null
           maxRetries: 5
           quietPeriod: !!java.time.Duration 'PT10S'
           quietPeriodEnabled: false
         verboseLogs: false
-  repositoryBranches: []
+  repositoryBranches: [ ]
   repositoryStoredSpecsData: null
   stages:
     - description: ''
@@ -303,23 +310,23 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
             key: CHECKOUT1
           name: Checkout
           oid: null
-          pluginConfigurations: []
-          artifactSubscriptions: []
-          artifacts: []
+          pluginConfigurations: [ ]
+          artifactSubscriptions: [ ]
+          artifacts: [ ]
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments: []
+            dockerRunArguments: [ ]
             enabled: false
             image: null
-            volumes: {}
-          finalTasks: []
-          requirements: []
+            volumes: { }
+          finalTasks: [ ]
+          requirements: [ ]
           tasks:
             - !!com.atlassian.bamboo.specs.model.task.VcsCheckoutTaskProperties
-              conditions: []
+              conditions: [ ]
               description: Checkout Default Repository
               enabled: true
-              requirements: []
+              requirements: [ ]
               checkoutItems:
                 - defaultRepository: false
                   path: aeolus
@@ -338,23 +345,23 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
             key: INTERNALACTION1
           name: internal-action
           oid: null
-          pluginConfigurations: []
-          artifactSubscriptions: []
-          artifacts: []
+          pluginConfigurations: [ ]
+          artifactSubscriptions: [ ]
+          artifacts: [ ]
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments: []
+            dockerRunArguments: [ ]
             enabled: false
             image: null
-            volumes: {}
-          finalTasks: []
-          requirements: []
+            volumes: { }
+          finalTasks: [ ]
+          requirements: [ ]
           tasks:
             - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
-              conditions: []
+              conditions: [ ]
               description: internal-action
               enabled: true
-              requirements: []
+              requirements: [ ]
               argument: null
               body: |
                 echo "This is an internal action"
@@ -374,23 +381,23 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
             key: CLEANUP2
           name: clean_up
           oid: null
-          pluginConfigurations: []
-          artifactSubscriptions: []
-          artifacts: []
+          pluginConfigurations: [ ]
+          artifactSubscriptions: [ ]
+          artifacts: [ ]
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments: []
+            dockerRunArguments: [ ]
             enabled: false
             image: null
-            volumes: {}
-          finalTasks: []
-          requirements: []
+            volumes: { }
+          finalTasks: [ ]
+          requirements: [ ]
           tasks:
             - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
-              conditions: []
+              conditions: [ ]
               description: clean_up
               enabled: true
-              requirements: []
+              requirements: [ ]
               argument: null
               body: |
                 rm -rf aeolus/
@@ -410,23 +417,23 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
             key: EXTERNALACTION03
           name: external-action_0
           oid: null
-          pluginConfigurations: []
-          artifactSubscriptions: []
-          artifacts: []
+          pluginConfigurations: [ ]
+          artifactSubscriptions: [ ]
+          artifacts: [ ]
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments: []
+            dockerRunArguments: [ ]
             enabled: false
             image: null
-            volumes: {}
-          finalTasks: []
-          requirements: []
+            volumes: { }
+          finalTasks: [ ]
+          requirements: [ ]
           tasks:
             - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
-              conditions: []
+              conditions: [ ]
               description: dummy task to prevent wrong result of build plan run
               enabled: true
-              requirements: []
+              requirements: [ ]
               argument: null
               body: echo "⚙️ Executing external-action_0 if stage is correct"
               environmentVariables: null
@@ -445,7 +452,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
                     value: ^.*[^(working_time)][^(preparation)].*
               description: external-action_0
               enabled: true
-              requirements: []
+              requirements: [ ]
               argument: null
               body: echo "Hello ${WHO_TO_GREET}"
               environmentVariables: WHO_TO_GREET=world
@@ -455,7 +462,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
               workingSubdirectory: null
       manualStage: false
       name: externalaction0
-  triggers: []
+  triggers: [ ]
   variables:
     - createOnly: false
       name: lifecycle_stage
@@ -469,47 +476,71 @@ specModelVersion: 9.3.3
 
 ### Windfile
 
-The windfile is the main input file for the Aeolus system. It contains the configuration for the CI jobs and references to actionfiles.
+The windfile is the main input file for the Aeolus system. It contains the configuration for the CI jobs and references
+to actionfiles.
 The yaml specification for the windfile can be found [here](schemas/v0.0.1/schemas/windfile.json).
 
 In a windfile, you can define jobs of different types. Currently, there are four types of jobs:
+
 - `internal`: A job that is defined in the windfile itself
+
 ```yaml
   internal-action:
     script: |
       echo "This is an internal action"
 ```
+
 - `external`: A job that is defined in an actionfile
+
 ```yaml
   external-action:
     use: simple-action.yml
 ```
+
 - `file`: A job that includes a file e.g. a bash script
+
 ```yaml
   file-action:
     file: file-action.sh
 ```
-- `platform`: A job that includes a platform-specific script, used to prepare the CI system for the eventual execution of the other jobs
+
+- `platform`: A job that includes a platform-specific script, used to prepare the CI system for the eventual execution
+  of the other jobs
+  or platform specific actions. The example shown below is translated into a TestParser task in Bamboo which
+  parses the test results of the other actions, this is only needed in Bamboo.
+
 ```yaml
   platform-action:
-    platform: jenkins
-    script: |
-      curl https://<your-jenkins-url>/job/<your-job-name>/build?token=<your-token>
+    parameters:
+      ignore_time: false
+      test_results: '**/test-results/test/*.xml'
+    platform: bamboo
+    kind: junit
+    run_always: true
 ```
 
 Every type of job can have the following properties:
-- `excludeDuring`: A list of lifecycles during which the job should be excluded from execution, 
-possible options are:
-  - `preparation`
-  - `working_time`
-  - `post_deadline`
-  - `evaluation`
-  - `always`
+
+- `excludeDuring`: A list of lifecycles during which the job should be excluded from execution,
+  possible options are:
+    - `preparation`
+    - `working_time`
+    - `post_deadline`
+    - `evaluation`
+    - `all`
 
 ### Code Generation
 
-| Feature                        | CLI/Bash |  Jenkins  | Bamboo |
-|--------------------------------|:--------:|:---------:|:------:|
-| simple script generation       |    ✅     |     ✅     |   ✅    |
-| usage of environment variables |    ✅     |     ✅     |   ✅    |
-| lifecycle parameter            |    ✅     |     ✅     |   ✅    |
+| Feature                        | CLI/Bash | Jenkins | Bamboo |
+|--------------------------------|:--------:|:-------:|:------:|
+| simple script generation       |    ✅     |    ✅    |   ✅    |
+| usage of environment variables |    ✅     |    ✅    |   ✅    |
+| lifecycle parameter            |    ✅     |    ✅    |   ✅    |
+
+### Additional Features
+
+| Feature                    | CLI/Bash | Jenkins | Bamboo |
+|----------------------------|:--------:|:-------:|:------:|
+| build trigger              |    ✅     |    ✅    |   ✅    |
+| docker configuration       |    ✅     |    ❌    |   ✅    |
+| translating back to Aeolus |    ❌     |    ❌    |   ✅    |
