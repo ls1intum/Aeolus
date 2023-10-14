@@ -66,7 +66,9 @@ class JenkinsGenerator(BaseGenerator):
             self.add_line(indentation=indentation, line="environment {")
             indentation += 2
             for env_var in self.windfile.environment.root.root:
-                self.add_line(indentation=indentation, line=f"{env_var} = '{self.windfile.environment.root.root[env_var]}'")
+                self.add_line(
+                    indentation=indentation, line=f"{env_var} = '{self.windfile.environment.root.root[env_var]}'"
+                )
             indentation -= 2
             self.add_line(indentation=indentation, line="}")
         assert indentation == 2
@@ -97,14 +99,15 @@ class JenkinsGenerator(BaseGenerator):
         )
         self.add_line(indentation=indentation - 2, line="}")
 
+    # pylint: disable=too-many-arguments
     def add_script(self, wrapper: str, name: str, original_type: Optional[str], script: str, indentation: int) -> None:
         """
         Add a script to the pipeline.
         :param wrapper: wrapper to use, e.g. steps, post, always etc.
-        :param original_type: original type of the action
         :param name: Name of the step to handle
-        :param indentation: indentation level
+        :param original_type: original type of the action
         :param script: Script to add
+        :param indentation: indentation level
         """
         self.result.append(" " * indentation + f"{wrapper} " + "{")
         indentation += 2
@@ -202,7 +205,7 @@ class JenkinsGenerator(BaseGenerator):
         self.add_line(indentation=indentation, line="submoduleCfg: [],")
         self.add_line(indentation=indentation, line="userRemoteConfigs: [[")
         indentation += 2
-        if self.windfile.metadata.gitCredentials:
+        if self.windfile.metadata.gitCredentials and isinstance(self.windfile.metadata.gitCredentials, str):
             self.add_line(
                 indentation=indentation, line="credentialsId: '" + self.windfile.metadata.gitCredentials + "',"
             )
