@@ -129,7 +129,7 @@ class BambooGenerator(BaseGenerator):
             return
         if self.final_result is None:
             return
-        build_id: str = job_id.replace("/", "-")
+        build_id: str = job_id.replace("/", "-").upper()
         logger.info("🔨", f"Triggering Bamboo build for {build_id}", self.output_settings.emoji)
 
         # Endpoint to trigger the build

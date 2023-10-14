@@ -1,7 +1,5 @@
 package de.tum.cit.ase.classes;
 
-import com.atlassian.bamboo.specs.api.builders.docker.DockerConfiguration;
-
 import java.util.List;
 import java.util.Map;
 
@@ -12,7 +10,7 @@ public abstract class Action {
     private Map<String, String> environment;
     private List<String> excludeDuring;
     private DockerConfig docker;
-    private boolean always;
+    private boolean runAlways;
 
     public static Action fromMap(String name, Map<String, Object> map) {
         if (map.containsKey("kind")) {
@@ -56,12 +54,12 @@ public abstract class Action {
         this.excludeDuring = excludeDuring;
     }
 
-    public boolean isAlways() {
-        return always;
+    public boolean isRunAlways() {
+        return runAlways;
     }
 
-    protected void setAlways(boolean always) {
-        this.always = always;
+    protected void setRunAlways(boolean runAlways) {
+        this.runAlways = runAlways;
     }
 
     public DockerConfig getDocker() {
