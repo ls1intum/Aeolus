@@ -179,6 +179,11 @@ public class Main {
         return null;
     }
 
+    /**
+     * If no docker configuration is specified, we can put all tasks in one stage, this is easier to read
+     * @param windFile the parsed Windfile
+     * @return true if all tasks can be put in one stage, false otherwise
+     */
     private static boolean canBePutInOneStage(WindFile windFile) {
         return windFile.getActions().stream().noneMatch(action -> action.getDocker() != null);
     }
