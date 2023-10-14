@@ -86,19 +86,10 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append(f"    // original type was {original_type}")
         self.result.append("      always " + "{")
         self.add_script(name=name, original_type=original_type, script=step.script, indentation=8)
-        # self.result.append(f"        echo '⚙️ executing {name}'")
-        # for now, we assume that all file actions are shell scripts
-        # if original_type in ("file", "internal"):
-        #     self.result.append("        sh '''")
-        # for line in step.script.split("\n"):
-        #     if line:
-        #         self.result.append(f"         {line}")
-        # if original_type in ("file", "internal"):
-        #     self.result.append("        '''")
         self.result.append("      }")
         self.result.append("    }")
 
-    def add_script(self, name: str, original_type: str, script: str, indentation: int) -> None:
+    def add_script(self, name: str, original_type: Optional[str], script: str, indentation: int) -> None:
         """
         Add a script to the pipeline.
         :param original_type: original type of the action
