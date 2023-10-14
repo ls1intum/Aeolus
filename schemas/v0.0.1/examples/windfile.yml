@@ -6,9 +6,15 @@ metadata:
   author:
     name: Andreas Resch
   gitCredentials: artemis_gitlab_admin_credentials
-jobs:
-  clone:
-    use: clone-default
+repositories:
+  tests:
+    url: https://github.com/ls1intum/Aeolus.git
+    branch: develop
+    path: .
+actions:
+  what-are-these-files:
+    script: |
+      ls -la
   run:
     script: |
       echo "Hello World"

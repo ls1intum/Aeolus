@@ -26,6 +26,24 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
+/**
+ * This is the main class of the bamboo-generator, it is responsible for parsing the input and calling the correct
+ * methods to generate, and publish the build plan. We support multiple modes of input, from a file, from json
+ * and base64 input. The input can be passed as an argument, or as stdin. The intended usage is for this application
+ * to be called from the python cli tool in the same repository. For that we use the base64 encoding of the json
+ * representation of the windfile. The application is further intended to be stateless, no information is stored
+ * and the generation process does not depend on any previous state.
+ * The workflow is as follows:
+ * 1. Parse the input (either from file, json, base64 or stdin)
+ * 2. Generate the build plan
+ * 3. Print the build plan to stdout
+ * 4. If --publish is passed, publish the build plan to bamboo (specified by --server and --token)
+ * <p>
+ * For the generation process, we use the bamboo-specs library, which is a library provided by Atlassian to generate
+ * build plans for bamboo. We use the library to generate a build plan from the windfile, and then serialize it to
+ * yaml, which is then printed to stdout. Every other output needs to be printed to stderr, so that it can be
+ * redirected to a file, while the yaml is printed to stdout and can be piped to the python cli tool.
+ */
 public class Main {
 
     private static final String FILE_INPUT_ARGUMENT = "--file";
@@ -34,27 +52,39 @@ public class Main {
     private static final String BASE64_ARGUMENT = "--base64";
     private static final String GET_YAML_ARGUMENT = "--get-yaml";
     private static final String PUBLISH_ARGUMENT = "--publish";
-    private static final String BAMBOOSERVER_ARGUMENT = "--server";
-    private static final String BAMBOOTOKEN_ARGUMENT = "--token";
+    private static final String BAMBOO_SERVER_ARGUMENT = "--server";
+    private static final String BAMBOO_TOKEN_ARGUMENT = "--token";
 
     private static boolean publish = false;
     private static String bambooUrl = "";
     private static String bambooToken = "";
 
+    /**
+     * If --server and --token are passed, we parse them and store them in the static variables
+     *
+     * @param args the arguments passed to the application
+     */
     private static void parseCredentials(String[] args) {
-        if (!Arrays.asList(args).contains(BAMBOOSERVER_ARGUMENT) || !Arrays.asList(args).contains(BAMBOOTOKEN_ARGUMENT)) {
+        if (!Arrays.asList(args).contains(BAMBOO_SERVER_ARGUMENT) || !Arrays.asList(args).contains(BAMBOO_TOKEN_ARGUMENT)) {
             System.err.println("If you want to interact with Bamboo, you also have to provide a bamboo server url and a bamboo token");
         }
-        bambooUrl = args[Arrays.asList(args).indexOf(BAMBOOSERVER_ARGUMENT) + 1];
-        bambooToken = args[Arrays.asList(args).indexOf(BAMBOOTOKEN_ARGUMENT) + 1];
+        bambooUrl = args[Arrays.asList(args).indexOf(BAMBOO_SERVER_ARGUMENT) + 1];
+        bambooToken = args[Arrays.asList(args).indexOf(BAMBOO_TOKEN_ARGUMENT) + 1];
     }
 
+    /**
+     * If --publish is passed, we parse the credentials and set the publish variable to true, so we know to
+     * contact the bamboo server
+     *
+     * @param args the arguments passed to the application
+     */
     private static void parsePublish(String[] args) {
         if (Arrays.asList(args).contains(PUBLISH_ARGUMENT)) {
             publish = true;
             parseCredentials(args);
         }
     }
+
 
     private static Mode getMode(String[] args) {
         if (Arrays.asList(args).contains(GET_YAML_ARGUMENT)) {
@@ -63,6 +93,12 @@ public class Main {
         return Mode.GENERATION;
     }
 
+    /**
+     * This method is used to parse the input and returns the parsed Windfile
+     *
+     * @param args the arguments passed to the application
+     * @return the parsed Windfile
+     */
     private static WindFile getInput(String[] args) {
         if (args.length < 1) {
             System.err.println("Usage: java -jar bamboo-generator.jar " + FILE_INPUT_ARGUMENT + "|" + STDIN_ARGUMENT + "|" + JSON_ARGUMENT + "|" + BASE64_ARGUMENT + "|" + GET_YAML_ARGUMENT + " [path|json|base64|buildplankey]" + "--publish --server <bamboo-server-url> --token <bamboo-token>");
@@ -98,6 +134,8 @@ public class Main {
                     System.err.println("✅ done reading windfile from stdin");
                 } catch (IOException e) {
                     e.printStackTrace();
+                    System.err.println("Error reading from stdin, exiting.");
+                    System.exit(2);
                 }
                 try {
                     return WindFile.fromYAML(builder.toString());
@@ -141,6 +179,13 @@ public class Main {
         return null;
     }
 
+    /**
+     * This method is used to generate the build plan from the parsed Windfile, it creates a bamboo plan that
+     * consists of a checkout task (if repsitories are specified), and a task for each action in the Windfile.
+     * If the given Windfile contains a docker configuration, the tasks are run in the specified docker container.
+     *
+     * @param args the arguments passed to the application
+     */
     private static void generateBuildPlan(String[] args) {
 
         WindFile windFile = getInput(args);
@@ -184,24 +229,37 @@ public class Main {
                 continue;
             }
             if (action instanceof InternalAction internalAction) {
-                var keyInput = internalAction.getName().toUpperCase().replaceAll("-", "").replaceAll("_", "") + stageList.size();
+                var keyInput = internalAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
+                System.out.println(keyInput);
                 var key = new BambooKey(keyInput);
                 var tasks = buildPlanService.handleAction(internalAction);
                 if (oneGlobalDockerConfig) {
                     defaultTasks.addAll(tasks);
                 } else {
-                    Stage stage = new Stage(internalAction.getName()).jobs(new Job(internalAction.getName(), key).dockerConfiguration(BuildPlanService.convertDockerConfig(internalAction.getDocker())).tasks(tasks.toArray(new Task[]{})));
+                    var job = new Job(internalAction.getName(), key).tasks(tasks.toArray(new Task[]{}));
+                    var docker = BuildPlanService.convertDockerConfig(internalAction.getDocker());
+                    if (docker != null) {
+                        job = job.dockerConfiguration(docker);
+                    }
+                    Stage stage = new Stage(internalAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(
+                            job
+                    );
                     stageList.add(stage);
                 }
             }
             if (action instanceof PlatformAction platformAction) {
-                var keyInput = platformAction.getName().toUpperCase().replaceAll("-", "").replaceAll("_", "") + stageList.size();
+                var keyInput = platformAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
                 var key = new BambooKey(keyInput);
                 var tasks = buildPlanService.handleSpecialAction(platformAction);
                 if (oneGlobalDockerConfig) {
                     defaultTasks.addAll(tasks);
                 } else {
-                    Stage stage = new Stage(platformAction.getName()).jobs(new Job(platformAction.getName(), key).dockerConfiguration(BuildPlanService.convertDockerConfig(platformAction.getDocker())).tasks(tasks.toArray(new Task[]{})));
+                    var job = new Job(platformAction.getName(), key).tasks(tasks.toArray(new Task[]{}));
+                    var docker = BuildPlanService.convertDockerConfig(platformAction.getDocker());
+                    if (docker != null) {
+                        job = job.dockerConfiguration(docker);
+                    }
+                    Stage stage = new Stage(platformAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(job);
                     stageList.add(stage);
                 }
             }
@@ -222,6 +280,12 @@ public class Main {
         }
     }
 
+    /**
+     * If --get-yaml is passed, we parse the credentials and the build plan key, and then fetch the yaml from bamboo
+     * and print it to stdout
+     *
+     * @param args the arguments passed to the application
+     */
     private static void getYAML(String[] args) {
         if (args.length < 2) {
             System.err.println("If you use --get-yaml, you also have to provide a build plan key");
@@ -243,6 +307,12 @@ public class Main {
         }
     }
 
+    /**
+     * This method is used to create a project object from the metadata of the windfile.
+     *
+     * @param metadata the metadata of the windfile
+     * @return a project object
+     */
     private static Project getEmptyProject(WindFileMetadata metadata) {
         String id = metadata.getProjectKey();
         return new Project().key(id).name(id).description(metadata.getDescription() + "\n---created using aeolus");

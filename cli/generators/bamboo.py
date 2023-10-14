@@ -2,7 +2,7 @@
 import base64
 import os
 import subprocess
-from typing import List
+from typing import List, Any
 from utils import logger
 
 import requests
@@ -94,7 +94,7 @@ class BambooGenerator(BaseGenerator):
             command += f" --publish --server {self.output_settings.ci_credentials.url} "
             command += f"--token {self.output_settings.ci_credentials.token}"
         client.containers.run(
-            image=os.getenv("BAMBOO_GENERATOR_IMAGE", "ghcr.io/ls1intum/aeolus/bamboo-generator:nightl"),
+            image=os.getenv("BAMBOO_GENERATOR_IMAGE", "ghcr.io/ls1intum/aeolus/bamboo-generator:nightly"),
             command=f"{command}",
             auto_remove=False,
             name=container_name,
@@ -111,6 +111,11 @@ class BambooGenerator(BaseGenerator):
                         logger.info("🐳", line, self.output_settings.emoji)
             except StopIteration:
                 break
+        result: dict[Any, Any] = container.wait()
+        if result["StatusCode"] != 0:
+            logger.error("❌", "Bamboo YAML Spec file generation failed", self.output_settings.emoji)
+            container.remove()
+            raise ValueError("Bamboo YAML Spec file generation failed")
         logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
         result_logs: str = container.logs(stdout=True, stderr=False).decode("utf-8")
         container.remove()

@@ -52,10 +52,7 @@ def fix_keys(dictionary: dict[str, Any]) -> dict[str, Any]:
     """
     clean: dict[str, Any] = {}
     for key in dictionary.keys():
-        if "-" in key:
-            clean[key.replace("-", "_")] = dictionary[key]
-        else:
-            clean[key] = dictionary[key]
+        clean[key.replace("-", "_")] = dictionary[key]
     return clean
 
 
@@ -158,7 +155,7 @@ def handle_tasks(job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooChec
             )
         else:
             print(f"Task type {task_type} is not implemented")
-            # raise NotImplementedError(f"Task type {task_type} is not implemented")
+            raise NotImplementedError(f"Task type {task_type} is not implemented")
     return tasks
 
 
@@ -227,7 +224,9 @@ def convert_stages(plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
 
 class BambooClient:
     """
-    Client for the Bamboo REST API.
+    Client for the Bamboo REST API. As bamboo does not provide a complete CRUD API, we create this workaround
+    of using the specs API to get the YAML representation of a plan. We take the YAML representation and convert
+    it into a defined structure that we can work with to translate it into Aeolus.
     """
 
     credentials: CICredentials

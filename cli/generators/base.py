@@ -38,7 +38,7 @@ class BaseGenerator:
         Check if there are always actions in the windfile.
         """
         for _, action in self.windfile.actions.items():
-            if action.root.always:
+            if action.root.run_always:
                 return True
         return False
 

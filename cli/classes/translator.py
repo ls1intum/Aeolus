@@ -80,7 +80,7 @@ def extract_action(job: BambooJob, task: BambooTask) -> Optional[Action]:
                     docker=docker,
                     environment=environment,
                     platform=Target.bamboo,
-                    always=task.always_execute,
+                    run_always=task.always_execute,
                 )
             )
     else:
@@ -91,7 +91,7 @@ def extract_action(job: BambooJob, task: BambooTask) -> Optional[Action]:
                 docker=docker,
                 environment=environment,
                 platform=None,
-                always=task.always_execute,
+                run_always=task.always_execute,
             )
         )
     return action

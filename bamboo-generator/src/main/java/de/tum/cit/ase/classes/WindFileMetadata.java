@@ -74,7 +74,7 @@ public class WindFileMetadata {
     }
 
     public String getProjectKey() {
-        String id = getId();
+        String id = getId().toUpperCase();
         if (id.contains("/")) {
             id = id.replaceAll("/", "-");
         }
@@ -83,7 +83,7 @@ public class WindFileMetadata {
     }
 
     public String getPlanName() {
-        String id = getId();
+        String id = getId().toUpperCase();
         if (id.contains("/")) {
             id = id.replaceAll("/", "-");
         }

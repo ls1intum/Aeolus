@@ -261,10 +261,8 @@ class Merger(PassSettings):
                 self.output_settings.emoji,
             )
             return False
-        for entry in external_actions:
+        for name, action in external_actions:
             try:
-                name: str = entry[0]
-                action: Action = entry[1]
                 path: Optional[str] = None
                 converted: Optional[
                     typing.Tuple[
@@ -372,6 +370,12 @@ class Merger(PassSettings):
     def convert_actionfile_to_internal_actions(
         self, actionfile: ActionFile, absolute_path: str
     ) -> Optional[typing.Tuple[typing.List[str], typing.List[Action]]]:
+        """
+        Converts the given actionfile to internal actions. By inlining the defined actions into the windfile.
+        :param actionfile: Actionfile to convert
+        :param absolute_path: Absolute path to the actionfile
+        :return: Tuple of the original types and the converted actions
+        """
         original_types: List[str] = []
         actions: List[Action] = []
         if actionfile is not None:
@@ -397,7 +401,7 @@ class Merger(PassSettings):
                             parameters=internals.root.parameters,
                             platform=internals.root.platform,
                             docker=internals.root.docker,
-                            always=internals.root.always,
+                            run_always=internals.root.run_always,
                         )
                     )
 
@@ -440,7 +444,7 @@ class Merger(PassSettings):
                         parameters=internals.root.parameters,
                         platform=internals.root.platform,
                         docker=internals.root.docker,
-                        always=internals.root.always,
+                        run_always=internals.root.run_always,
                     )
                 )
                 if internal:
@@ -480,7 +484,7 @@ class Merger(PassSettings):
                         parameters=action.parameters,
                         platform=action.platform,
                         docker=action.docker,
-                        always=action.always,
+                        run_always=action.run_always,
                     )
                 )
                 original_types.append("file")

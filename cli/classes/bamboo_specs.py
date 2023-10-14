@@ -3,6 +3,10 @@
 from typing import Optional, Any
 
 
+# This file contains a simplified view of the Bamboo Specs, as returned by the Bamboo REST API.
+# We only use the fields that help us in crafting a working Aeolus spec file.
+
+
 class BambooPlan:
     """
     BambooPlan represents a Bamboo plan as returned by the Bamboo REST API.
