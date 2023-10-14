@@ -2,7 +2,7 @@
 import base64
 import os
 import subprocess
-from typing import List
+from typing import List, Any
 from utils import logger
 
 import requests
@@ -77,8 +77,7 @@ class BambooGenerator(BaseGenerator):
         if process.returncode != 0:
             logger.error("❌", "Bamboo YAML Spec file generation failed", self.output_settings.emoji)
             raise ValueError("Bamboo YAML Spec file generation failed")
-        else:
-            logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
+        logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
         result_logs: str = process.stdout
         self.result.append(result_logs)
 
@@ -112,6 +111,11 @@ class BambooGenerator(BaseGenerator):
                         logger.info("🐳", line, self.output_settings.emoji)
             except StopIteration:
                 break
+        result: dict[Any, Any] = container.wait()
+        if result["StatusCode"] != 0:
+            logger.error("❌", "Bamboo YAML Spec file generation failed", self.output_settings.emoji)
+            container.remove()
+            raise ValueError("Bamboo YAML Spec file generation failed")
         logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
         result_logs: str = container.logs(stdout=True, stderr=False).decode("utf-8")
         container.remove()
