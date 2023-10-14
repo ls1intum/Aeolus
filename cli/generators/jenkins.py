@@ -20,7 +20,15 @@ class JenkinsGenerator(BaseGenerator):
         the environment, etc.
         """
         self.result.append("pipeline {")
-        self.result.append("  agent any")
+        if self.windfile.metadata.docker is None:
+            self.result.append("  agent any")
+        else:
+            tag: str = self.windfile.metadata.docker.tag if self.windfile.metadata.docker.tag is not None else "latest"
+            self.result.append("  agent {")
+            self.result.append("    docker {")
+            self.result.append("      image '" + self.windfile.metadata.docker.image + ":" + tag + "'")
+            self.result.append("    }")
+            self.result.append("  }")
         # to respect the exclusion during different parts of the lifecycle
         # we need a parameter that holds the current lifecycle
         self.result.append("  parameters {")
@@ -99,6 +107,13 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append(f"    // generated from step {original_name}")
         self.result.append(f"    // original type was {original_type}")
         self.result.append(f"    stage('{name}') " + "{")
+        if step.docker is not None:
+            tag: str = step.docker.tag if step.docker.tag is not None else "latest"
+            self.result.append("      agent {")
+            self.result.append("        docker {")
+            self.result.append("          image '" + step.docker.image + ":" + tag + "'")
+            self.result.append("        }")
+            self.result.append("      }")
         if step.excludeDuring is not None:
             self.result.append("      when {")
             self.result.append("        anyOf {")
@@ -227,10 +242,6 @@ class JenkinsGenerator(BaseGenerator):
         script.appendChild(config_xml.createTextNode(super().generate()))
 
         server.upsert_job(job_name, config_xml.toxml())
-        if exists:
-            server.build_job(job_name, parameters={"current_lifecycle": "initial-invalid-build"})
-        else:
-            server.build_job(job_name)
 
     def generate(self) -> str:
         """

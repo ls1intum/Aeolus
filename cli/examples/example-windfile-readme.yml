@@ -4,6 +4,9 @@ metadata:
   id: example-windfile
   description: This is a windfile with an internal action
   author: Andreas Resch
+  docker:
+    image: ls1tum/artemis-maven-template
+    tag: java17-20
   gitCredentials: artemis_gitlab_admin_credentials
 repositories:
   aeolus:
@@ -11,6 +14,12 @@ repositories:
     branch: develop
     path: aeolus
 actions:
+  set-java-container:
+    script: set
+  set-c-container:
+    docker:
+      image: ghcr.io/ls1intum/artemis-c-docker
+    script: set
   internal-action:
     script: |
       echo "This is an internal action"
