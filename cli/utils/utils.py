@@ -9,7 +9,7 @@ import inspect
 import pydantic
 import yaml
 
-from classes.generated.definitions import Target, Environment
+from classes.generated.definitions import Target
 from classes.generated.environment import EnvironmentSchema
 from classes.output_settings import OutputSettings
 from utils import logger
@@ -141,7 +141,9 @@ def get_ci_environment(target: Target, output_settings: OutputSettings) -> Optio
     return None
 
 
-def replace_environment_variables(environment: EnvironmentSchema, haystack: typing.List[str], reverse: bool = False) -> list[str]:
+def replace_environment_variables(
+    environment: EnvironmentSchema, haystack: typing.List[str], reverse: bool = False
+) -> list[str]:
     """
     Replaces the environment variables in the given list.
     :param environment: Environment variables
