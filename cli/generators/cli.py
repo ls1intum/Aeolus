@@ -2,7 +2,7 @@
 import os
 import subprocess
 import tempfile
-from typing import List, Optional, Any
+from typing import List, Optional
 
 from classes.generated.definitions import InternalAction, Repository, Target
 from classes.generated.windfile import WindFile
@@ -108,16 +108,18 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
         if step.environment:
             for env_var in step.environment.root.root:
-                updated: Optional[str | float | bool] = step.environment.root.root[env_var]
-                if isinstance(updated, str):
-                    updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
-                self.add_line(indentation=2, line=f'export {env_var}="' f'{updated}"')
+                updated_env: Optional[str | float | bool] = step.environment.root.root[env_var]
+                if isinstance(updated_env, str):
+                    updated_env = utils.replace_environment_variable(environment=self.environment, haystack=updated_env)
+                self.add_line(indentation=2, line=f'export {env_var}="' f'{updated_env}"')
         if step.parameters is not None:
             for parameter in step.parameters.root.root:
-                updated: Optional[str | float | bool] = step.parameters.root.root[parameter]
-                if isinstance(updated, str):
-                    updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
-                self.add_line(indentation=2, line=f'{parameter}="' f'{updated}"')
+                updated_param: Optional[str | float | bool] = step.parameters.root.root[parameter]
+                if isinstance(updated_param, str):
+                    updated_param = utils.replace_environment_variable(
+                        environment=self.environment, haystack=updated_param
+                    )
+                self.add_line(indentation=2, line=f'{parameter}="' f'{updated_param}"')
         for line in step.script.split("\n"):
             if line:
                 line = utils.replace_environment_variable(environment=self.environment, haystack=line)

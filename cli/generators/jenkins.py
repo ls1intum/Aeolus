@@ -78,10 +78,10 @@ class JenkinsGenerator(BaseGenerator):
             self.add_line(indentation=indentation, line="environment {")
             indentation += 2
             for env_var in self.windfile.environment.root.root:
-                updated: Optional[str | float | bool] = self.windfile.environment.root.root[env_var]
-                if isinstance(updated, str):
-                    updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
-                self.add_line(indentation=indentation, line=f"{env_var} = '{updated}'")
+                updated_env: Optional[str | float | bool] = self.windfile.environment.root.root[env_var]
+                if isinstance(updated_env, str):
+                    updated_env = utils.replace_environment_variable(environment=self.environment, haystack=updated_env)
+                self.add_line(indentation=indentation, line=f"{env_var} = '{updated_env}'")
             indentation -= 2
             self.add_line(indentation=indentation, line="}")
         assert indentation == 2  # we need to be at the same level as in the beginning, otherwise something is wrong
@@ -195,10 +195,12 @@ class JenkinsGenerator(BaseGenerator):
                     self.result.append(f'        {param} = "{updated}"')
             if step.environment is not None:
                 for env_var in step.environment.root.root:
-                    updated: Optional[str | float | bool] = step.environment.root.root[env_var]
-                    if isinstance(updated, str):
-                        updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
-                    self.result.append(f'        {env_var} = "' f'{updated}"')
+                    updated_env: Optional[str | float | bool] = step.environment.root.root[env_var]
+                    if isinstance(updated_env, str):
+                        updated_env = utils.replace_environment_variable(
+                            environment=self.environment, haystack=updated_env
+                        )
+                    self.result.append(f'        {env_var} = "' f'{updated_env}"')
             self.result.append("      }")
 
     def handle_clone(self, name: str, repository: Repository, indentation: int) -> None:
