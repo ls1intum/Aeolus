@@ -2,6 +2,7 @@
 import typing
 
 from classes.generated.definitions import InternalAction, Environment, Target
+from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.pass_metadata import PassMetadata
@@ -20,7 +21,7 @@ class BaseGenerator:
     metadata: PassMetadata
     result: typing.List[str]
     final_result: typing.Optional[str]
-    environment: Environment
+    environment: EnvironmentSchema
 
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
@@ -30,7 +31,7 @@ class BaseGenerator:
         self.output_settings = output_settings
         self.metadata = metadata
         self.result = []
-        env: typing.Optional[Environment] = utils.get_ci_environment(
+        env: typing.Optional[EnvironmentSchema] = utils.get_ci_environment(
             target=input_settings.target, output_settings=output_settings
         )
         if env is None:

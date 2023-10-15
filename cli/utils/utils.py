@@ -10,6 +10,7 @@ import pydantic
 import yaml
 
 from classes.generated.definitions import Target, Environment
+from classes.generated.environment import EnvironmentSchema
 from classes.output_settings import OutputSettings
 from utils import logger
 
@@ -119,7 +120,7 @@ def read_file(
         return None
 
 
-def get_ci_environment(target: Target, output_settings: OutputSettings) -> Optional[Environment]:
+def get_ci_environment(target: Target, output_settings: OutputSettings) -> Optional[EnvironmentSchema]:
     """
     Returns the CI environment for the given target.
     :param target: Target
@@ -132,14 +133,14 @@ def get_ci_environment(target: Target, output_settings: OutputSettings) -> Optio
     path = os.path.normpath(path)
     if file_exists(path, OutputSettings()):
         with open(path, "r", encoding="utf-8") as file:
-            environment: Optional[Environment] = read_file(
+            environment: Optional[EnvironmentSchema] = read_file(
                 filetype=Environment, file=file, output_settings=output_settings
             )
             return environment
     return None
 
 
-def replace_environment_variables(environment: Environment, list: list[str], reverse: bool = False) -> list[str]:
+def replace_environment_variables(environment: EnvironmentSchema, list: list[str], reverse: bool = False) -> list[str]:
     """
     Replaces the environment variables in the given list.
     :param environment: Environment variables
@@ -157,16 +158,23 @@ def replace_environment_variables(environment: Environment, list: list[str], rev
     return result
 
 
+def replace_bamboo_environment_variable_with_aeolus(environment: EnvironmentSchema, haystack: str) -> str:
+    """
+    Replaces the bamboo environment variables with aeolus environment variables.
+    :param environment: Environment variables
+    :param haystack: String to replace
+    :return: Replaced string
+    """
+    return replace_environment_variables(environment=environment, list=[haystack], reverse=True)[0]
+
+
 def replace_bamboo_environment_variables_with_aeolus(
-    environment: Environment, haystack: typing.Union[str, list[str]]
-) -> typing.Union[str, list[str]]:
+    environment: EnvironmentSchema, haystack: typing.List[str]
+) -> typing.List[str]:
     """
     Replaces the bamboo environment variables with aeolus environment variables.
     :param environment:
     :param haystack:
     :return:
     """
-    if isinstance(haystack, str):
-        return replace_environment_variables(environment=environment, list=[haystack], reverse=True)[0]
-    if isinstance(haystack, list):
-        return replace_environment_variables(environment=environment, list=haystack, reverse=True)
+    return replace_environment_variables(environment=environment, list=haystack, reverse=True)

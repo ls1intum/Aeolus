@@ -34,6 +34,7 @@ from classes.generated.definitions import (
     Parameters,
     ListModel,
 )
+from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -41,7 +42,7 @@ from classes.pass_settings import PassSettings
 from utils import logger, utils
 
 
-def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Environment) -> Optional[Docker]:
+def parse_docker(docker_config: Optional[BambooDockerConfig], environment: EnvironmentSchema) -> Optional[Docker]:
     """
     Converts the given docker configuration into a Docker object.
     :param docker_config: Config from Bamboo
@@ -51,8 +52,8 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
     if docker_config is not None:
         volume_list: list[str] = []
         for volume in docker_config.volumes:
-            host: str = utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=volume)
-            container: str = utils.replace_bamboo_environment_variables_with_aeolus(
+            host: str = utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=volume)
+            container: str = utils.replace_bamboo_environment_variable_with_aeolus(
                 environment=environment, haystack=docker_config.volumes[volume]
             )
             volume_list.append(f"{host}:{container}")
@@ -69,22 +70,22 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
     return None
 
 
-def parse_env_variables(environment: Environment, vars: dict[Any, str | float | None]) -> Environment:
+def parse_env_variables(environment: EnvironmentSchema, variables: dict[Any, str | float | None]) -> Environment:
     """
     Converts the given environment variables into a Environment object.
     :param environment: Environment variables to replace
-    :param vars: Environment variables from Bamboo
+    :param variables: Environment variables from Bamboo
     :return:
     """
-    envs: Environment = Environment(root=Dictionary(root=vars))
+    envs: Environment = Environment(root=Dictionary(root=variables))
     for key, value in envs.root.root.items():
-        envs.root.root[key] = utils.replace_bamboo_environment_variables_with_aeolus(
+        envs.root.root[key] = utils.replace_bamboo_environment_variable_with_aeolus(
             environment=environment, haystack=value
         )
     return envs
 
 
-def parse_arguments(environment: Environment, task: BambooTask) -> Parameters:
+def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Parameters:
     """
     Converts the given arguments into a Parameters object.
     :param environment: Environment variables to replace
@@ -94,17 +95,17 @@ def parse_arguments(environment: Environment, task: BambooTask) -> Parameters:
     params: Parameters = Parameters(root=ListModel(root=[]))
     for value in task.arguments:
         params.root.root.append(
-            utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=value)
+            utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
         )
     if isinstance(task, BambooSpecialTask):
         for value in task.parameters:
             params.root.root.append(
-                utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=value)
+                utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
             )
     return params
 
 
-def extract_action(job: BambooJob, task: BambooTask, environment: Environment) -> Optional[Action]:
+def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSchema) -> Optional[Action]:
     """
     Converts the given task of the given Job into an Action.
     Setting the conditions and environment variables fetched from Bamboo
@@ -122,7 +123,7 @@ def extract_action(job: BambooJob, task: BambooTask, environment: Environment) -
                 for entry in regex.sub("", lifecycle).split("|"):
                     exclude.append(Lifecycle[entry])
     docker: Optional[Docker] = parse_docker(docker_config=job.docker, environment=environment)
-    envs: Environment = parse_env_variables(environment=environment, vars=task.environment)
+    envs: Environment = parse_env_variables(environment=environment, variables=task.environment)
     params: Parameters = parse_arguments(environment=environment, task=task)
     action: Optional[Action] = None
     if isinstance(task, BambooSpecialTask):
@@ -145,7 +146,7 @@ def extract_action(job: BambooJob, task: BambooTask, environment: Environment) -
         action = Action(
             root=InternalAction(
                 script="".join(
-                    utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=script)
+                    utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=script)
                 ),
                 excludeDuring=exclude,
                 docker=docker,
@@ -158,7 +159,7 @@ def extract_action(job: BambooJob, task: BambooTask, environment: Environment) -
     return action
 
 
-def extract_actions(stages: dict[str, BambooStage], environment: Environment) -> dict[Any, Action]:
+def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSchema) -> dict[Any, Action]:
     """
     Converts all jobs and tasks from the given stages (from the REST API)
     into a dictionary of InternalActions.
@@ -223,11 +224,11 @@ def extract_repositories(
 class BambooTranslator(PassSettings):
     source: Target = Target.bamboo
     client: BambooClient
-    environment: Environment
+    environment: EnvironmentSchema
 
     def __init__(self, input_settings: InputSettings, output_settings: OutputSettings, credentials: CICredentials):
         input_settings.target = Target.bamboo
-        env: typing.Optional[Environment] = utils.get_ci_environment(
+        env: typing.Optional[EnvironmentSchema] = utils.get_ci_environment(
             target=input_settings.target, output_settings=output_settings
         )
         if env is None:
