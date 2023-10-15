@@ -133,24 +133,25 @@ def get_ci_environment(target: Target, output_settings: OutputSettings) -> Optio
     path = os.path.normpath(path)
     if file_exists(path, OutputSettings()):
         with open(path, "r", encoding="utf-8") as file:
-            environment: Optional[EnvironmentSchema] = read_file(
-                filetype=Environment, file=file, output_settings=output_settings
+            environment: type[EnvironmentSchema] | None = read_file(
+                filetype=EnvironmentSchema, file=file, output_settings=output_settings
             )
-            return environment
+            if isinstance(environment, EnvironmentSchema):
+                return environment
     return None
 
 
-def replace_environment_variables(environment: EnvironmentSchema, list: list[str], reverse: bool = False) -> list[str]:
+def replace_environment_variables(environment: EnvironmentSchema, haystack: typing.List[str], reverse: bool = False) -> list[str]:
     """
     Replaces the environment variables in the given list.
     :param environment: Environment variables
-    :param list: List to replace
+    :param haystack: List to replace
     :param reverse: Whether to reverse the replacement or not
     :return: Replaced list
     """
-    result: list[str] = []
-    for item in list:
-        for key, value in environment.root.root.items():
+    result: typing.List[str] = []
+    for item in haystack:
+        for key, value in environment.__dict__.items():
             if reverse:
                 value, key = key, value
             item = item.replace(key, value)
@@ -165,7 +166,7 @@ def replace_bamboo_environment_variable_with_aeolus(environment: EnvironmentSche
     :param haystack: String to replace
     :return: Replaced string
     """
-    return replace_environment_variables(environment=environment, list=[haystack], reverse=True)[0]
+    return replace_environment_variables(environment=environment, haystack=[haystack], reverse=True)[0]
 
 
 def replace_bamboo_environment_variables_with_aeolus(
@@ -179,4 +180,4 @@ def replace_bamboo_environment_variables_with_aeolus(
     """
     if haystack is None:
         return []
-    return replace_environment_variables(environment=environment, list=haystack, reverse=True)
+    return replace_environment_variables(environment=environment, haystack=haystack, reverse=True)

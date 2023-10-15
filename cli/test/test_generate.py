@@ -2,11 +2,11 @@ import logging
 import unittest
 from typing import Optional
 
-from classes.generated.definitions import Target
 from test.testutils import TemporaryFileWithContent
 from test.windfile_definitions import (
     VALID_WINDFILE_INTERNAL_ACTION,
 )
+from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
