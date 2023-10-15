@@ -102,10 +102,10 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
         for key, value in task.parameters.items():
             updated: str | float | bool | None = value
             if isinstance(value, str):
-                value = utils.replace_bamboo_environment_variable_with_aeolus(
-                    environment=environment, haystack=value
+                updated = utils.replace_bamboo_environment_variable_with_aeolus(
+                    environment=environment, haystack=updated
                 )
-            param_dictionary[key] = value
+            param_dictionary[key] = updated
     print(param_dictionary)
     return Parameters(root=Dictionary(root=param_dictionary))
 
