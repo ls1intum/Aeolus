@@ -78,11 +78,12 @@ def parse_env_variables(environment: EnvironmentSchema, variables: dict[Any, str
     :return:
     """
     envs: Environment = Environment(root=Dictionary(root=variables))
-    for key, value in envs.root.root.items():
-        envs.root.root[key] = utils.replace_bamboo_environment_variable_with_aeolus(
+    dictionary: Dictionary = Dictionary(root={})
+    for key, value in variables.items():
+        dictionary.root[key] = utils.replace_bamboo_environment_variable_with_aeolus(
             environment=environment, haystack=value
         )
-    return envs
+    return Environment(root=dictionary)
 
 
 def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Parameters:
@@ -92,17 +93,17 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
     :param task: Task containing the arguments
     :return: Parameters object
     """
-    params: Parameters = Parameters(root=ListModel(root=[]))
+    param_list: typing.List[str] = []
     for value in task.arguments:
-        params.root.root.append(
+        param_list.append(
             utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
         )
     if isinstance(task, BambooSpecialTask):
         for value in task.parameters:
-            params.root.root.append(
+            param_list.append(
                 utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
             )
-    return params
+    return Parameters(root=ListModel(root=param_list))
 
 
 def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSchema) -> Optional[Action]:

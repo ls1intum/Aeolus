@@ -169,7 +169,7 @@ def replace_bamboo_environment_variable_with_aeolus(environment: EnvironmentSche
 
 
 def replace_bamboo_environment_variables_with_aeolus(
-    environment: EnvironmentSchema, haystack: typing.List[str]
+    environment: EnvironmentSchema, haystack: Optional[typing.List[str]]
 ) -> typing.List[str]:
     """
     Replaces the bamboo environment variables with aeolus environment variables.
@@ -177,4 +177,6 @@ def replace_bamboo_environment_variables_with_aeolus(
     :param haystack:
     :return:
     """
+    if haystack is None:
+        return []
     return replace_environment_variables(environment=environment, list=haystack, reverse=True)
