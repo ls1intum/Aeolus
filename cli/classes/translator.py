@@ -95,7 +95,9 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
     """
     param_dictionary: dict[Any, str | float | bool | None] = {}
     for value in task.arguments:
-        param_dictionary[value] = utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
+        param_dictionary[value] = utils.replace_bamboo_environment_variable_with_aeolus(
+            environment=environment, haystack=value
+        )
     if isinstance(task, BambooSpecialTask):
         for key, value in task.parameters.items():
             param_dictionary[key] = utils.replace_bamboo_environment_variable_with_aeolus(
