@@ -1,10 +1,7 @@
-import traceback
 import typing
 from typing import Optional
 
 from io import TextIOWrapper
-import pydantic
-import yaml
 
 
 from classes.generated.actionfile import ActionFile

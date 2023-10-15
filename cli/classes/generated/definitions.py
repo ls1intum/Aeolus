@@ -48,6 +48,10 @@ class Lifecycle(Enum):
     all = 'all'
 
 
+class Parameters(RootModel):
+    root: Dictionary = Field(..., description='The parameters of an action.', title='Parameters of an action.')
+
+
 class Target(Enum):
     """
     The CI platforms that are able to run this windfile.
@@ -65,14 +69,6 @@ class ContactData(BaseModel):
 
     name: str = Field(..., description='The name of the author.', examples=['Andreas Resch'])
     email: Optional[str] = Field(None, description='The email of the author.', examples=['aeolus@resch.io'])
-
-
-class ListModel(RootModel):
-    """
-    A list of values.
-    """
-
-    root: List[Union[str, float, Any, bool]] = Field(..., description='A list of values.', title='List')
 
 
 class Repository(BaseModel):
@@ -98,81 +94,6 @@ class GitCredentials(BaseModel):
 
 class Environment(RootModel):
     root: Dictionary = Field(..., description='Environment variables for actions.', title='Environment')
-
-
-class Author(RootModel):
-    root: Union[str, ContactData] = Field(..., description='The author of the windfile.', title='Author')
-
-
-class Parameters(RootModel):
-    root: Union[ListModel, Dictionary] = Field(
-        ..., description='The parameters of an action.', title='Parameters of an action.'
-    )
-
-
-class WindfileMetadata(BaseModel):
-    """
-    Metadata of the windfile.
-    """
-
-    name: str = Field(..., description='The name of the windfile.', examples=['rust-exercise-jobs'])
-    id: Optional[str] = Field(
-        None,
-        description='The id of the resulting job in the CI system.',
-        examples=['rust-exercise-jobs', 'AEOLUS-BASE', 'jenkins/job/path'],
-    )
-    description: str = Field(
-        ...,
-        description='Description of what this list of actions is supposed to achieve',
-        examples=['This windfile contains the jobs that are executed during the CI of the rust-exercise.'],
-    )
-    author: Author = Field(..., description='The author of the windfile.')
-    targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')
-    gitCredentials: Optional[Union[str, GitCredentials]] = Field(
-        None, description='The git credentials that are used to clone the repositories'
-    )
-    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the actions')
-
-
-class ExternalAction(BaseModel):
-    """
-    External action that can be executed with or without parameters.
-    """
-
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    use: str = Field(..., description='The name of the external action.', title='Name of the external action.')
-    parameters: Optional[Parameters] = None
-    excludeDuring: Optional[List[Lifecycle]] = Field(
-        None,
-        description='Exclude this action during the specified parts of the lifetime of an exercise.',
-        title='Exclude during',
-    )
-    environment: Optional[Environment] = Field(None, description='Environment variables for this external action.')
-    platform: Optional[Target] = Field(
-        None,
-        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
-    )
-    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    run_always: Optional[bool] = Field(
-        False, description='If this is set to true, the action is always executed, even if other actions fail.'
-    )
-
-
-class ActionMetadata(BaseModel):
-    """
-    Metadata of the actionfile.
-    """
-
-    name: str = Field(..., description='The name of the windfile.', examples=['rust-exercise-jobs'])
-    description: str = Field(
-        ...,
-        description='Description of what this list of actions is supposed to achieve',
-        examples=['This windfile contains the jobs that are executed during the CI of the rust-exercise.'],
-    )
-    author: Author = Field(..., description='The author of the actionfile.')
-    targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')
 
 
 class FileAction(BaseModel):
@@ -252,6 +173,75 @@ class PlatformAction(BaseModel):
     run_always: Optional[bool] = Field(
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
     )
+
+
+class Author(RootModel):
+    root: Union[str, ContactData] = Field(..., description='The author of the windfile.', title='Author')
+
+
+class WindfileMetadata(BaseModel):
+    """
+    Metadata of the windfile.
+    """
+
+    name: str = Field(..., description='The name of the windfile.', examples=['rust-exercise-jobs'])
+    id: Optional[str] = Field(
+        None,
+        description='The id of the resulting job in the CI system.',
+        examples=['rust-exercise-jobs', 'AEOLUS-BASE', 'jenkins/job/path'],
+    )
+    description: str = Field(
+        ...,
+        description='Description of what this list of actions is supposed to achieve',
+        examples=['This windfile contains the jobs that are executed during the CI of the rust-exercise.'],
+    )
+    author: Author = Field(..., description='The author of the windfile.')
+    targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')
+    gitCredentials: Optional[Union[str, GitCredentials]] = Field(
+        None, description='The git credentials that are used to clone the repositories'
+    )
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the actions')
+
+
+class ExternalAction(BaseModel):
+    """
+    External action that can be executed with or without parameters.
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    use: str = Field(..., description='The name of the external action.', title='Name of the external action.')
+    parameters: Optional[Parameters] = None
+    excludeDuring: Optional[List[Lifecycle]] = Field(
+        None,
+        description='Exclude this action during the specified parts of the lifetime of an exercise.',
+        title='Exclude during',
+    )
+    environment: Optional[Environment] = Field(None, description='Environment variables for this external action.')
+    platform: Optional[Target] = Field(
+        None,
+        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+    )
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    run_always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
+
+
+class ActionMetadata(BaseModel):
+    """
+    Metadata of the actionfile.
+    """
+
+    name: str = Field(..., description='The name of the windfile.', examples=['rust-exercise-jobs'])
+    description: str = Field(
+        ...,
+        description='Description of what this list of actions is supposed to achieve',
+        examples=['This windfile contains the jobs that are executed during the CI of the rust-exercise.'],
+    )
+    author: Author = Field(..., description='The author of the actionfile.')
+    targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')
 
 
 class Action(RootModel):

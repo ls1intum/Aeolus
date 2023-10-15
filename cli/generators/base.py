@@ -1,7 +1,7 @@
 # pylint: disable=duplicate-code
 import typing
 
-from classes.generated.definitions import InternalAction, Environment, Target
+from classes.generated.definitions import InternalAction
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
@@ -31,6 +31,8 @@ class BaseGenerator:
         self.output_settings = output_settings
         self.metadata = metadata
         self.result = []
+        if input_settings.target is None:
+            raise ValueError("No target specified")
         env: typing.Optional[EnvironmentSchema] = utils.get_ci_environment(
             target=input_settings.target, output_settings=output_settings
         )

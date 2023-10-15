@@ -32,7 +32,6 @@ from classes.generated.definitions import (
     FileAction,
     ExternalAction,
     Parameters,
-    ListModel,
 )
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
@@ -77,11 +76,12 @@ def parse_env_variables(environment: EnvironmentSchema, variables: dict[Any, str
     :param variables: Environment variables from Bamboo
     :return:
     """
-    envs: Environment = Environment(root=Dictionary(root=variables))
     dictionary: Dictionary = Dictionary(root={})
     for key, value in variables.items():
-        dictionary.root[key] = utils.replace_bamboo_environment_variable_with_aeolus(
-            environment=environment, haystack=value
+        dictionary.root[key] = (
+            utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
+            if isinstance(value, str)
+            else value
         )
     return Environment(root=dictionary)
 
@@ -93,17 +93,16 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
     :param task: Task containing the arguments
     :return: Parameters object
     """
-    param_list: typing.List[str] = []
+    param_dictionary: dict[Any, str | float | bool | None] = {}
     for value in task.arguments:
-        param_list.append(
-            utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
-        )
+        param_dictionary[value] = utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
     if isinstance(task, BambooSpecialTask):
-        for value in task.parameters:
-            param_list.append(
-                utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
+        for key, value in task.parameters.items():
+            param_dictionary[key] = utils.replace_bamboo_environment_variable_with_aeolus(
+                environment=environment, haystack=value
             )
-    return Parameters(root=ListModel(root=param_list))
+    print(param_dictionary)
+    return Parameters(root=Dictionary(root=param_dictionary))
 
 
 def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSchema) -> Optional[Action]:
@@ -250,10 +249,11 @@ class BambooTranslator(PassSettings):
             windfile.metadata.docker.parameters = utils.replace_bamboo_environment_variables_with_aeolus(
                 environment=self.environment, haystack=windfile.metadata.docker.parameters
             )
-        for name, action in windfile.actions.items():
-            action.root.script = utils.replace_bamboo_environment_variables_with_aeolus(
-                environment=self.environment, haystack=action.root.script
-            )
+        for _, action in windfile.actions.items():
+            if isinstance(action.root, InternalAction):
+                action.root.script = utils.replace_bamboo_environment_variables_with_aeolus(
+                    environment=self.environment, haystack=action.root.script
+                )
 
     def combine_docker_config(self, windfile: WindFile) -> None:
         """
