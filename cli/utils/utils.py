@@ -161,6 +161,17 @@ def replace_environment_variables(
     return result
 
 
+def replace_environment_variable(environment: EnvironmentSchema, haystack: str, reverse: bool = False) -> str:
+    """
+    Replaces the environment variables in the given list.
+    :param environment: Environment variables
+    :param haystack: List to replace
+    :param reverse: Whether to reverse the replacement or not
+    :return: Replaced string
+    """
+    return replace_environment_variables(environment=environment, haystack=[haystack], reverse=reverse)[0]
+
+
 def replace_bamboo_environment_variable_with_aeolus(environment: EnvironmentSchema, haystack: str) -> str:
     """
     Replaces the bamboo environment variables with aeolus environment variables.

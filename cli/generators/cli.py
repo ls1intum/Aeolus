@@ -2,7 +2,7 @@
 import os
 import subprocess
 import tempfile
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from classes.generated.definitions import InternalAction, Repository, Target
 from classes.generated.windfile import WindFile
@@ -10,7 +10,7 @@ from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
 from generators.base import BaseGenerator
-from utils import logger
+from utils import logger, utils
 from docker.models.containers import Container  # type: ignore
 from docker.client import DockerClient  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
@@ -36,11 +36,12 @@ class CliGenerator(BaseGenerator):
         """
         self.result.append("#!/usr/bin/env bash")
         self.result.append("set -e")
-        # if self.output_settings.debug:
-        #     self.result.append("set -x")
         if self.windfile.environment:
             for env_var in self.windfile.environment.root.root:
-                self.result.append(f'export {env_var}="' f'{self.windfile.environment.root.root[env_var]}"')
+                updated: Optional[str | float | bool] = self.windfile.environment.root.root[env_var]
+                if isinstance(updated, str):
+                    updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
+                self.result.append(f'export {env_var}="' f'{updated}"')
 
     def add_postfix(self) -> None:
         """
@@ -107,12 +108,19 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
         if step.environment:
             for env_var in step.environment.root.root:
-                self.add_line(indentation=2, line=f'export {env_var}="' f'{step.environment.root.root[env_var]}"')
+                updated: Optional[str | float | bool] = step.environment.root.root[env_var]
+                if isinstance(updated, str):
+                    updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
+                self.add_line(indentation=2, line=f'export {env_var}="' f'{updated}"')
         if step.parameters is not None:
             for parameter in step.parameters.root.root:
-                self.add_line(indentation=2, line=f'{parameter}="' f'{step.parameters.root.root[parameter]}"')
+                updated: Optional[str | float | bool] = step.parameters.root.root[parameter]
+                if isinstance(updated, str):
+                    updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
+                self.add_line(indentation=2, line=f'{parameter}="' f'{updated}"')
         for line in step.script.split("\n"):
             if line:
+                line = utils.replace_environment_variable(environment=self.environment, haystack=line)
                 self.add_line(indentation=2, line=line)
         self.result.append("}")
         return None

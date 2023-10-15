@@ -9,7 +9,7 @@ from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
 from generators.base import BaseGenerator
-from utils import logger
+from utils import logger, utils
 
 
 class JenkinsGenerator(BaseGenerator):
@@ -42,7 +42,9 @@ class JenkinsGenerator(BaseGenerator):
         if config.parameters is not None:
             if args is None:
                 args = ""
-            args += " " + " ".join(config.parameters)
+            args += " " + " ".join(
+                utils.replace_environment_variables(environment=self.environment, haystack=config.parameters)
+            )
         if args is not None:
             self.result.append(" " * indentation + "    args '" + args + "'")
         self.result.append(" " * indentation + "  }")
@@ -76,12 +78,13 @@ class JenkinsGenerator(BaseGenerator):
             self.add_line(indentation=indentation, line="environment {")
             indentation += 2
             for env_var in self.windfile.environment.root.root:
-                self.add_line(
-                    indentation=indentation, line=f"{env_var} = '{self.windfile.environment.root.root[env_var]}'"
-                )
+                updated: Optional[str | float | bool] = self.windfile.environment.root.root[env_var]
+                if isinstance(updated, str):
+                    updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
+                self.add_line(indentation=indentation, line=f"{env_var} = '{updated}'")
             indentation -= 2
             self.add_line(indentation=indentation, line="}")
-        assert indentation == 2
+        assert indentation == 2  # we need to be at the same level as in the beginning, otherwise something is wrong
         self.add_line(indentation=indentation, line="stages {")
 
     def add_postfix(self) -> None:
@@ -127,6 +130,7 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append(" " * indentation + "sh '''")
         for line in script.split("\n"):
             if line:
+                line = utils.replace_environment_variable(environment=self.environment, haystack=line)
                 self.result.append(" " * indentation + f"{line}")
         if was_internal_or_file:
             self.result.append(" " * indentation + "'''")
@@ -185,10 +189,16 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append("      environment {")
             if step.parameters is not None:
                 for param in step.parameters.root.root:
-                    self.result.append(f'        {param} = "{step.parameters.root.root[param]}"')
+                    updated: Optional[str | float | bool] = step.parameters.root.root[param]
+                    if isinstance(updated, str):
+                        updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
+                    self.result.append(f'        {param} = "{updated}"')
             if step.environment is not None:
                 for env_var in step.environment.root.root:
-                    self.result.append(f'        {env_var} = "' f'{step.environment.root.root[env_var]}"')
+                    updated: Optional[str | float | bool] = step.environment.root.root[env_var]
+                    if isinstance(updated, str):
+                        updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
+                    self.result.append(f'        {env_var} = "' f'{updated}"')
             self.result.append("      }")
 
     def handle_clone(self, name: str, repository: Repository, indentation: int) -> None:
