@@ -4,7 +4,11 @@ import subprocess
 import tempfile
 from typing import List, Optional
 
-from classes.generated.definitions import InternalAction, Repository
+from classes.generated.definitions import InternalAction, Repository, Target
+from classes.generated.windfile import WindFile
+from classes.input_settings import InputSettings
+from classes.output_settings import OutputSettings
+from classes.pass_metadata import PassMetadata
 from generators.base import BaseGenerator
 from utils import logger
 from docker.models.containers import Container  # type: ignore
@@ -18,6 +22,12 @@ class CliGenerator(BaseGenerator):
     """
 
     functions: List[str] = []
+
+    def __init__(
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
+    ):
+        input_settings.target = Target.cli
+        super().__init__(windfile, input_settings, output_settings, metadata)
 
     def add_prefix(self) -> None:
         """
@@ -39,12 +49,12 @@ class CliGenerator(BaseGenerator):
         """
         self.result.append("\n")
         self.result.append("# main function")
-        self.result.append("main () " + "{")
-        self.result.append('  local _current_lifecycle="${1}"')
+        self.result.append("main () {")
+        self.add_line(indentation=2, line='local _current_lifecycle="${1}"')
         if self.has_always_actions():
-            self.result.append("  trap final_aeolus_post_action EXIT")
+            self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
-            self.result.append(f"  {function} $_current_lifecycle")
+            self.add_line(indentation=2, line=f"{function} $_current_lifecycle")
         self.result.append("}\n")
         self.result.append("main $@")
 
@@ -56,9 +66,9 @@ class CliGenerator(BaseGenerator):
         """
         self.result.append("\n# always steps")
         self.result.append("final_aeolus_post_action () " + "{")
-        self.result.append("  echo '⚙️ executing final_aeolus_post_action'")
+        self.add_line(indentation=2, line="echo '⚙️ executing final_aeolus_post_action'")
         for step in steps:
-            self.result.append(f"  {step} $_current_lifecycle")
+            self.add_line(indentation=2, line=f"{step} $_current_lifecycle")
         self.result.append("}")
 
     def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
@@ -86,24 +96,24 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"{name} () " + "{")
         if step.excludeDuring is not None:
             # we don't need the local variable if there are no exclusions
-            self.result.append('  local _current_lifecycle="${1}"')
+            self.add_line(indentation=2, line='local _current_lifecycle="${1}"')
 
             for exclusion in step.excludeDuring:
-                self.result.append(f'  if [[ "${{_current_lifecycle}}" == "{exclusion.name}" ]]; then')
-                self.result.append(f"    echo '⚠️  {name} is excluded during {exclusion.name}'")
-                self.result.append("    return 0")
-                self.result.append("  fi")
+                self.add_line(indentation=2, line=f'if [[ "${{_current_lifecycle}}" == "{exclusion.name}" ]]; then')
+                self.add_line(indentation=4, line="echo '⚠️  " f"{name} is excluded during {exclusion.name}'")
+                self.add_line(indentation=4, line="return 0")
+                self.add_line(indentation=2, line="fi")
 
-        self.result.append(f"  echo '⚙️ executing {name}'")
+        self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
         if step.environment:
             for env_var in step.environment.root.root:
-                self.result.append(f'  export {env_var}="' f'{step.environment.root.root[env_var]}"')
+                self.add_line(indentation=2, line=f'export {env_var}="' f'{step.environment.root.root[env_var]}"')
         if step.parameters is not None:
             for parameter in step.parameters.root.root:
-                self.result.append(f'  {parameter}="{step.parameters.root.root[parameter]}"')
+                self.add_line(indentation=2, line=f'{parameter}="' f'{step.parameters.root.root[parameter]}"')
         for line in step.script.split("\n"):
             if line:
-                self.result.append(f"  {line}")
+                self.add_line(indentation=2, line=line)
         self.result.append("}")
         return None
 
@@ -149,8 +159,8 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"# step {name}")
         self.result.append(f"# generated from repository {name}")
         self.result.append(f"{clone_method} () " + "{")
-        self.result.append(f"  echo '🖨️ cloning {name}'")
-        self.result.append(f"  git clone {repository.url} --branch {repository.branch} {directory}")
+        self.add_line(indentation=2, line=f"echo '🖨️ cloning {name}'")
+        self.add_line(indentation=2, line=f"git clone {repository.url} --branch {repository.branch} {directory}")
         self.result.append("}")
         self.functions.append(clone_method)
 

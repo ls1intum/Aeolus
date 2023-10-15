@@ -2,7 +2,7 @@ import typing
 
 import argparse
 
-from classes.generated.definitions import Lifecycle
+from classes.generated.definitions import Lifecycle, Target
 from classes.generator import Generator
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -54,7 +54,7 @@ class Generate(Subcommand):
             "-t",
             help="Target CI system",
             required=True,
-            choices=["cli", "jenkins", "bamboo"],
+            choices=Target.__members__.keys(),
         )
 
         parser.add_argument(

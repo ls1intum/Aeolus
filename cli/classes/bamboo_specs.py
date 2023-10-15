@@ -77,6 +77,7 @@ class BambooTask:
         environment: dict[Any, str | float | None],
         description: str,
         condition: Optional[BambooCondition],
+        arguments: Optional[list[str]] = None,
         always_execute: bool = False,
     ) -> None:
         self.interpreter = interpreter
@@ -84,6 +85,7 @@ class BambooTask:
         self.environment = environment
         self.description = description
         self.condition = condition
+        self.arguments = arguments
         self.always_execute = always_execute
 
     interpreter: str
@@ -91,6 +93,7 @@ class BambooTask:
     environment: dict[Any, str | float | None]
     description: str
     condition: Optional[BambooCondition]
+    arguments: Optional[list[str]]
     always_execute: bool
 
 

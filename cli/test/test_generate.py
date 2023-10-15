@@ -2,6 +2,7 @@ import logging
 import unittest
 from typing import Optional
 
+from classes.generated.definitions import Target
 from test.testutils import TemporaryFileWithContent
 from test.windfile_definitions import (
     VALID_WINDFILE_INTERNAL_ACTION,
@@ -30,7 +31,7 @@ class GenerateTests(unittest.TestCase):
             metadata: PassMetadata = PassMetadata()
             merger: Merger = Merger(
                 windfile=None,
-                input_settings=InputSettings(file=file, file_path=file.name),
+                input_settings=InputSettings(file=file, file_path=file.name, target=Target.cli),
                 output_settings=self.output_settings,
                 metadata=metadata,
             )
@@ -39,7 +40,7 @@ class GenerateTests(unittest.TestCase):
             if windfile is None:
                 self.fail("Windfile is None")
             cli: CliGenerator = CliGenerator(
-                input_settings=InputSettings(file=file, file_path=file.name),
+                input_settings=InputSettings(file=file, file_path=file.name, target=Target.cli),
                 output_settings=self.output_settings,
                 windfile=windfile,
                 metadata=metadata,

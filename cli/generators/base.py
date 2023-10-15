@@ -1,11 +1,12 @@
 # pylint: disable=duplicate-code
 import typing
 
-from classes.generated.definitions import InternalAction
+from classes.generated.definitions import InternalAction, Environment, Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
+from utils import utils
 
 
 class BaseGenerator:
@@ -19,19 +20,22 @@ class BaseGenerator:
     metadata: PassMetadata
     result: typing.List[str]
     final_result: typing.Optional[str]
+    environment: Environment
 
     def __init__(
-        self,
-        windfile: WindFile,
-        input_settings: InputSettings,
-        output_settings: OutputSettings,
-        metadata: PassMetadata,
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
         self.windfile = windfile
         self.input_settings = input_settings
         self.output_settings = output_settings
         self.metadata = metadata
         self.result = []
+        env: typing.Optional[Environment] = utils.get_ci_environment(
+            target=input_settings.target, output_settings=output_settings
+        )
+        if env is None:
+            raise ValueError(f"No environment found for target {input_settings.target.value}")
+        self.environment = env
 
     def add_line(self, indentation: int, line: str) -> None:
         """

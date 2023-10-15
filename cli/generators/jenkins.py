@@ -4,6 +4,10 @@ from xml.dom.minidom import Document, parseString, Element
 
 import jenkins  # type: ignore
 from classes.generated.definitions import InternalAction, Action, Target, Repository, Docker
+from classes.generated.windfile import WindFile
+from classes.input_settings import InputSettings
+from classes.output_settings import OutputSettings
+from classes.pass_metadata import PassMetadata
 from generators.base import BaseGenerator
 from utils import logger
 
@@ -13,6 +17,12 @@ class JenkinsGenerator(BaseGenerator):
     Jenkins generator. Generates a jenkins pipeline
     to be used in the Jenkins CI system.
     """
+
+    def __init__(
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
+    ):
+        input_settings.target = Target.jenkins
+        super().__init__(windfile, input_settings, output_settings, metadata)
 
     def add_docker_config(self, config: Optional[Docker], indentation: int) -> None:
         """

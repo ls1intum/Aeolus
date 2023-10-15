@@ -1,11 +1,19 @@
 import os
+import traceback
 import typing
+from io import TextIOWrapper
 from types import ModuleType
 from typing import Optional
 import inspect
 
+import pydantic
+import yaml
+
+from classes.generated.definitions import Target, Environment
 from classes.output_settings import OutputSettings
 from utils import logger
+
+T = typing.TypeVar("T")
 
 
 def get_content_of(file: str) -> Optional[str]:
@@ -82,3 +90,83 @@ def file_exists(path: str, output_settings: OutputSettings) -> bool:
         )
         return False
     return True
+
+
+def read_file(
+    filetype: T,
+    file: TextIOWrapper,
+    output_settings: OutputSettings,
+) -> Optional[T]:
+    """
+    Validates the given file. If the file is valid,
+    the read object is returned.
+    :param filetype: Filetype to validate
+    :param file: File to read
+    :param output_settings: OutputSettings
+    :return: Validated object or None
+    """
+    try:
+        typevalidator: pydantic.TypeAdapter = pydantic.TypeAdapter(filetype)
+        content: str = file.read()
+        validated: T = typevalidator.validate_python(yaml.safe_load(content))
+        logger.info("✅ ", f"{file.name} is valid", output_settings.emoji)
+        return validated
+    except pydantic.ValidationError as validation_error:
+        logger.info("❌ ", f"{file.name} is invalid", output_settings.emoji)
+        logger.error("❌ ", str(validation_error), output_settings.emoji)
+        if output_settings.debug:
+            traceback.print_exc()
+        return None
+
+
+def get_ci_environment(target: Target, output_settings: OutputSettings) -> Optional[Environment]:
+    """
+    Returns the CI environment for the given target.
+    :param target: Target
+    :param output_settings: OutputSettings
+    :return: Environment
+    """
+    path: str = os.path.join(
+        os.path.dirname(__file__), "..", "..", "schemas", "v0.0.1", "environment", f"{target.name}.yaml"
+    )
+    path = os.path.normpath(path)
+    if file_exists(path, OutputSettings()):
+        with open(path, "r", encoding="utf-8") as file:
+            environment: Optional[Environment] = read_file(
+                filetype=Environment, file=file, output_settings=output_settings
+            )
+            return environment
+    return None
+
+
+def replace_environment_variables(environment: Environment, list: list[str], reverse: bool = False) -> list[str]:
+    """
+    Replaces the environment variables in the given list.
+    :param environment: Environment variables
+    :param list: List to replace
+    :param reverse: Whether to reverse the replacement or not
+    :return: Replaced list
+    """
+    result: list[str] = []
+    for item in list:
+        for key, value in environment.root.root.items():
+            if reverse:
+                value, key = key, value
+            item = item.replace(key, value)
+        result.append(item)
+    return result
+
+
+def replace_bamboo_environment_variables_with_aeolus(
+    environment: Environment, haystack: typing.Union[str, list[str]]
+) -> typing.Union[str, list[str]]:
+    """
+    Replaces the bamboo environment variables with aeolus environment variables.
+    :param environment:
+    :param haystack:
+    :return:
+    """
+    if isinstance(haystack, str):
+        return replace_environment_variables(environment=environment, list=[haystack], reverse=True)[0]
+    if isinstance(haystack, list):
+        return replace_environment_variables(environment=environment, list=haystack, reverse=True)

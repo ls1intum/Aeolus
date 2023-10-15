@@ -18,7 +18,7 @@ from classes.generated.definitions import (
 from classes.generated.windfile import WindFile
 from classes.output_settings import OutputSettings
 from classes.pass_settings import PassSettings
-from utils import logger
+from utils import logger, utils
 
 T = typing.TypeVar("T")
 
@@ -44,7 +44,7 @@ def get_external_actions(
     :param windfile: WindFile to analyze
     :return: List of external actions in the given windfile
     """
-    return get_actions_of_type(actiontype=ExternalAction, windfile=windfile)
+    return get_actions_of_type(action_type=ExternalAction, windfile=windfile)
 
 
 def get_platform_actions(
@@ -55,16 +55,16 @@ def get_platform_actions(
     :param windfile: WindFile to analyze
     :return: List of external actions in the given windfile
     """
-    return get_actions_of_type(actiontype=PlatformAction, windfile=windfile)
+    return get_actions_of_type(action_type=PlatformAction, windfile=windfile)
 
 
 def get_actions_of_type(
-    actiontype: T,
+    action_type: T,
     windfile: typing.Optional[WindFile],
 ) -> typing.List[typing.Tuple[str, Action]]:
     """
     Returns a list of all file actions in the given windfile.
-    :param actiontype: Type of action to return
+    :param action_type: Type of action to return
     :param windfile: Windfile to analyze
     :return: List of file actions in the given windfile
     """
@@ -76,7 +76,7 @@ def get_actions_of_type(
         if "root" in action.__dict__:
             # this allows handling of manually created actions during merging
             action = action.root
-        if isinstance(action, actiontype):  # type: ignore
+        if isinstance(action, action_type):  # type: ignore
             actions.append((name, action))
     return actions
 
@@ -89,7 +89,7 @@ def get_file_actions(
     :param windfile: Windfile to analyze
     :return: List of file actions in the given windfile
     """
-    return get_actions_of_type(actiontype=FileAction, windfile=windfile)
+    return get_actions_of_type(action_type=FileAction, windfile=windfile)
 
 
 def get_internal_actions_with_names(
@@ -100,7 +100,7 @@ def get_internal_actions_with_names(
     :param windfile: Windfile to analyze
     :return: List of actions in the given windfile
     """
-    return get_actions_of_type(actiontype=InternalAction, windfile=windfile)
+    return get_actions_of_type(action_type=InternalAction, windfile=windfile)
 
 
 def get_actions(
@@ -139,33 +139,6 @@ def get_internal_actions(windfile: WindFile) -> typing.List[InternalAction]:
     return actions
 
 
-def read_file(
-    filetype: T,
-    file: TextIOWrapper,
-    output_settings: OutputSettings,
-) -> Optional[T]:
-    """
-    Validates the given file. If the file is valid,
-    the read object is returned.
-    :param filetype: Filetype to validate
-    :param file: File to read
-    :param output_settings: OutputSettings
-    :return:
-    """
-    try:
-        typevalidator: pydantic.TypeAdapter = pydantic.TypeAdapter(filetype)
-        content: str = file.read()
-        validated: T = typevalidator.validate_python(yaml.safe_load(content))
-        logger.info("✅ ", f"{file.name} is valid", output_settings.emoji)
-        return validated
-    except pydantic.ValidationError as validation_error:
-        logger.info("❌ ", f"{file.name} is invalid", output_settings.emoji)
-        logger.error("❌ ", str(validation_error), output_settings.emoji)
-        if output_settings.debug:
-            traceback.print_exc()
-        return None
-
-
 def read_windfile(file: Optional[TextIOWrapper], output_settings: OutputSettings) -> Optional[WindFile]:
     """
     Validates the given file. If the file is valid, the windfile is returned.
@@ -176,7 +149,7 @@ def read_windfile(file: Optional[TextIOWrapper], output_settings: OutputSettings
     if file is None:
         return None
     # this shuts mypy up about the type
-    windfile: type[WindFile] | None = read_file(filetype=WindFile, file=file, output_settings=output_settings)
+    windfile: type[WindFile] | None = utils.read_file(filetype=WindFile, file=file, output_settings=output_settings)
     if isinstance(windfile, WindFile):
         return windfile
     return None
@@ -193,7 +166,9 @@ def read_action_file(file: Optional[TextIOWrapper], output_settings: OutputSetti
     # this shuts mypy up about the type
     if file is None:
         return None
-    action_file: type[ActionFile] | None = read_file(filetype=ActionFile, file=file, output_settings=output_settings)
+    action_file: type[ActionFile] | None = utils.read_file(
+        filetype=ActionFile, file=file, output_settings=output_settings
+    )
     if isinstance(action_file, ActionFile):
         return action_file
     return None

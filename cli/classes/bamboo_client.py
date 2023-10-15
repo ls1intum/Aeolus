@@ -96,6 +96,10 @@ def handle_script_task(task_dict: dict[str, Any]) -> BambooTask:
         for entry in str(task_dict["environment"]).split(";"):
             key, value = entry.split("=")
             environment[key] = value
+    arguments: Optional[list[str]] = []
+    if "argument" in task_dict:
+        for argument in task_dict["argument"].split(" "):
+            arguments.append(str(argument))
     scripts: list[str] = []
     if "scripts" in task_dict and isinstance(task_dict["scripts"], list):
         for script in task_dict["scripts"]:
@@ -106,6 +110,7 @@ def handle_script_task(task_dict: dict[str, Any]) -> BambooTask:
         environment=environment,
         description=str(task_dict["description"]) if "description" in task_dict else "",
         condition=condition,
+        arguments=arguments,
         always_execute=bool(task_dict["always_execute"]) if "always_execute" in task_dict else False,
     )
 
