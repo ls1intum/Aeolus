@@ -12,6 +12,7 @@ from classes.bamboo_specs import (
     BambooTask,
     BambooRepository,
     BambooSpecialTask,
+    BambooDockerConfig,
 )
 from classes.bamboo_client import BambooClient
 from classes.ci_credentials import CICredentials
@@ -40,6 +41,69 @@ from classes.pass_settings import PassSettings
 from utils import logger, utils
 
 
+def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Environment) -> Optional[Docker]:
+    """
+    Converts the given docker configuration into a Docker object.
+    :param docker_config: Config from Bamboo
+    :param environment: Environment variables to replace
+    :return: Docker object or None
+    """
+    if docker_config is not None:
+        volume_list: list[str] = []
+        for volume in docker_config.volumes:
+            host: str = utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=volume)
+            container: str = utils.replace_bamboo_environment_variables_with_aeolus(
+                environment=environment, haystack=docker_config.volumes[volume]
+            )
+            volume_list.append(f"{host}:{container}")
+        arguments: list[str] = utils.replace_bamboo_environment_variables_with_aeolus(
+            environment=environment, haystack=docker_config.docker_run_arguments
+        )
+        docker = Docker(
+            image=docker_config.image if ":" not in docker_config.image else docker_config.image.split(":")[0],
+            tag=docker_config.image.split(":")[1] if ":" in docker_config.image else "latest",
+            volumes=volume_list,
+            parameters=arguments,
+        )
+        return docker
+    return None
+
+
+def parse_env_variables(environment: Environment, vars: dict[Any, str | float | None]) -> Environment:
+    """
+    Converts the given environment variables into a Environment object.
+    :param environment: Environment variables to replace
+    :param vars: Environment variables from Bamboo
+    :return:
+    """
+    envs: Environment = Environment(root=Dictionary(root=vars))
+    for key, value in envs.root.root.items():
+        envs.root.root[key] = utils.replace_bamboo_environment_variables_with_aeolus(
+            environment=environment, haystack=value
+        )
+    return envs
+
+
+def parse_arguments(environment: Environment, task: BambooTask) -> Parameters:
+    """
+    Converts the given arguments into a Parameters object.
+    :param environment: Environment variables to replace
+    :param task: Task containing the arguments
+    :return: Parameters object
+    """
+    params: Parameters = Parameters(root=ListModel(root=[]))
+    for value in task.arguments:
+        params.root.root.append(
+            utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=value)
+        )
+    if isinstance(task, BambooSpecialTask):
+        for value in task.parameters:
+            params.root.root.append(
+                utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=value)
+            )
+    return params
+
+
 def extract_action(job: BambooJob, task: BambooTask, environment: Environment) -> Optional[Action]:
     """
     Converts the given task of the given Job into an Action.
@@ -57,42 +121,12 @@ def extract_action(job: BambooJob, task: BambooTask, environment: Environment) -
                 lifecycle = condition.matches[match]
                 for entry in regex.sub("", lifecycle).split("|"):
                     exclude.append(Lifecycle[entry])
-    script_task: BambooTask = task
-    docker: Optional[Docker] = None
-    if job.docker is not None:
-        volume_list: list[str] = []
-        for volume in job.docker.volumes:
-            host: str = utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=volume)
-            container: str = utils.replace_bamboo_environment_variables_with_aeolus(
-                environment=environment, haystack=job.docker.volumes[volume]
-            )
-            volume_list.append(f"{host}:{container}")
-        arguments: list[str] = utils.replace_bamboo_environment_variables_with_aeolus(
-            environment=environment, haystack=job.docker.docker_run_arguments
-        )
-        docker = Docker(
-            image=job.docker.image if ":" not in job.docker.image else job.docker.image.split(":")[0],
-            tag=job.docker.image.split(":")[1] if ":" in job.docker.image else "latest",
-            volumes=volume_list,
-            parameters=arguments,
-        )
-    envs: Environment = Environment(root=Dictionary(root=script_task.environment))
-    for key, value in envs.root.root.items():
-        envs.root.root[key] = utils.replace_bamboo_environment_variables_with_aeolus(
-            environment=environment, haystack=value
-        )
-    params: Parameters = Parameters(root=ListModel(root=[]))
-    for value in script_task.arguments:
-        params.root.root.append(
-            utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=value)
-        )
+    docker: Optional[Docker] = parse_docker(docker_config=job.docker, environment=environment)
+    envs: Environment = parse_env_variables(environment=environment, vars=task.environment)
+    params: Parameters = parse_arguments(environment=environment, task=task)
     action: Optional[Action] = None
     if isinstance(task, BambooSpecialTask):
         if isinstance(task, BambooSpecialTask):
-            for value in task.parameters:
-                params.root.root.append(
-                    utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=value)
-                )
             action = Action(
                 root=PlatformAction(
                     parameters=params,
@@ -107,13 +141,11 @@ def extract_action(job: BambooJob, task: BambooTask, environment: Environment) -
                 )
             )
     else:
-        script: str = "".join(script_task.scripts)
+        script: str = "".join(task.scripts)
         action = Action(
             root=InternalAction(
                 script="".join(
-                    utils.replace_bamboo_environment_variables_with_aeolus(
-                        environment=environment, haystack=script
-                    )
+                    utils.replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=script)
                 ),
                 excludeDuring=exclude,
                 docker=docker,
