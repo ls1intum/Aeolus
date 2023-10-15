@@ -366,27 +366,7 @@
   "parameters": {
     "description": "The parameters of an action.",
     "title": "Parameters of an action.",
-    "oneOf": [
-      {
-        "$ref": "#/list"
-      },
-      {
-        "$ref": "#/dictionary"
-      }
-    ]
-  },
-  "list": {
-    "type": "array",
-    "title": "List",
-    "description": "A list of values.",
-    "items": {
-      "type": [
-        "string",
-        "number",
-        "float",
-        "boolean"
-      ]
-    }
+    "$ref": "#/dictionary"
   },
   "dictionary": {
     "type": "object",
