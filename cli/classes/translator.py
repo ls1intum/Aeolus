@@ -100,8 +100,8 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
         )
     if isinstance(task, BambooSpecialTask):
         for key, value in task.parameters.items():
-            updated: str | float | bool | None = value
-            if isinstance(value, str):
+            updated: Optional[str | float | bool] = value
+            if isinstance(updated, str):
                 updated = utils.replace_bamboo_environment_variable_with_aeolus(
                     environment=environment, haystack=updated
                 )
