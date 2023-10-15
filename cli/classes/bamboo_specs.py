@@ -1,6 +1,6 @@
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-instance-attributes
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 
 # This file contains a simplified view of the Bamboo Specs, as returned by the Bamboo REST API.
@@ -73,11 +73,11 @@ class BambooTask:
     def __init__(
         self,
         interpreter: str,
-        scripts: list[str],
+        scripts: List[str],
         environment: dict[Any, str | float | None],
         description: str,
         condition: Optional[BambooCondition],
-        arguments: Optional[list[str]] = None,
+        arguments: List[str] = None,
         always_execute: bool = False,
     ) -> None:
         self.interpreter = interpreter

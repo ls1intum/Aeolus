@@ -1,4 +1,4 @@
-from typing import Optional, Tuple, Any
+from typing import Optional, Tuple, Any, List
 from xml.dom.minidom import parseString, Document, Text, Node
 
 import requests
@@ -96,7 +96,7 @@ def handle_script_task(task_dict: dict[str, Any]) -> BambooTask:
         for entry in str(task_dict["environment"]).split(";"):
             key, value = entry.split("=")
             environment[key] = value
-    arguments: Optional[list[str]] = []
+    arguments: List[str] = []
     if "argument" in task_dict:
         for argument in task_dict["argument"].split(" "):
             arguments.append(str(argument))
