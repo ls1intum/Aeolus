@@ -105,7 +105,7 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
         if step.environment:
             for env_var in step.environment.root.root:
-                self.result.append(f'export {env_var}="' f'{self.windfile.environment.root.root[env_var]}"')
+                self.result.append(f'export {env_var}="' f'{step.environment.root.root[env_var]}"')
         if step.parameters is not None:
             for parameter in step.parameters.root.root:
                 self.add_line(indentation=2, line=f'{parameter}="' f'{step.parameters.root.root[parameter]}"')

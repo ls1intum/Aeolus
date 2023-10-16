@@ -197,7 +197,9 @@ def replace_bamboo_environment_variables_with_aeolus(
     return replace_environment_variables(environment=environment, haystack=haystack, reverse=False)
 
 
-def replace_env_variables_in_docker_config(environment: EnvironmentSchema, docker: Optional[Docker]) -> Optional[Docker]:
+def replace_env_variables_in_docker_config(
+    environment: EnvironmentSchema, docker: Optional[Docker]
+) -> Optional[Docker]:
     """
     Replaces the environment variables in the given docker config.
     :param environment: Environment variables
@@ -220,9 +222,11 @@ def replace_environment_variables_in_windfile(environment: EnvironmentSchema, wi
     :param windfile:
     """
     metadata: WindfileMetadata = windfile.metadata
-    windfile.metadata.docker = replace_env_variables_in_docker_config(environment=environment, docker=windfile.metadata.docker)
+    windfile.metadata.docker = replace_env_variables_in_docker_config(
+        environment=environment, docker=windfile.metadata.docker
+    )
     if windfile.environment is not None:
-        dictionary: Dictionary = Dictionary()
+        dictionary: Dictionary = Dictionary(root={})
         for key, value in windfile.environment.root.root.items():
             dictionary[
                 replace_environment_variable(environment=environment, haystack=key)
