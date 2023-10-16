@@ -9,7 +9,7 @@ import inspect
 import pydantic
 import yaml
 
-from classes.generated.definitions import Target, Docker, WindfileMetadata, Environment, Dictionary, InternalAction
+from classes.generated.definitions import Target, Docker, Environment, Dictionary, InternalAction
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.output_settings import OutputSettings
@@ -229,7 +229,7 @@ def replace_environment_dictionary(environment: EnvironmentSchema, env: Optional
         key = replace_environment_variable(environment=environment, haystack=key)
         if isinstance(value, str):
             value = replace_environment_variable(environment=environment, haystack=value)
-        dictionary[key] = value
+        dictionary.root[key] = value
     return Environment(root=dictionary)
 
 
