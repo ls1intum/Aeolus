@@ -27,6 +27,7 @@ class CliGenerator(BaseGenerator):
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
         input_settings.target = Target.cli
+        self.functions = []
         super().__init__(windfile, input_settings, output_settings, metadata)
 
     def add_prefix(self) -> None:

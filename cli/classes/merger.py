@@ -106,13 +106,6 @@ class Merger(PassSettings):
             output_settings=output_settings,
             metadata=metadata,
         )
-        if not windfile:
-            validator: Validator = Validator(output_settings=output_settings, input_settings=input_settings)
-            validated: Optional[WindFile] = validator.validate_wind_file()
-            if validated:
-                self.windfile = validated
-        else:
-            self.windfile = windfile
 
     def merge_internal_actions(self) -> bool:
         """
@@ -177,6 +170,11 @@ class Merger(PassSettings):
     def pull_external_action(
         self, action: ExternalAction
     ) -> Optional[typing.Tuple[typing.List[str], typing.List[Action]]]:
+        """
+        Pulls the given external action from GitHub/or other GIT hostings and converts it to internal actions.
+        :param action: External action to pull
+        :return: Tuple of the original types and the converted actions
+        """
         if not action.use:
             logger.error("❌ ", f"{action.use} not found", self.output_settings.emoji)
             return None
@@ -522,6 +520,13 @@ class Merger(PassSettings):
         return os.path.dirname(os.path.abspath(self.input_settings.file_path))
 
     def merge(self) -> Optional[WindFile]:
+        if not self.windfile:
+            validator: Validator = Validator(output_settings=self.output_settings, input_settings=self.input_settings)
+            validated: Optional[WindFile] = validator.validate_wind_file()
+            if validated:
+                self.windfile = validated
+        else:
+            return None
         """
         Merges the given windfile by inlining the external actions. So that the windfile can be
         used without other dependencies.

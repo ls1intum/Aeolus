@@ -48,12 +48,17 @@ class GenerateTests(unittest.TestCase):
             result: str = cli.generate()
             self.assertTrue(result.count("#!/usr/bin/env bash") == 1)
             self.assertTrue("set -e" in result)
-            # two comments, one definition, one echo for, and one call
+            # two comments, one definition, one echo for execution, one echo in the actual action, and one call
+            print("esrvus")
+            print(result)
+            print(result.count("internal-action"))
+            print(result.count("internal-action") == 5)
             self.assertTrue(result.count("internal-action") == 5)
             self.assertTrue(result.count("{") == result.count("}"))
             self.assertTrue(cli.check(content=result))
 
     def test_generate_jenkinsfile(self) -> None:
+        self.setUp()
         with TemporaryFileWithContent(VALID_WINDFILE_INTERNAL_ACTION) as file:
             metadata: PassMetadata = PassMetadata()
             merger: Merger = Merger(
