@@ -215,30 +215,35 @@ def replace_env_variables_in_docker_config(
     return docker
 
 
+def replace_environment_dictionary(environment: EnvironmentSchema, env: Optional[Environment]) -> Optional[Environment]:
+    """
+    Replaces the environment variables in the given environment dictionary.
+    :param environment: Environment variables to replace
+    :param env: Environment dictionary
+    :return: Environment dictionary with replaced variables
+    """
+    if env is None:
+        return None
+    dictionary: Dictionary = Dictionary(root={})
+    for key, value in env.root.root.items():
+        key = replace_environment_variable(environment=environment, haystack=key)
+        if isinstance(value, str):
+            value = replace_environment_variable(environment=environment, haystack=value)
+        dictionary[key] = value
+    return Environment(root=dictionary)
+
+
 def replace_environment_variables_in_windfile(environment: EnvironmentSchema, windfile: WindFile) -> None:
     """
     Replaces the environment variables in the given windfile.
     :param environment:
     :param windfile:
     """
-    metadata: WindfileMetadata = windfile.metadata
     windfile.metadata.docker = replace_env_variables_in_docker_config(
         environment=environment, docker=windfile.metadata.docker
     )
-    if windfile.environment is not None:
-        dictionary: Dictionary = Dictionary(root={})
-        for key, value in windfile.environment.root.root.items():
-            dictionary[
-                replace_environment_variable(environment=environment, haystack=key)
-            ] = replace_environment_variable(environment=environment, haystack=value)
-        metadata.environment = Environment(root=dictionary)
-    for name, action in windfile.actions.items():
+    windfile.environment = replace_environment_dictionary(environment=environment, env=windfile.environment)
+    for _, action in windfile.actions.items():
         if isinstance(action.root, InternalAction):
             action.root.script = replace_environment_variable(environment=environment, haystack=action.root.script)
-        if action.root.environment is not None:
-            dictionary: Dictionary = Dictionary()
-            for key, value in action.root.environment.root.root.items():
-                dictionary[
-                    replace_environment_variable(environment=environment, haystack=key)
-                ] = replace_environment_variable(environment=environment, haystack=value)
-            action.root.environment = Environment(root=dictionary)
+        action.root.environment = replace_environment_dictionary(environment=environment, env=action.root.environment)
