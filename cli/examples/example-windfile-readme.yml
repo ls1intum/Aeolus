@@ -8,7 +8,7 @@ metadata:
     image: ls1tum/artemis-maven-template
     tag: java17-20
     volumes:
-      - ./aeolus:/aeolus
+      - ${WORKDIR}:/aeolus
     parameters:
       - --cpus
       - '"2"'

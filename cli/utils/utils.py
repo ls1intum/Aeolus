@@ -9,8 +9,9 @@ import inspect
 import pydantic
 import yaml
 
-from classes.generated.definitions import Target
+from classes.generated.definitions import Target, Docker, WindfileMetadata, Environment, Dictionary, InternalAction
 from classes.generated.environment import EnvironmentSchema
+from classes.generated.windfile import WindFile
 from classes.output_settings import OutputSettings
 from utils import logger
 
@@ -193,4 +194,47 @@ def replace_bamboo_environment_variables_with_aeolus(
     """
     if haystack is None:
         return []
-    return replace_environment_variables(environment=environment, haystack=haystack, reverse=True)
+    return replace_environment_variables(environment=environment, haystack=haystack, reverse=False)
+
+
+def replace_env_variables_in_docker_config(environment: EnvironmentSchema, docker: Optional[Docker]) -> Optional[Docker]:
+    """
+    Replaces the environment variables in the given docker config.
+    :param environment: Environment variables
+    :param docker: Docker config
+    :return: None
+    """
+    if docker is None:
+        return None
+    docker.volumes = replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=docker.volumes)
+    docker.parameters = replace_bamboo_environment_variables_with_aeolus(
+        environment=environment, haystack=docker.parameters
+    )
+    return docker
+
+
+def replace_environment_variables_in_windfile(environment: EnvironmentSchema, windfile: WindFile) -> None:
+    """
+    Replaces the environment variables in the given windfile.
+    :param environment:
+    :param windfile:
+    """
+    metadata: WindfileMetadata = windfile.metadata
+    windfile.metadata.docker = replace_env_variables_in_docker_config(environment=environment, docker=windfile.metadata.docker)
+    if windfile.environment is not None:
+        dictionary: Dictionary = Dictionary()
+        for key, value in windfile.environment.root.root.items():
+            dictionary[
+                replace_environment_variable(environment=environment, haystack=key)
+            ] = replace_environment_variable(environment=environment, haystack=value)
+        metadata.environment = Environment(root=dictionary)
+    for name, action in windfile.actions.items():
+        if isinstance(action.root, InternalAction):
+            action.root.script = replace_environment_variable(environment=environment, haystack=action.root.script)
+        if action.root.environment is not None:
+            dictionary: Dictionary = Dictionary()
+            for key, value in action.root.environment.root.root.items():
+                dictionary[
+                    replace_environment_variable(environment=environment, haystack=key)
+                ] = replace_environment_variable(environment=environment, haystack=value)
+            action.root.environment = Environment(root=dictionary)

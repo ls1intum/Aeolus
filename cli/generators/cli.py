@@ -38,10 +38,7 @@ class CliGenerator(BaseGenerator):
         self.result.append("set -e")
         if self.windfile.environment:
             for env_var in self.windfile.environment.root.root:
-                updated: Optional[str | float | bool] = self.windfile.environment.root.root[env_var]
-                if isinstance(updated, str):
-                    updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
-                self.result.append(f'export {env_var}="' f'{updated}"')
+                self.result.append(f'export {env_var}="' f'{self.windfile.environment.root.root[env_var]}"')
 
     def add_postfix(self) -> None:
         """
@@ -108,21 +105,12 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
         if step.environment:
             for env_var in step.environment.root.root:
-                updated_env: Optional[str | float | bool] = step.environment.root.root[env_var]
-                if isinstance(updated_env, str):
-                    updated_env = utils.replace_environment_variable(environment=self.environment, haystack=updated_env)
-                self.add_line(indentation=2, line=f'export {env_var}="' f'{updated_env}"')
+                self.result.append(f'export {env_var}="' f'{self.windfile.environment.root.root[env_var]}"')
         if step.parameters is not None:
             for parameter in step.parameters.root.root:
-                updated_param: Optional[str | float | bool] = step.parameters.root.root[parameter]
-                if isinstance(updated_param, str):
-                    updated_param = utils.replace_environment_variable(
-                        environment=self.environment, haystack=updated_param
-                    )
-                self.add_line(indentation=2, line=f'{parameter}="' f'{updated_param}"')
+                self.add_line(indentation=2, line=f'{parameter}="' f'{step.parameters.root.root[parameter]}"')
         for line in step.script.split("\n"):
             if line:
-                line = utils.replace_environment_variable(environment=self.environment, haystack=line)
                 self.add_line(indentation=2, line=line)
         self.result.append("}")
         return None
@@ -222,6 +210,7 @@ class CliGenerator(BaseGenerator):
         Generate the bash script to be used as a local CI system.
         :return: bash script
         """
+        utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         self.add_prefix()
         if self.windfile.repositories:
             for name in self.windfile.repositories:

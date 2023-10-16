@@ -42,9 +42,7 @@ class JenkinsGenerator(BaseGenerator):
         if config.parameters is not None:
             if args is None:
                 args = ""
-            args += " " + " ".join(
-                utils.replace_environment_variables(environment=self.environment, haystack=config.parameters)
-            )
+            args += " " + " ".join(config.parameters)
         if args is not None:
             self.result.append(" " * indentation + "    args '" + args + "'")
         self.result.append(" " * indentation + "  }")
@@ -78,10 +76,9 @@ class JenkinsGenerator(BaseGenerator):
             self.add_line(indentation=indentation, line="environment {")
             indentation += 2
             for env_var in self.windfile.environment.root.root:
-                updated_env: Optional[str | float | bool] = self.windfile.environment.root.root[env_var]
-                if isinstance(updated_env, str):
-                    updated_env = utils.replace_environment_variable(environment=self.environment, haystack=updated_env)
-                self.add_line(indentation=indentation, line=f"{env_var} = '{updated_env}'")
+                self.add_line(
+                    indentation=indentation, line=f"{env_var} = '{self.windfile.environment.root.root[env_var]}'"
+                )
             indentation -= 2
             self.add_line(indentation=indentation, line="}")
         assert indentation == 2  # we need to be at the same level as in the beginning, otherwise something is wrong
@@ -130,7 +127,6 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append(" " * indentation + "sh '''")
         for line in script.split("\n"):
             if line:
-                line = utils.replace_environment_variable(environment=self.environment, haystack=line)
                 self.result.append(" " * indentation + f"{line}")
         if was_internal_or_file:
             self.result.append(" " * indentation + "'''")
@@ -186,22 +182,14 @@ class JenkinsGenerator(BaseGenerator):
         :param step: Step to add environment variables to
         """
         if step.environment is not None or step.parameters is not None:
-            self.result.append("      environment {")
+            self.add_line(indentation=6, line="environment {")
             if step.parameters is not None:
                 for param in step.parameters.root.root:
-                    updated: Optional[str | float | bool] = step.parameters.root.root[param]
-                    if isinstance(updated, str):
-                        updated = utils.replace_environment_variable(environment=self.environment, haystack=updated)
-                    self.result.append(f'        {param} = "{updated}"')
+                    self.add_line(indentation=8, line=f'{param} = "{step.parameters.root.root[param]}"')
             if step.environment is not None:
                 for env_var in step.environment.root.root:
-                    updated_env: Optional[str | float | bool] = step.environment.root.root[env_var]
-                    if isinstance(updated_env, str):
-                        updated_env = utils.replace_environment_variable(
-                            environment=self.environment, haystack=updated_env
-                        )
-                    self.result.append(f'        {env_var} = "' f'{updated_env}"')
-            self.result.append("      }")
+                    self.add_line(indentation=8, line=f'{env_var} = "{step.environment.root.root[env_var]}"')
+            self.add_line(indentation=6, line="}")
 
     def handle_clone(self, name: str, repository: Repository, indentation: int) -> None:
         """
@@ -313,6 +301,7 @@ class JenkinsGenerator(BaseGenerator):
         Generate the bash script to be used as a local CI system.
         :return: bash script
         """
+        utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         self.add_prefix()
         if self.windfile.repositories:
             for name in self.windfile.repositories:

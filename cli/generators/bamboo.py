@@ -9,7 +9,7 @@ from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
-from utils import logger
+from utils import logger, utils
 
 import requests
 from generators.base import BaseGenerator
@@ -54,6 +54,7 @@ class BambooGenerator(BaseGenerator):
         so we simply call docker
         :return: bamboo yaml specs
         """
+        utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         logger.info("🔨", "Generating Bamboo YAML Spec file...", self.output_settings.emoji)
 
         json: str = self.windfile.model_dump_json(exclude_none=True)
