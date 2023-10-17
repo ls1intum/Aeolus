@@ -1,16 +1,16 @@
 api: v0.0.1
 metadata:
-  name: ARTEMISTESTUSER1
-  id: BAMBOOEX3-ARTEMISTESTUSER1
-  description: Build plan for exercise BAMBOOEX3
+  name: example windfile
+  id: AEOLUS-BASE1
+  description: Plan created from stdin
   author: bamboo
-  gitCredentials: artemis_admin
+  gitCredentials: artemis_gitlab_admin_credentials
   docker:
     image: ls1tum/artemis-maven-template
     tag: java17-20
     volumes:
-    - ${bamboo.working.directory}:${bamboo.working.directory}
-    - ${bamboo.tmp.directory}:${bamboo.tmp.directory}
+    - ${WORKDIR}:${WORKDIR}
+    - ${TMPDIR}:${TMPDIR}
     parameters:
     - --cpus
     - '"2"'
@@ -21,25 +21,29 @@ metadata:
     - --pids-limit
     - '"1000"'
 repositories:
-  tests:
-    url: http://bitbucket:7990/scm/bambooex3/bambooex3-tests.git
-    branch: main
-    path: ''
-  assignment:
-    url: http://bitbucket:7990/scm/BAMBOOEX3/bambooex3-artemis_test_user_1.git
-    branch: main
-    path: assignment
+  aeolus:
+    url: https://github.com/ls1intum/Aeolus.git
+    branch: develop
+    path: .
 actions:
-  JOB11:
-    script: ./gradlew clean test
+  INTERNALACTION11:
+    script: "echo \"\u2699\uFE0F Executing internal-action\""
     run_always: false
-  JOB12:
-    parameters:
-      ignore_time: false
-      test_results: '**/test-results/test/*.xml'
-    platform: bamboo
-    kind: junit
-    run_always: true
-  JOB13:
-    script: chmod -R 777 ${bamboo.working.directory}
-    run_always: true
+  INTERNALACTION12:
+    script: 'echo "This is an internal action"
+
+      echo ${BRANCH_NAME}
+
+      echo ${JOB_ID}'
+    run_always: false
+  EXTERNALACTION21:
+    script: "echo \"\u2699\uFE0F Executing external-action if stage is correct\""
+    run_always: false
+  EXTERNALACTION22:
+    script: echo "Hello ${WHO_TO_GREET}"
+    excludeDuring:
+    - preparation
+    - post_deadline
+    environment:
+      WHO_TO_GREET: world
+    run_always: false

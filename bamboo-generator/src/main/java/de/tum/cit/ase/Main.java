@@ -190,7 +190,7 @@ public class Main {
 
     /**
      * This method is used to generate the build plan from the parsed Windfile, it creates a bamboo plan that
-     * consists of a checkout task (if repsitories are specified), and a task for each action in the Windfile.
+     * consists of a checkout task (if repositories are specified), and a task for each action in the Windfile.
      * If the given Windfile contains a docker configuration, the tasks are run in the specified docker container.
      *
      * @param args the arguments passed to the application

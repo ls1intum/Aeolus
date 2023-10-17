@@ -3,7 +3,13 @@ import base64
 import os
 import subprocess
 from typing import List, Any
-from utils import logger
+
+from classes.generated.definitions import Target
+from classes.generated.windfile import WindFile
+from classes.input_settings import InputSettings
+from classes.output_settings import OutputSettings
+from classes.pass_metadata import PassMetadata
+from utils import logger, utils
 
 import requests
 from generators.base import BaseGenerator
@@ -32,6 +38,12 @@ class BambooGenerator(BaseGenerator):
     can directly publish the plan to the Bamboo server.
     """
 
+    def __init__(
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
+    ):
+        input_settings.target = Target.bamboo
+        super().__init__(windfile, input_settings, output_settings, metadata)
+
     def generate(self) -> str:
         """
         Generate the bamboo specs that can be used to create a plan in bamboo.
@@ -42,6 +54,7 @@ class BambooGenerator(BaseGenerator):
         so we simply call docker
         :return: bamboo yaml specs
         """
+        utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         logger.info("🔨", "Generating Bamboo YAML Spec file...", self.output_settings.emoji)
 
         json: str = self.windfile.model_dump_json(exclude_none=True)

@@ -1,3 +1,4 @@
+import typing
 from typing import Optional, Tuple, Any
 import re
 import yaml
@@ -11,6 +12,7 @@ from classes.bamboo_specs import (
     BambooTask,
     BambooRepository,
     BambooSpecialTask,
+    BambooDockerConfig,
 )
 from classes.bamboo_client import BambooClient
 from classes.ci_credentials import CICredentials
@@ -31,19 +33,90 @@ from classes.generated.definitions import (
     ExternalAction,
     Parameters,
 )
+from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_settings import PassSettings
-from utils import logger
+from utils import logger, utils
 
 
-def extract_action(job: BambooJob, task: BambooTask) -> Optional[Action]:
+def parse_docker(docker_config: Optional[BambooDockerConfig], environment: EnvironmentSchema) -> Optional[Docker]:
+    """
+    Converts the given docker configuration into a Docker object.
+    :param docker_config: Config from Bamboo
+    :param environment: Environment variables to replace
+    :return: Docker object or None
+    """
+    if docker_config is not None:
+        volume_list: list[str] = []
+        for volume in docker_config.volumes:
+            host: str = utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=volume)
+            container: str = utils.replace_bamboo_environment_variable_with_aeolus(
+                environment=environment, haystack=docker_config.volumes[volume]
+            )
+            volume_list.append(f"{host}:{container}")
+        arguments: list[str] = utils.replace_bamboo_environment_variables_with_aeolus(
+            environment=environment, haystack=docker_config.docker_run_arguments
+        )
+        docker = Docker(
+            image=docker_config.image if ":" not in docker_config.image else docker_config.image.split(":")[0],
+            tag=docker_config.image.split(":")[1] if ":" in docker_config.image else "latest",
+            volumes=volume_list,
+            parameters=arguments,
+        )
+        return docker
+    return None
+
+
+def parse_env_variables(environment: EnvironmentSchema, variables: dict[Any, str | float | None]) -> Environment:
+    """
+    Converts the given environment variables into a Environment object.
+    :param environment: Environment variables to replace
+    :param variables: Environment variables from Bamboo
+    :return:
+    """
+    dictionary: Dictionary = Dictionary(root={})
+    for key, value in variables.items():
+        dictionary.root[key] = (
+            utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=value)
+            if isinstance(value, str)
+            else value
+        )
+    return Environment(root=dictionary)
+
+
+def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Parameters:
+    """
+    Converts the given arguments into a Parameters object.
+    :param environment: Environment variables to replace
+    :param task: Task containing the arguments
+    :return: Parameters object
+    """
+    param_dictionary: dict[Any, str | float | bool | None] = {}
+    for value in task.arguments:
+        param_dictionary[value] = utils.replace_bamboo_environment_variable_with_aeolus(
+            environment=environment, haystack=value
+        )
+    if isinstance(task, BambooSpecialTask):
+        for key in task.parameters:
+            updated: Optional[str | float | bool] = task.parameters[key]
+            if isinstance(updated, str):
+                updated = utils.replace_bamboo_environment_variable_with_aeolus(
+                    environment=environment, haystack=updated
+                )
+            param_dictionary[key] = updated
+    print(param_dictionary)
+    return Parameters(root=Dictionary(root=param_dictionary))
+
+
+def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSchema) -> Optional[Action]:
     """
     Converts the given task of the given Job into an Action.
     Setting the conditions and environment variables fetched from Bamboo
     :param job: Job containing the task we want to convert
     :param task: Task to convert
+    :param environment: Environment variables to replace
     :return: converted Action
     """
     exclude: list[Lifecycle] = []
@@ -54,42 +127,36 @@ def extract_action(job: BambooJob, task: BambooTask) -> Optional[Action]:
                 lifecycle = condition.matches[match]
                 for entry in regex.sub("", lifecycle).split("|"):
                     exclude.append(Lifecycle[entry])
-    script_task: BambooTask = task
-    docker: Optional[Docker] = None
-    if job.docker is not None:
-        volume_list: list[str] = []
-        for volume in job.docker.volumes:
-            volume_list.append(f"{volume}:{job.docker.volumes[volume]}")
-        docker = Docker(
-            image=job.docker.image if ":" not in job.docker.image else job.docker.image.split(":")[0],
-            tag=job.docker.image.split(":")[1] if ":" in job.docker.image else "latest",
-            volumes=volume_list,
-            parameters=job.docker.docker_run_arguments,
-        )
-    environment: Environment = Environment(root=Dictionary(root=script_task.environment))
+    docker: Optional[Docker] = parse_docker(docker_config=job.docker, environment=environment)
+    envs: Environment = parse_env_variables(environment=environment, variables=task.environment)
+    params: Parameters = parse_arguments(environment=environment, task=task)
     action: Optional[Action] = None
     if isinstance(task, BambooSpecialTask):
         if isinstance(task, BambooSpecialTask):
             action = Action(
                 root=PlatformAction(
-                    parameters=Parameters(root=Dictionary(root=task.parameters)),
+                    parameters=params,
                     kind=task.task_type,
                     excludeDuring=exclude,
                     file=None,
                     function=None,
                     docker=docker,
-                    environment=environment,
+                    environment=envs,
                     platform=Target.bamboo,
                     run_always=task.always_execute,
                 )
             )
     else:
+        script: str = "".join(task.scripts)
         action = Action(
             root=InternalAction(
-                script="\n".join(script_task.scripts),
+                script="".join(
+                    utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=script)
+                ),
                 excludeDuring=exclude,
                 docker=docker,
-                environment=environment,
+                parameters=params,
+                environment=envs,
                 platform=None,
                 run_always=task.always_execute,
             )
@@ -97,11 +164,12 @@ def extract_action(job: BambooJob, task: BambooTask) -> Optional[Action]:
     return action
 
 
-def extract_actions(stages: dict[str, BambooStage]) -> dict[Any, Action]:
+def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSchema) -> dict[Any, Action]:
     """
     Converts all jobs and tasks from the given stages (from the REST API)
     into a dictionary of InternalActions.
     :param stages: dict of stages from the REST API
+    :param environment: Environment variables from the REST API
     :return: dict of InternalActions
     """
     actions: dict[Any, Action] = {}
@@ -112,9 +180,9 @@ def extract_actions(stages: dict[str, BambooStage]) -> dict[Any, Action]:
             for task in job.tasks:
                 if isinstance(task, BambooTask):
                     counter += 1
-                    action: Optional[Action] = extract_action(job=job, task=task)
+                    action: Optional[Action] = extract_action(job=job, task=task, environment=environment)
                     if action is not None:
-                        actions[job.key + str(counter)] = action
+                        actions[job.key.lower() + str(counter)] = action
     return actions
 
 
@@ -161,10 +229,36 @@ def extract_repositories(
 class BambooTranslator(PassSettings):
     source: Target = Target.bamboo
     client: BambooClient
+    environment: EnvironmentSchema
 
     def __init__(self, input_settings: InputSettings, output_settings: OutputSettings, credentials: CICredentials):
+        input_settings.target = Target.bamboo
+        env: typing.Optional[EnvironmentSchema] = utils.get_ci_environment(
+            target=input_settings.target, output_settings=output_settings
+        )
+        if env is None:
+            raise ValueError(f"No environment found for target {input_settings.target.value}")
+        self.environment = env
         super().__init__(input_settings=input_settings, output_settings=output_settings)
         self.client = BambooClient(credentials=credentials)
+
+    def replace_environment_variables(self, windfile: WindFile) -> None:
+        """
+        Replaces the environment variables in the given windfile.
+        :param windfile: Windfile to replace
+        """
+        if windfile.metadata.docker is not None:
+            windfile.metadata.docker.volumes = utils.replace_bamboo_environment_variables_with_aeolus(
+                environment=self.environment, haystack=windfile.metadata.docker.volumes
+            )
+            windfile.metadata.docker.parameters = utils.replace_bamboo_environment_variables_with_aeolus(
+                environment=self.environment, haystack=windfile.metadata.docker.parameters
+            )
+        for _, action in windfile.actions.items():
+            if isinstance(action.root, InternalAction):
+                action.root.script = utils.replace_bamboo_environment_variable_with_aeolus(
+                    environment=self.environment, haystack=action.root.script
+                )
 
     def combine_docker_config(self, windfile: WindFile) -> None:
         """
@@ -200,7 +294,7 @@ class BambooTranslator(PassSettings):
         specs: BambooSpecs = optional[0]
         # raw: dict[str, str] = optional[1]
         plan: BambooPlan = specs.plan
-        actions: dict[Any, Action] = extract_actions(stages=specs.stages)
+        actions: dict[Any, Action] = extract_actions(stages=specs.stages, environment=self.environment)
         repositories: dict[str, Repository] = extract_repositories(stages=specs.stages, repositories=specs.repositories)
         metadata: WindfileMetadata = WindfileMetadata(
             name=plan.name,

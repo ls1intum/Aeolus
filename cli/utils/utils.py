@@ -1,11 +1,21 @@
 import os
+import traceback
 import typing
+from io import TextIOWrapper
 from types import ModuleType
 from typing import Optional
 import inspect
 
+import pydantic
+import yaml
+
+from classes.generated.definitions import Target, Docker, Environment, Dictionary, InternalAction
+from classes.generated.environment import EnvironmentSchema
+from classes.generated.windfile import WindFile
 from classes.output_settings import OutputSettings
 from utils import logger
+
+T = typing.TypeVar("T")
 
 
 def get_content_of(file: str) -> Optional[str]:
@@ -82,3 +92,158 @@ def file_exists(path: str, output_settings: OutputSettings) -> bool:
         )
         return False
     return True
+
+
+def read_file(
+    filetype: T,
+    file: TextIOWrapper,
+    output_settings: OutputSettings,
+) -> Optional[T]:
+    """
+    Validates the given file. If the file is valid,
+    the read object is returned.
+    :param filetype: Filetype to validate
+    :param file: File to read
+    :param output_settings: OutputSettings
+    :return: Validated object or None
+    """
+    try:
+        typevalidator: pydantic.TypeAdapter = pydantic.TypeAdapter(filetype)
+        content: str = file.read()
+        validated: T = typevalidator.validate_python(yaml.safe_load(content))
+        logger.info("✅ ", f"{file.name} is valid", output_settings.emoji)
+        return validated
+    except pydantic.ValidationError as validation_error:
+        logger.info("❌ ", f"{file.name} is invalid", output_settings.emoji)
+        logger.error("❌ ", str(validation_error), output_settings.emoji)
+        if output_settings.debug:
+            traceback.print_exc()
+        return None
+
+
+def get_ci_environment(target: Target, output_settings: OutputSettings) -> Optional[EnvironmentSchema]:
+    """
+    Returns the CI environment for the given target.
+    :param target: Target
+    :param output_settings: OutputSettings
+    :return: Environment
+    """
+    path: str = os.path.join(
+        os.path.dirname(__file__), "..", "..", "schemas", "v0.0.1", "environment", f"{target.name}.yaml"
+    )
+    path = os.path.normpath(path)
+    if file_exists(path, OutputSettings()):
+        with open(path, "r", encoding="utf-8") as file:
+            environment: type[EnvironmentSchema] | None = read_file(
+                filetype=EnvironmentSchema, file=file, output_settings=output_settings
+            )
+            if isinstance(environment, EnvironmentSchema):
+                return environment
+    return None
+
+
+def replace_environment_variables(
+    environment: EnvironmentSchema, haystack: typing.List[str], reverse: bool = False
+) -> list[str]:
+    """
+    Replaces the environment variables in the given list.
+    :param environment: Environment variables
+    :param haystack: List to replace
+    :param reverse: Whether to reverse the replacement or not
+    :return: Replaced list
+    """
+    result: typing.List[str] = []
+    for item in haystack:
+        for key, value in environment.__dict__.items():
+            if reverse:
+                value, key = key, value
+            item = item.replace(key, value)
+        result.append(item)
+    return result
+
+
+def replace_environment_variable(environment: EnvironmentSchema, haystack: str, reverse: bool = False) -> str:
+    """
+    Replaces the environment variables in the given list.
+    :param environment: Environment variables
+    :param haystack: List to replace
+    :param reverse: Whether to reverse the replacement or not
+    :return: Replaced string
+    """
+    return replace_environment_variables(environment=environment, haystack=[haystack], reverse=reverse)[0]
+
+
+def replace_bamboo_environment_variable_with_aeolus(environment: EnvironmentSchema, haystack: str) -> str:
+    """
+    Replaces the bamboo environment variables with aeolus environment variables.
+    :param environment: Environment variables
+    :param haystack: String to replace
+    :return: Replaced string
+    """
+    return replace_environment_variables(environment=environment, haystack=[haystack], reverse=True)[0]
+
+
+def replace_bamboo_environment_variables_with_aeolus(
+    environment: EnvironmentSchema, haystack: Optional[typing.List[str]]
+) -> typing.List[str]:
+    """
+    Replaces the bamboo environment variables with aeolus environment variables.
+    :param environment:
+    :param haystack:
+    :return:
+    """
+    if haystack is None:
+        return []
+    return replace_environment_variables(environment=environment, haystack=haystack, reverse=False)
+
+
+def replace_env_variables_in_docker_config(
+    environment: EnvironmentSchema, docker: Optional[Docker]
+) -> Optional[Docker]:
+    """
+    Replaces the environment variables in the given docker config.
+    :param environment: Environment variables
+    :param docker: Docker config
+    :return: None
+    """
+    if docker is None:
+        return None
+    docker.volumes = replace_bamboo_environment_variables_with_aeolus(environment=environment, haystack=docker.volumes)
+    docker.parameters = replace_bamboo_environment_variables_with_aeolus(
+        environment=environment, haystack=docker.parameters
+    )
+    return docker
+
+
+def replace_environment_dictionary(environment: EnvironmentSchema, env: Optional[Environment]) -> Optional[Environment]:
+    """
+    Replaces the environment variables in the given environment dictionary.
+    :param environment: Environment variables to replace
+    :param env: Environment dictionary
+    :return: Environment dictionary with replaced variables
+    """
+    if env is None:
+        return None
+    dictionary: Dictionary = Dictionary(root={})
+    for key, value in env.root.root.items():
+        key = replace_environment_variable(environment=environment, haystack=key)
+        if isinstance(value, str):
+            value = replace_environment_variable(environment=environment, haystack=value)
+        dictionary.root[key] = value
+    return Environment(root=dictionary)
+
+
+def replace_environment_variables_in_windfile(environment: EnvironmentSchema, windfile: WindFile) -> None:
+    """
+    Replaces the environment variables in the given windfile.
+    :param environment:
+    :param windfile:
+    """
+    windfile.metadata.docker = replace_env_variables_in_docker_config(
+        environment=environment, docker=windfile.metadata.docker
+    )
+    windfile.environment = replace_environment_dictionary(environment=environment, env=windfile.environment)
+    for _, action in windfile.actions.items():
+        if isinstance(action.root, InternalAction):
+            action.root.script = replace_environment_variable(environment=environment, haystack=action.root.script)
+        action.root.environment = replace_environment_dictionary(environment=environment, env=action.root.environment)

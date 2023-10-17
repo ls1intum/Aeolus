@@ -37,3 +37,13 @@ class EnvironmentSchema(BaseModel):
         description='The name of the branch that is currently executed.',
         examples=['BRANCH_NAME', 'bamboo.planRepository.branchName'],
     )
+    WORKDIR: str = Field(
+        ...,
+        description='The directory where the job is executed.',
+        examples=['WORKDIR', 'bamboo.build.working.directory'],
+    )
+    TMPDIR: str = Field(
+        ...,
+        description='The directory where temporary files are stored.',
+        examples=['TMPDIR', 'bamboo.build.working.directory'],
+    )

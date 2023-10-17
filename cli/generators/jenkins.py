@@ -4,8 +4,12 @@ from xml.dom.minidom import Document, parseString, Element
 
 import jenkins  # type: ignore
 from classes.generated.definitions import InternalAction, Action, Target, Repository, Docker
+from classes.generated.windfile import WindFile
+from classes.input_settings import InputSettings
+from classes.output_settings import OutputSettings
+from classes.pass_metadata import PassMetadata
 from generators.base import BaseGenerator
-from utils import logger
+from utils import logger, utils
 
 
 class JenkinsGenerator(BaseGenerator):
@@ -13,6 +17,12 @@ class JenkinsGenerator(BaseGenerator):
     Jenkins generator. Generates a jenkins pipeline
     to be used in the Jenkins CI system.
     """
+
+    def __init__(
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
+    ):
+        input_settings.target = Target.jenkins
+        super().__init__(windfile, input_settings, output_settings, metadata)
 
     def add_docker_config(self, config: Optional[Docker], indentation: int) -> None:
         """
@@ -71,7 +81,7 @@ class JenkinsGenerator(BaseGenerator):
                 )
             indentation -= 2
             self.add_line(indentation=indentation, line="}")
-        assert indentation == 2
+        assert indentation == 2  # we need to be at the same level as in the beginning, otherwise something is wrong
         self.add_line(indentation=indentation, line="stages {")
 
     def add_postfix(self) -> None:
@@ -172,14 +182,14 @@ class JenkinsGenerator(BaseGenerator):
         :param step: Step to add environment variables to
         """
         if step.environment is not None or step.parameters is not None:
-            self.result.append("      environment {")
+            self.add_line(indentation=6, line="environment {")
             if step.parameters is not None:
                 for param in step.parameters.root.root:
-                    self.result.append(f'        {param} = "{step.parameters.root.root[param]}"')
+                    self.add_line(indentation=8, line=f'{param} = "{step.parameters.root.root[param]}"')
             if step.environment is not None:
                 for env_var in step.environment.root.root:
-                    self.result.append(f'        {env_var} = "' f'{step.environment.root.root[env_var]}"')
-            self.result.append("      }")
+                    self.add_line(indentation=8, line=f'{env_var} = "{step.environment.root.root[env_var]}"')
+            self.add_line(indentation=6, line="}")
 
     def handle_clone(self, name: str, repository: Repository, indentation: int) -> None:
         """
@@ -291,6 +301,7 @@ class JenkinsGenerator(BaseGenerator):
         Generate the bash script to be used as a local CI system.
         :return: bash script
         """
+        utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         self.add_prefix()
         if self.windfile.repositories:
             for name in self.windfile.repositories:

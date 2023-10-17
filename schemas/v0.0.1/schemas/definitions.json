@@ -368,19 +368,6 @@
     "title": "Parameters of an action.",
     "$ref": "#/dictionary"
   },
-  "list": {
-    "type": "object",
-    "patternProperties": {
-      ".+": {
-        "type": [
-          "string",
-          "number",
-          "null"
-        ]
-      }
-    },
-    "additionalProperties": false
-  },
   "dictionary": {
     "type": "object",
     "patternProperties": {

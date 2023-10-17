@@ -106,13 +106,6 @@ class Merger(PassSettings):
             output_settings=output_settings,
             metadata=metadata,
         )
-        if not windfile:
-            validator: Validator = Validator(output_settings=output_settings, input_settings=input_settings)
-            validated: Optional[WindFile] = validator.validate_wind_file()
-            if validated:
-                self.windfile = validated
-        else:
-            self.windfile = windfile
 
     def merge_internal_actions(self) -> bool:
         """
@@ -177,6 +170,11 @@ class Merger(PassSettings):
     def pull_external_action(
         self, action: ExternalAction
     ) -> Optional[typing.Tuple[typing.List[str], typing.List[Action]]]:
+        """
+        Pulls the given external action from GitHub/or other GIT hostings and converts it to internal actions.
+        :param action: External action to pull
+        :return: Tuple of the original types and the converted actions
+        """
         if not action.use:
             logger.error("❌ ", f"{action.use} not found", self.output_settings.emoji)
             return None
@@ -527,13 +525,19 @@ class Merger(PassSettings):
         used without other dependencies.
         :return: Merged windfile or none if the windfile could not be merged
         """
-        if not self.merge_internal_actions():
+        if not self.windfile:
+            validator: Validator = Validator(output_settings=self.output_settings, input_settings=self.input_settings)
+            validated: Optional[WindFile] = validator.validate_wind_file()
+            if validated:
+                self.windfile = validated
+        else:
             return None
-        if not self.merge_file_actions():
-            return None
-        if not self.merge_external_actions():
-            return None
-        if not self.merge_platform_actions():
+        if (
+            not self.merge_internal_actions()
+            or not self.merge_file_actions()
+            or not self.merge_external_actions()
+            or not self.merge_platform_actions()
+        ):
             return None
         if not self.windfile:
             logger.error("❌", "Merging failed. Aborting.", self.output_settings.emoji)

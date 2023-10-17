@@ -26,7 +26,7 @@
             <SchemaInfo>
               <option name="generatedName" value="New Schema" />
               <option name="name" value="ma_action_schema" />
-              <option name="relativePathToSchema" value="schemas/v0.0.1/actionfile.schema.json" />
+              <option name="relativePathToSchema" value="schemas/v0.0.1/schemas/actionfile.json" />
               <option name="schemaVersion" value="JSON Schema version 7" />
               <option name="patterns">
                 <list>
@@ -49,14 +49,14 @@
             <SchemaInfo>
               <option name="generatedName" value="New Schema" />
               <option name="name" value="ma_environment_schema" />
-              <option name="relativePathToSchema" value="schemas/v0.0.1/environment/environment.schema.json" />
+              <option name="relativePathToSchema" value="schemas/v0.0.1/schemas/environment.json" />
               <option name="patterns">
                 <list>
                   <Item>
-                    <option name="path" value="schemas/v0.0.1/environment/jenkins.yaml" />
+                    <option name="path" value="schemas/v0.0.1/environment/bamboo.yaml" />
                   </Item>
                   <Item>
-                    <option name="path" value="schemas/v0.0.1/environment/bamboo.yaml" />
+                    <option name="path" value="schemas/v0.0.1/environment/jenkins.yaml" />
                   </Item>
                 </list>
               </option>
@@ -68,7 +68,7 @@
             <SchemaInfo>
               <option name="generatedName" value="New Schema" />
               <option name="name" value="ma_windfile_schema" />
-              <option name="relativePathToSchema" value="schemas/v0.0.1/windfile.schema.json" />
+              <option name="relativePathToSchema" value="schemas/v0.0.1/schemas/windfile.json" />
               <option name="patterns">
                 <list>
                   <Item>

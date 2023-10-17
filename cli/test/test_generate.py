@@ -6,6 +6,7 @@ from test.testutils import TemporaryFileWithContent
 from test.windfile_definitions import (
     VALID_WINDFILE_INTERNAL_ACTION,
 )
+from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
@@ -30,7 +31,7 @@ class GenerateTests(unittest.TestCase):
             metadata: PassMetadata = PassMetadata()
             merger: Merger = Merger(
                 windfile=None,
-                input_settings=InputSettings(file=file, file_path=file.name),
+                input_settings=InputSettings(file=file, file_path=file.name, target=Target.cli),
                 output_settings=self.output_settings,
                 metadata=metadata,
             )
@@ -39,7 +40,7 @@ class GenerateTests(unittest.TestCase):
             if windfile is None:
                 self.fail("Windfile is None")
             cli: CliGenerator = CliGenerator(
-                input_settings=InputSettings(file=file, file_path=file.name),
+                input_settings=InputSettings(file=file, file_path=file.name, target=Target.cli),
                 output_settings=self.output_settings,
                 windfile=windfile,
                 metadata=metadata,
@@ -47,12 +48,17 @@ class GenerateTests(unittest.TestCase):
             result: str = cli.generate()
             self.assertTrue(result.count("#!/usr/bin/env bash") == 1)
             self.assertTrue("set -e" in result)
-            # two comments, one definition, one echo for, and one call
+            # two comments, one definition, one echo for execution, one echo in the actual action, and one call
+            print("esrvus")
+            print(result)
+            print(result.count("internal-action"))
+            print(result.count("internal-action") == 5)
             self.assertTrue(result.count("internal-action") == 5)
             self.assertTrue(result.count("{") == result.count("}"))
             self.assertTrue(cli.check(content=result))
 
     def test_generate_jenkinsfile(self) -> None:
+        self.setUp()
         with TemporaryFileWithContent(VALID_WINDFILE_INTERNAL_ACTION) as file:
             metadata: PassMetadata = PassMetadata()
             merger: Merger = Merger(
