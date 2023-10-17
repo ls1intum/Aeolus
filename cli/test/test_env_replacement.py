@@ -1,7 +1,5 @@
 import logging
-import os
 import unittest
-from tempfile import NamedTemporaryFile
 from typing import Optional, List, Union, Type
 
 from classes.generated.environment import EnvironmentSchema
@@ -9,15 +7,9 @@ from generators.bamboo import BambooGenerator
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
 from test.testutils import TemporaryFileWithContent
-from test.actionfile_definitions import VALID_ACTIONFILE_WITH_TWO_ACTIONS
 from test.windfile_definitions import (
-    VALID_WINDFILE_INTERNAL_ACTION,
-    INVALID_WINDFILE_INTERNAL_ACTION,
-    VALID_WINDFILE_WITH_NON_EXISTING_ACTIONFILE,
-    VALID_WINDFILE_WITH_FILEACTION,
     VALID_WINDFILE_WITH_ENV_VARIABLES_AND_DOCKER,
 )
-from classes.generated.definitions import InternalAction, FileAction, PlatformAction, ExternalAction
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
@@ -85,8 +77,8 @@ class EnvironmentReplacementTests(unittest.TestCase):
         allowed: List[str] = [env_vars.__dict__[e] for e in env_vars.__dict__.keys()]
         forbidden_with_none: List[Optional[str]] = [e if e not in allowed else None for e in env_vars.__dict__.keys()]
         forbidden: List[str] = [e for e in forbidden_with_none if e is not None]
-        self.assertFalse(all([e not in result for e in forbidden]))
-        self.assertTrue(any([e in result for e in allowed]))
+        self.assertFalse(all(e not in result for e in forbidden))
+        self.assertTrue(any(e in result for e in allowed))
 
 
 if __name__ == "__main__":

@@ -520,6 +520,11 @@ class Merger(PassSettings):
         return os.path.dirname(os.path.abspath(self.input_settings.file_path))
 
     def merge(self) -> Optional[WindFile]:
+        """
+        Merges the given windfile by inlining the external actions. So that the windfile can be
+        used without other dependencies.
+        :return: Merged windfile or none if the windfile could not be merged
+        """
         if not self.windfile:
             validator: Validator = Validator(output_settings=self.output_settings, input_settings=self.input_settings)
             validated: Optional[WindFile] = validator.validate_wind_file()
@@ -527,11 +532,6 @@ class Merger(PassSettings):
                 self.windfile = validated
         else:
             return None
-        """
-        Merges the given windfile by inlining the external actions. So that the windfile can be
-        used without other dependencies.
-        :return: Merged windfile or none if the windfile could not be merged
-        """
         if not self.merge_internal_actions():
             return None
         if not self.merge_file_actions():
