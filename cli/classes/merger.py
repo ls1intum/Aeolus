@@ -532,13 +532,12 @@ class Merger(PassSettings):
                 self.windfile = validated
         else:
             return None
-        if not self.merge_internal_actions():
-            return None
-        if not self.merge_file_actions():
-            return None
-        if not self.merge_external_actions():
-            return None
-        if not self.merge_platform_actions():
+        if (
+            not self.merge_internal_actions()
+            or not self.merge_file_actions()
+            or not self.merge_external_actions()
+            or not self.merge_platform_actions()
+        ):
             return None
         if not self.windfile:
             logger.error("❌", "Merging failed. Aborting.", self.output_settings.emoji)

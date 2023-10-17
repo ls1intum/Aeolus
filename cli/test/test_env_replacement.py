@@ -2,14 +2,15 @@ import logging
 import unittest
 from typing import Optional, List, Union, Type
 
-from classes.generated.environment import EnvironmentSchema
 from generators.bamboo import BambooGenerator
+from generators.base import BaseGenerator
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
 from test.testutils import TemporaryFileWithContent
 from test.windfile_definitions import (
     VALID_WINDFILE_WITH_ENV_VARIABLES_AND_DOCKER,
 )
+from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
@@ -55,7 +56,7 @@ class EnvironmentReplacementTests(unittest.TestCase):
             self.assertIsNotNone(windfile)
             if windfile is None:
                 self.fail("Windfile is None")
-            gen: generator = generator(
+            gen: BaseGenerator = generator(
                 input_settings=InputSettings(file=file, file_path=file.name),
                 output_settings=self.output_settings,
                 windfile=windfile,
