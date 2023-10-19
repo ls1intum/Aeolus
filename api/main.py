@@ -1,24 +1,22 @@
-from typing import Optional, Dict
 import time
+from typing import Optional, Dict
+
+import yaml
+from fastapi import FastAPI, HTTPException
+from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
-import yaml
-
-from starlette.requests import Request
-from classes.pass_metadata import PassMetadata
+from classes.generated.definitions import Target
+from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
 from classes.output_settings import OutputSettings
+from classes.pass_metadata import PassMetadata
 from classes.validator import Validator
 from generators.bamboo import BambooGenerator
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
 from utils.utils import TemporaryFileWithContent
-
-from fastapi import FastAPI, HTTPException
-
-from classes.generated.definitions import Target
-from classes.generated.windfile import WindFile
 
 app = FastAPI()
 
@@ -82,7 +80,8 @@ async def validate(windfile: WindFile) -> WindFile | dict[str, str] | None:
     }
     """
     with TemporaryFileWithContent(
-            content=yaml.dump(yaml.safe_load(windfile.model_dump_json(exclude_none=True)), sort_keys=False)) as file:
+            content=yaml.dump(yaml.safe_load(windfile.model_dump_json(exclude_none=True)), sort_keys=False)
+    ) as file:
         input_settings: InputSettings = InputSettings(file=file, file_path=file.name)
         output_settings: OutputSettings = OutputSettings(verbose=True, debug=True, emoji=True)
         validator: Validator = Validator(output_settings=output_settings, input_settings=input_settings)
@@ -116,15 +115,13 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
     :return:
     """
     with TemporaryFileWithContent(
-            content=yaml.dump(yaml.safe_load(windfile.model_dump_json(exclude_none=True)), sort_keys=False)) as file:
+            content=yaml.dump(yaml.safe_load(windfile.model_dump_json(exclude_none=True)), sort_keys=False)
+    ) as file:
         input_settings: InputSettings = InputSettings(file=file, file_path=file.name, target=target)
         output_settings: OutputSettings = OutputSettings(verbose=True, debug=True, emoji=True)
         metadata: PassMetadata = PassMetadata()
         merger: Merger = Merger(
-            windfile=windfile,
-            input_settings=input_settings,
-            output_settings=output_settings,
-            metadata=metadata
+            windfile=windfile, input_settings=input_settings, output_settings=output_settings, metadata=metadata
         )
         merged: Optional[WindFile] = merger.merge()
         if not merged:

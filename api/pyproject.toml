@@ -10,8 +10,8 @@ ignore_errors = true
 
 [tool.black]
 force-exclude = '''
-    cli/classes/generated
-    | cli/venv
+    classes/generated
+    | venv
     | docs/lib
     | docs/bin
     | docs/source
