@@ -1,10 +1,10 @@
 from typing import Optional, Dict
-import _paths  # pylint: disable=unused-import
 import time
+
+import _paths  # pylint: disable=unused-import # noqa: F401
 import yaml
 
 from starlette.requests import Request
-
 from classes.pass_metadata import PassMetadata
 from classes.input_settings import InputSettings
 from classes.merger import Merger

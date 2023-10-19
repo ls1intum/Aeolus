@@ -10,7 +10,7 @@ on:
       - 'pyproject.toml'
 
 jobs:
-  python-lint:
+  python-cli-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,9 +29,41 @@ jobs:
           auto_fix: false
           continue_on_error: false
           mypy: true
+          mypy_dir: cli
           flake8: true
+          flake8_dir: cli
           black: true
           black_args: --config pyproject.toml
+          black_dir: cli
           pylint: true
           pylint_args: --rcfile pyproject.toml
+          pylint_dir: cli
           black_auto_fix: true
+  python-api-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.5.3
+      - name: Setup Python
+        uses: actions/setup-python@v4.7.0
+        with:
+          python-version: 3.11
+      - name: Install Python dependencies
+        run: pip install -r api/requirements.txt
+      - name: Install Python linting dependencies
+        run: pip install black flake8 mypy pylint
+      - name: Run linters
+        uses: wearerequired/lint-action@v2
+        with:
+          auto_fix: false
+          continue_on_error: false
+          mypy: true
+          mypy_dir: api
+          flake8: true
+          flake8_dir: api
+          black: true
+          black_args: --config ../pyproject.toml
+          black_dir: api
+          pylint: true
+          pylint_args: --rcfile pyproject.toml
+          pylint_dir: api
