@@ -4,11 +4,13 @@ import subprocess
 import tempfile
 from typing import List, Optional
 
-from generators.base import BaseGenerator
 from utils import logger, utils
 from docker.models.containers import Container  # type: ignore
 from docker.client import DockerClient  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
+
+from generators.base import BaseGenerator
+
 from classes.generated.definitions import InternalAction, Repository, Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
