@@ -3,6 +3,12 @@ import base64
 import os
 import subprocess
 from typing import List, Any
+import requests
+
+from docker.models.containers import Container  # type: ignore
+from docker.client import DockerClient  # type: ignore
+from docker.errors import DockerException  # type: ignore
+from docker.types.daemon import CancellableStream  # type: ignore
 
 from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile
@@ -10,13 +16,7 @@ from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
 from utils import logger, utils
-
-import requests
 from generators.base import BaseGenerator
-from docker.models.containers import Container  # type: ignore
-from docker.client import DockerClient  # type: ignore
-from docker.errors import DockerException  # type: ignore
-from docker.types.daemon import CancellableStream  # type: ignore
 
 
 def docker_available() -> bool:
