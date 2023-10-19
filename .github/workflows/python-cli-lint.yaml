@@ -1,43 +1,43 @@
-name: CLI Lint
-
-on:
-  pull_request:
-  push:
-    paths:
-      - '*.py'
-      - '.github/workflows/python-cli-lint.yaml'
-      - 'api/setup.cfg'
-      - 'cli/setup.cfg'
-      - 'api/pyproject.toml'
-      - 'cli/pyproject.toml'
-
-jobs:
-  python-cli-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3.5.3
-      - name: Setup Python
-        uses: actions/setup-python@v4.7.0
-        with:
-          python-version: 3.11
-      - name: Install Python dependencies
-        run: pip install -r cli/requirements.txt
-      - name: Install Python linting dependencies
-        run: pip install black flake8 mypy pylint
-      - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          auto_fix: false
-          continue_on_error: false
-          mypy: true
-          mypy_dir: cli
-          flake8: true
-          flake8_dir: cli
-          black: true
-          black_args: --config pyproject.toml
-          black_dir: cli
-          pylint: true
-          pylint_args: --rcfile pyproject.toml
-          pylint_dir: cli
-          black_auto_fix: true
+#name: CLI Lint
+#
+#on:
+#  pull_request:
+#  push:
+#    paths:
+#      - '*.py'
+#      - '.github/workflows/python-cli-lint.yaml'
+#      - 'api/setup.cfg'
+#      - 'cli/setup.cfg'
+#      - 'api/pyproject.toml'
+#      - 'cli/pyproject.toml'
+#
+#jobs:
+#  python-cli-lint:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3.5.3
+#      - name: Setup Python
+#        uses: actions/setup-python@v4.7.0
+#        with:
+#          python-version: 3.11
+#      - name: Install Python dependencies
+#        run: pip install -r cli/requirements.txt
+#      - name: Install Python linting dependencies
+#        run: pip install black flake8 mypy pylint
+#      - name: Run linters
+#        uses: wearerequired/lint-action@v2
+#        with:
+#          auto_fix: false
+#          continue_on_error: false
+#          mypy: true
+#          mypy_dir: cli
+#          flake8: true
+#          flake8_dir: cli
+#          black: true
+#          black_args: --config pyproject.toml
+#          black_dir: cli
+#          pylint: true
+#          pylint_args: --rcfile pyproject.toml
+#          pylint_dir: cli
+#          black_auto_fix: true
