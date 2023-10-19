@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 import yaml
 from fastapi import FastAPI, HTTPException
@@ -22,16 +22,16 @@ app = FastAPI()
 
 
 @app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
+async def add_process_time_header(request: Request, call_next: Any) -> Any:
     """
     Adds the process time to the response header.
     :param request: the request
     :param call_next: next middleware
-    :return: the resonse
+    :return: the response
     """
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
+    start_time: float = time.time()
+    response: Any = await call_next(request)
+    process_time: float = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
     return response
 
@@ -133,4 +133,7 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
         if target == Target.jenkins:
             generator = JenkinsGenerator(input_settings=input_settings, output_settings=output_settings,
                                          windfile=merged, metadata=merger.metadata, )
-        return {"result": generator.generate()}
+        if generator:
+            return {"result": generator.generate()}
+        else:
+            return {"detail": "Unknown target"}
