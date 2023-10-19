@@ -172,7 +172,7 @@ typing-extensions==4.8.0
     #   mypy
     #   pydantic
     #   pydantic-core
-urllib3==2.0.6
+urllib3==2.0.7
     # via
     #   -r ../cli/requirements.in
     #   docker

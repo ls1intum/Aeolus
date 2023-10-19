@@ -1,3 +1,4 @@
+#run to update:  pip-compile requirements.in
 pip-tools
 datamodel-code-generator
 ruamel-yaml
@@ -12,5 +13,5 @@ pydantic
 coverage
 gitpython
 types-requests
-urllib3==2.0.6
+urllib3==2.0.7
 python-jenkins
