@@ -1,4 +1,4 @@
-name: API LINT
+name: api lint
 
 on:
   pull_request:
