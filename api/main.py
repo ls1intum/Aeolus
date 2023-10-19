@@ -1,14 +1,12 @@
-import json
 import sys
 import time
+import yaml
 
-from pydantic import ValidationError
 from starlette.requests import Request
 
 sys.path.append("../cli")  # Adds higher directory to python modules path.
 
 from typing import Optional, Dict
-import yaml
 
 from classes.pass_metadata import PassMetadata
 from classes.input_settings import InputSettings

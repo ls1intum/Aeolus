@@ -29,6 +29,8 @@ jobs:
             image: ghcr.io/${{ github.repository }}/worker
           - dockerfile: ./docker/bamboo-generator/Dockerfile
             image: ghcr.io/${{ github.repository }}/bamboo-generator
+          - dockerfile: ./docker/api/Dockerfile
+            image: ghcr.io/${{ github.repository }}/api
     steps:
       - name: Checkout
         uses: actions/checkout@v3

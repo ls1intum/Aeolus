@@ -1,6 +1,6 @@
 import os
 import tempfile
-import traceback
+import traceback as tb
 import typing
 from io import TextIOWrapper
 from types import ModuleType
@@ -118,7 +118,7 @@ def read_file(
         logger.info("❌ ", f"{file.name} is invalid", output_settings.emoji)
         logger.error("❌ ", str(validation_error), output_settings.emoji)
         if output_settings.debug:
-            traceback.print_exc()
+            tb.print_exc()
         return None
 
 

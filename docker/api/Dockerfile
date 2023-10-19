@@ -10,12 +10,15 @@ RUN apt-get update && apt-get install -y default-jre git && rm -rf /var/cache
 
 COPY --from=jar-builder /bamboo-generator.jar bamboo-generator.jar
 
-COPY ../../cli/requirements.txt /requirements.txt
+COPY ../../api/requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt && rm /requirements.txt
 
-COPY ../../cli /
+COPY ../../cli/ /cli
+WORKDIR /cli
 RUN rm requirements.txt requirements.in
-RUN ln -s /main.py /usr/local/bin/aeolus && chmod +x /usr/local/bin/aeolus
 
-ENTRYPOINT ["aeolus"]
-CMD ["-h"]
+COPY ../../api /api
+WORKDIR /api
+RUN rm requirements.txt requirements.in
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]
