@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import logging
+import sys
 import typing
 from io import TextIOWrapper
 
 import argparse
-import sys
 
 from classes.ci_credentials import CICredentials
 from classes.input_settings import InputSettings

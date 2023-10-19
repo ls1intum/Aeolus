@@ -80,8 +80,7 @@ async def validate(windfile: WindFile) -> WindFile | dict[str, str] | None:
     }
     """
     with TemporaryFileWithContent(
-            content=yaml.dump(yaml.safe_load(windfile.model_dump_json(exclude_none=True)), sort_keys=False)
-    ) as file:
+            content=yaml.dump(yaml.safe_load(windfile.model_dump_json(exclude_none=True)), sort_keys=False)) as file:
         input_settings: InputSettings = InputSettings(file=file, file_path=file.name)
         output_settings: OutputSettings = OutputSettings(verbose=True, debug=True, emoji=True)
         validator: Validator = Validator(output_settings=output_settings, input_settings=input_settings)
@@ -115,37 +114,23 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
     :return:
     """
     with TemporaryFileWithContent(
-            content=yaml.dump(yaml.safe_load(windfile.model_dump_json(exclude_none=True)), sort_keys=False)
-    ) as file:
+            content=yaml.dump(yaml.safe_load(windfile.model_dump_json(exclude_none=True)), sort_keys=False)) as file:
         input_settings: InputSettings = InputSettings(file=file, file_path=file.name, target=target)
         output_settings: OutputSettings = OutputSettings(verbose=True, debug=True, emoji=True)
         metadata: PassMetadata = PassMetadata()
-        merger: Merger = Merger(
-            windfile=windfile, input_settings=input_settings, output_settings=output_settings, metadata=metadata
-        )
+        merger: Merger = Merger(windfile=windfile, input_settings=input_settings, output_settings=output_settings,
+                                metadata=metadata)
         merged: Optional[WindFile] = merger.merge()
         if not merged:
             return None
         generator: Optional[CliGenerator | JenkinsGenerator | BambooGenerator] = None
         if target == Target.cli:
-            generator = CliGenerator(
-                input_settings=input_settings,
-                output_settings=output_settings,
-                windfile=merged,
-                metadata=merger.metadata,
-            )
+            generator = CliGenerator(input_settings=input_settings, output_settings=output_settings, windfile=merged,
+                                     metadata=merger.metadata, )
         if target == Target.bamboo:
-            generator = BambooGenerator(
-                input_settings=input_settings,
-                output_settings=output_settings,
-                windfile=merged,
-                metadata=merger.metadata,
-            )
+            generator = BambooGenerator(input_settings=input_settings, output_settings=output_settings, windfile=merged,
+                                        metadata=merger.metadata, )
         if target == Target.jenkins:
-            generator = JenkinsGenerator(
-                input_settings=input_settings,
-                output_settings=output_settings,
-                windfile=merged,
-                metadata=merger.metadata,
-            )
+            generator = JenkinsGenerator(input_settings=input_settings, output_settings=output_settings,
+                                         windfile=merged, metadata=merger.metadata, )
         return {"result": generator.generate()}
