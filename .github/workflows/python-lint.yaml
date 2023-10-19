@@ -64,7 +64,7 @@ jobs:
           flake8: true
           flake8_dir: api
           black: true
-          black_args: --config ../pyproject.toml
+          black_args: --config pyproject.toml
           black_dir: api
           pylint: true
           pylint_args: --rcfile pyproject.toml
