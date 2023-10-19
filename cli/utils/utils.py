@@ -1,4 +1,5 @@
 import os
+import tempfile
 import traceback
 import typing
 from io import TextIOWrapper
@@ -247,3 +248,23 @@ def replace_environment_variables_in_windfile(environment: EnvironmentSchema, wi
         if isinstance(action.root, InternalAction):
             action.root.script = replace_environment_variable(environment=environment, haystack=action.root.script)
         action.root.environment = replace_environment_dictionary(environment=environment, env=action.root.environment)
+
+
+class TemporaryFileWithContent:
+    """
+    A temporary file with content.
+    """
+
+    file: typing.Any
+
+    def __init__(self, content: str):
+        # pylint: disable=consider-using-with
+        self.file = tempfile.NamedTemporaryFile(mode="w+")
+        self.file.write(content)
+        self.file.seek(0)
+
+    def __enter__(self) -> typing.Any:
+        return self.file.__enter__()
+
+    def __exit__(self, exc_type: typing.Any, exc_value: typing.Any, traceback: typing.Any) -> None:
+        self.file.__exit__(exc_type, exc_value, traceback)

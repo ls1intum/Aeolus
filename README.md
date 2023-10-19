@@ -542,5 +542,5 @@ Every type of job can have the following properties:
 | Feature                    | CLI/Bash | Jenkins | Bamboo |
 |----------------------------|:--------:|:-------:|:------:|
 | build trigger              |    ✅     |    ✅    |   ✅    |
-| docker configuration       |    ✅     |    ❌    |   ✅    |
+| docker configuration       |    ✅     |    ✅    |   ✅    |
 | translating back to Aeolus |    ❌     |    ❌    |   ✅    |

@@ -2,7 +2,6 @@ import logging
 import unittest
 from typing import Optional
 
-from test.testutils import TemporaryFileWithContent
 from test.actionfile_definitions import (
     VALID_ACTIONFILE_WITH_TWO_ACTIONS,
     INVALID_ACTIONFILE_WITH_ONE_ACTION,
@@ -17,6 +16,7 @@ from classes.input_settings import InputSettings
 from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
 from classes.validator import Validator, read_action_file
+from utils.utils import TemporaryFileWithContent
 
 
 class ValidateTests(unittest.TestCase):

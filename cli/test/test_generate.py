@@ -2,7 +2,6 @@ import logging
 import unittest
 from typing import Optional
 
-from test.testutils import TemporaryFileWithContent
 from test.windfile_definitions import (
     VALID_WINDFILE_INTERNAL_ACTION,
 )
@@ -14,6 +13,7 @@ from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
+from utils.utils import TemporaryFileWithContent
 
 
 class GenerateTests(unittest.TestCase):
@@ -49,10 +49,6 @@ class GenerateTests(unittest.TestCase):
             self.assertTrue(result.count("#!/usr/bin/env bash") == 1)
             self.assertTrue("set -e" in result)
             # two comments, one definition, one echo for execution, one echo in the actual action, and one call
-            print("esrvus")
-            print(result)
-            print(result.count("internal-action"))
-            print(result.count("internal-action") == 5)
             self.assertTrue(result.count("internal-action") == 5)
             self.assertTrue(result.count("{") == result.count("}"))
             self.assertTrue(cli.check(content=result))

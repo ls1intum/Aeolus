@@ -530,8 +530,6 @@ class Merger(PassSettings):
             validated: Optional[WindFile] = validator.validate_wind_file()
             if validated:
                 self.windfile = validated
-        else:
-            return None
         if (
             not self.merge_internal_actions()
             or not self.merge_file_actions()
