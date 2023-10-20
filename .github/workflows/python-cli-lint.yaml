@@ -1,16 +1,21 @@
 name: cli lint
 
-on:
-  pull_request:
-  push:
-    paths:
-      - '*.py'
-      - '.github/workflows/python-cli-lint.yaml'
-      - 'api/setup.cfg'
-      - 'cli/setup.cfg'
-      - 'api/pyproject.toml'
-      - 'cli/pyproject.toml'
+#on:
+#  pull_request:
+#  push:
+#    paths:
+#      - '*.py'
+#      - '.github/workflows/python-cli-lint.yaml'
+#      - 'api/setup.cfg'
+#      - 'cli/setup.cfg'
+#      - 'api/pyproject.toml'
+#      - 'cli/pyproject.toml'
 
+on:
+  push:
+    branches:
+      - develop
+      -
 jobs:
   python-cli-lint:
     runs-on: ubuntu-latest
