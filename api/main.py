@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
+from api_utils.utils import dump_yaml
 from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
@@ -13,10 +14,10 @@ from classes.merger import Merger
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
 from classes.validator import Validator
+from cli_utils.utils import TemporaryFileWithContent
 from generators.bamboo import BambooGenerator
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
-from utils.utils import TemporaryFileWithContent, dump_yaml
 
 app = FastAPI()
 
@@ -116,8 +117,9 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
         input_settings: InputSettings = InputSettings(file=file, file_path=file.name, target=target)
         output_settings: OutputSettings = OutputSettings(verbose=True, debug=True, emoji=True)
         metadata: PassMetadata = PassMetadata()
-        merger: Merger = Merger(windfile=windfile, input_settings=input_settings, output_settings=output_settings,
-                                metadata=metadata)
+        merger: Merger = Merger(
+            windfile=windfile, input_settings=input_settings, output_settings=output_settings, metadata=metadata
+        )
         merged: Optional[WindFile] = merger.merge()
         if not merged:
             return None
