@@ -37,7 +37,7 @@ jobs:
           black: true
           black_args: --config pyproject.toml
           black_dir: cli
+          black_auto_fix: true
           pylint: true
           pylint_args: --rcfile pyproject.toml
           pylint_dir: cli
-          black_auto_fix: true

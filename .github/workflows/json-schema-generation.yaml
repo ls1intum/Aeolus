@@ -2,6 +2,11 @@ name: JSON schema Generation Check
 
 on:
   pull_request:
+    paths-ignore:
+      - 'docker/**'
+      - 'bamboo-generator/**'
+      - '.github/workflows/python-**.yaml'
+      - '.github/workflows/build**.yaml'
   push:
     paths:
       - 'schemas/**'
