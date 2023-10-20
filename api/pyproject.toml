@@ -28,3 +28,5 @@ ignore = ['venv', 'generated', 'examples', 'docs']
 max-line-length = 120
 min-similarity-lines=10
 disable = "missing-module-docstring,missing-class-docstring,missing-function-docstring,too-few-public-methods"
+[MASTER]
+init-hook='import sys; sys.path.append("../cli")'
