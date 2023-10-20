@@ -28,6 +28,7 @@ jobs:
       - name: Run linters
         uses: wearerequired/lint-action@v2
         with:
+          check_name: cli-lint
           auto_fix: false
           continue_on_error: false
           mypy: true
