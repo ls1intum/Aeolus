@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
+# pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
 from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile
@@ -101,8 +102,8 @@ async def generate_from_yaml(request: Request, target: Target) -> Optional[Dict[
     try:
         data: WindFile = WindFile(**yaml.safe_load(raw_body))
         return await generate(windfile=data, target=target)
-    except yaml.YAMLError:
-        raise HTTPException(status_code=422, detail="Invalid YAML")
+    except yaml.YAMLError as exc:
+        raise HTTPException(status_code=422, detail="Invalid YAML") from exc
 
 
 @app.post("/generate/{target}")
@@ -147,5 +148,4 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
             )
         if generator:
             return {"result": generator.generate()}
-        else:
-            return {"detail": "Unknown target"}
+        return {"detail": "Unknown target"}

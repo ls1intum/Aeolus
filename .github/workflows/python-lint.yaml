@@ -12,14 +12,16 @@ on:
       - 'cli/pyproject.toml'
 
 jobs:
-  python-api-lint:
+  python-lint:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
           - directory: "cli/"
+            name: "cli-linter"
           - directory: "api/"
+            name: "api-linter"
     steps:
       - name: Checkout
         uses: actions/checkout@v3.5.3
@@ -36,6 +38,7 @@ jobs:
         with:
           auto_fix: false
           continue_on_error: false
+          check_name: ${{ matrix.name }}
           mypy: true
           mypy_dir: ${{ matrix.directory }}
           flake8: true
