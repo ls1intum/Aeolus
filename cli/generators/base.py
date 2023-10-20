@@ -7,7 +7,7 @@ from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
-from utils import utils
+from cli_utils import utils
 
 
 class BaseGenerator:

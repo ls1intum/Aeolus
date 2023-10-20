@@ -15,7 +15,7 @@ from classes.generated.definitions import (
 from classes.generated.windfile import WindFile
 from classes.output_settings import OutputSettings
 from classes.pass_settings import PassSettings
-from utils import logger, utils
+from cli_utils import logger, utils
 
 T = typing.TypeVar("T")
 

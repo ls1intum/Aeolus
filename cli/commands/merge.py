@@ -10,7 +10,7 @@ from classes.validator import (
     Validator,
 )
 from commands.subcommand import Subcommand
-from utils import logger
+from cli_utils import logger
 
 
 class Merge(Subcommand):

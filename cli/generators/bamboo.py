@@ -16,7 +16,7 @@ from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
 from generators.base import BaseGenerator
-from utils import logger, utils
+from cli_utils import logger, utils
 
 
 def docker_available() -> bool:

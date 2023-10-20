@@ -17,7 +17,7 @@ from classes.input_settings import InputSettings
 from classes.merger import Merger
 from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
-from utils.utils import TemporaryFileWithContent
+from cli_utils.utils import TemporaryFileWithContent
 
 
 class MergeTests(unittest.TestCase):

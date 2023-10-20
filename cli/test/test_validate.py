@@ -16,7 +16,7 @@ from classes.input_settings import InputSettings
 from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
 from classes.validator import Validator, read_action_file
-from utils.utils import TemporaryFileWithContent
+from cli_utils.utils import TemporaryFileWithContent
 
 
 class ValidateTests(unittest.TestCase):

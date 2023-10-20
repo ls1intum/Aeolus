@@ -13,7 +13,7 @@ from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
-from utils.utils import TemporaryFileWithContent
+from cli_utils.utils import TemporaryFileWithContent
 
 
 class GenerateTests(unittest.TestCase):

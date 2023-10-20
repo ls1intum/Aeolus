@@ -14,7 +14,7 @@ from commands.generate import Generate
 from commands.merge import Merge
 from commands.translate import Translate
 from commands.validate import Validate
-from utils import utils
+from cli_utils import utils
 
 
 def add_argparse() -> argparse.ArgumentParser:

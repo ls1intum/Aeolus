@@ -14,7 +14,7 @@ from classes.generated.definitions import Target, Docker, Environment, Dictionar
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.output_settings import OutputSettings
-from utils import logger
+from cli_utils import logger
 
 T = typing.TypeVar("T")
 
