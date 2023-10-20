@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
+
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
 from classes.generated.definitions import Target
