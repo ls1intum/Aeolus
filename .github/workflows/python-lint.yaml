@@ -1,7 +1,6 @@
 name: python lint
 
 on:
-  pull_request:
   push:
     paths:
       - '*.py'

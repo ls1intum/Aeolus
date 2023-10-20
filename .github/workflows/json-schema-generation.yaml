@@ -1,17 +1,15 @@
 name: JSON schema Generation Check
 
 on:
-  pull_request:
-    paths-ignore:
-      - 'docker/**'
-      - 'bamboo-generator/**'
-      - '.github/workflows/python-**.yaml'
-      - '.github/workflows/build**.yaml'
   push:
     paths:
       - 'schemas/**'
       - '.github/workflows/json-schema-generation.yaml'
       - 'cli/classes/generated/**'
+      - '!docker/**'
+      - '!bamboo-generator/**'
+      - '!.github/workflows/python-**.yaml'
+      - '!.github/workflows/build**.yaml'
 
 jobs:
   json-schema-generation:
