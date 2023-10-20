@@ -37,7 +37,6 @@ jobs:
         with:
           auto_fix: false
           continue_on_error: false
-          check_name: ${{ matrix.name }}
           mypy: true
           mypy_dir: ${{ matrix.directory }}
           flake8: true
