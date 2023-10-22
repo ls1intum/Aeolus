@@ -3,6 +3,7 @@ from typing import Optional, Dict, Any
 
 import yaml
 from fastapi import FastAPI, HTTPException
+from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
@@ -23,6 +24,18 @@ from generators.jenkins import JenkinsGenerator
 
 app = FastAPI()
 
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next: Any) -> Any:
