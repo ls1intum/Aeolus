@@ -9,6 +9,7 @@ export function JenkinsIcon({size, style, ...others}: AddressBookIconProps) {
         <img
             style={{width: rem(size), height: rem(size), ...style}}
             src="/static/jenkins.svg"
+            alt="Jenkins"
         />
     );
 }

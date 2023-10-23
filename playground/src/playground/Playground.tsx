@@ -69,17 +69,14 @@ actions:
     run_always: true`;
     const [data, setData] = useState<string>(default_windfile);
 
-    const monacoRef = useRef(null);
+    const monacoRef = useRef<any>(null);
 
     function handleEditorWillMount(monaco: any) {
-        // here is the monaco instance
-        // do something before editor is mounted
-        // monaco.languages.typescript.javascriptDefaults.setEagerModelSync(true);
         configureMonacoYaml(monaco, {
             enableSchemaRequest: true,
             schemas: [
                 {
-                    fileMatch: ['windfile.yaml'],
+                    fileMatch: ['**'],
                     uri: 'https://raw.githubusercontent.com/ls1intum/Aeolus/develop/schemas/v0.0.1/schemas/windfile.json'
                 },
             ]
@@ -113,7 +110,7 @@ actions:
         })
             .then(response => response.json())
             .catch(error => console.error('Error:', error))
-            .then(data => setData(data.result));
+            .then(data => data ? setData(data.result) : setData(''));
     }, [target, input]);
 
 
@@ -133,7 +130,7 @@ actions:
                 <Title style={{
                     margin: '4px',
                 }} order={4}>Define your job:</Title>
-                <Editor height="80vh" defaultLanguage="yaml" path="windfile.yaml"
+                <Editor height="80vh" defaultLanguage="yaml" path="windfile.yaml" defaultPath="windfile.yaml"
                         defaultValue={default_windfile} theme={editorTheme} beforeMount={handleEditorWillMount}
                         onMount={handleEditorDidMount} onChange={handleEditorChange}/>
             </Grid.Col>
@@ -150,40 +147,25 @@ actions:
                     code={[
                         {
                             fileName: 'generated.sh',
-                            code: data,
+                            code: data ? data : 'enter a valid windfile to generate bash script',
                             language: 'bash',
                             icon: bashIcon,
                         },
                         {
                             fileName: 'Bamboo Build Plan',
-                            code: data,
+                            code: data ? data : 'enter a valid windfile to generate Bamboo Build Plan',
                             language: 'yaml',
                             icon: bambooIcon,
                         },
                         {
                             fileName: 'Jenkinsfile',
-                            code: data,
+                            code: data ? data : 'enter a valid windfile to generate Jenkinsfile',
                             language: 'groovy',
                             icon: jenkinsIcon,
                         },
                     ]}
                 >
                 </CodeHighlightTabs>
-                {/*<Group justify="center">*/}
-                {/*    <Button leftSection={bashIcon} variant="default" onClick={() => setTarget('cli')}>*/}
-                {/*        Bash*/}
-                {/*    </Button>*/}
-                {/*    <Button leftSection={bambooIcon} variant="default" onClick={() => setTarget('bamboo')}>*/}
-                {/*        Bamboo*/}
-                {/*    </Button>*/}
-                {/*    <Button leftSection={jenkinsIcon} variant="default" onClick={() => setTarget('jenkins')}>*/}
-                {/*        Jenkins*/}
-                {/*    </Button>*/}
-                {/*</Group>*/}
-                {/*<CodeHighlight*/}
-                {/*    code={data}*/}
-                {/*    language={getCurrentLanguage()}*/}
-                {/*/>*/}
             </Grid.Col>
         </Grid>
     );

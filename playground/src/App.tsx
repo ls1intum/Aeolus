@@ -38,13 +38,6 @@ function App() {
                             <Title order={2} >Aeolus</Title>
                             <ThemeSwitcher/>
                         </Group>
-                        {/*<Grid grow justify="space-between">*/}
-                        {/*    <Grid.Col>*/}
-                        {/*    </Grid.Col>*/}
-                        {/*    <Grid.Col>*/}
-                        {/*        <ThemeSwitcher/>*/}
-                        {/*    </Grid.Col>*/}
-                        {/*</Grid>*/}
                     </AppShell.Header>
 
                     <AppShell.Navbar p="md">

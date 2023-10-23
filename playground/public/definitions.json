@@ -1,0 +1,528 @@
+{
+  "api": {
+    "title": "API Version",
+    "description": "The API version of the windfile.",
+    "type": "string",
+    "examples": [
+      "v0.0.1"
+    ]
+  },
+  "windfile-metadata": {
+    "title": "Windfile Metadata",
+    "description": "Metadata of the windfile.",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "name": {
+        "description": "The name of the windfile.",
+        "type": "string",
+        "examples": [
+          "rust-exercise-jobs"
+        ]
+      },
+      "id": {
+        "description": "The id of the resulting job in the CI system.",
+        "type": "string",
+        "examples": [
+          "rust-exercise-jobs",
+          "AEOLUS-BASE",
+          "jenkins/job/path"
+        ]
+      },
+      "description": {
+        "description": "Description of what this list of actions is supposed to achieve",
+        "type": "string",
+        "examples": [
+          "This windfile contains the jobs that are executed during the CI of the rust-exercise."
+        ]
+      },
+      "author": {
+        "description": "The author of the windfile.",
+        "$ref": "#/author"
+      },
+      "targets": {
+        "description": "The targets of the windfile.",
+        "type": "array",
+        "items": {
+          "$ref": "#/target"
+        }
+      },
+      "gitCredentials": {
+        "description": "The git credentials that are used to clone the repositories",
+        "oneOf": [
+          {
+            "type": "string",
+            "examples": [
+              "git-credentials-id"
+            ]
+          },
+          {
+            "$ref": "#/git-credentials"
+          }
+        ]
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the actions",
+        "$ref": "#/docker"
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "author"
+    ]
+  },
+  "action-metadata": {
+    "title": "Metadata",
+    "description": "Metadata of the actionfile.",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "name": {
+        "description": "The name of the windfile.",
+        "type": "string",
+        "examples": [
+          "rust-exercise-jobs"
+        ]
+      },
+      "description": {
+        "description": "Description of what this list of actions is supposed to achieve",
+        "type": "string",
+        "examples": [
+          "This windfile contains the jobs that are executed during the CI of the rust-exercise."
+        ]
+      },
+      "author": {
+        "description": "The author of the actionfile.",
+        "$ref": "#/author"
+      },
+      "targets": {
+        "description": "The targets of the windfile.",
+        "type": "array",
+        "items": {
+          "$ref": "#/target"
+        }
+      }
+    },
+    "required": [
+      "name",
+      "description",
+      "author"
+    ]
+  },
+  "author": {
+    "title": "Author",
+    "description": "The author of the windfile.",
+    "allowAdditionalProperties": false,
+    "oneOf": [
+      {
+        "type": "string",
+        "examples": [
+          "Andreas Resch <aeolus@resch.io>"
+        ]
+      },
+      {
+        "$ref": "#/contact-data"
+      }
+    ]
+  },
+  "contact-data": {
+    "type": "object",
+    "title": "Contact Data",
+    "description": "Contact data of the author.",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "name": {
+        "description": "The name of the author.",
+        "type": "string",
+        "examples": [
+          "Andreas Resch"
+        ]
+      },
+      "email": {
+        "description": "The email of the author.",
+        "type": "string",
+        "examples": [
+          "aeolus@resch.io"
+        ]
+      }
+    },
+    "required": [
+      "name"
+    ]
+  },
+  "action": {
+    "title": "Action",
+    "description": "Action that can be executed.",
+    "oneOf": [
+      {
+        "$ref": "#/file-action"
+      },
+      {
+        "$ref": "#/internal-action"
+      },
+      {
+        "$ref": "#/platform-action"
+      },
+      {
+        "$ref": "#/external-action"
+      }
+    ]
+  },
+  "platform-action": {
+    "title": "Platform Action",
+    "description": "Action that is defined for a specific platform.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "file": {
+        "description": "The file of the platform action. Written in Python",
+        "type": "string"
+      },
+      "parameters": {
+        "$ref": "#/parameters"
+      },
+      "function": {
+        "description": "The function of the platform action.",
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9._-]+$",
+        "default": "run",
+        "examples": [
+          "run"
+        ]
+      },
+      "excludeDuring": {
+        "type": "array",
+        "title": "Exclude during",
+        "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+        "items": {
+          "$ref": "#/lifecycle"
+        }
+      },
+      "environment": {
+        "description": "Environment variables for this platform action.",
+        "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "Ignored for this action.",
+        "$ref": "#/target"
+      },
+      "kind": {
+        "description": "The kind of the platform action.",
+        "type": "string",
+        "examples": [
+          "junit"
+        ]
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
+      },
+      "run_always": {
+        "description": "If this is set to true, the action is always executed, even if other actions fail.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "oneOff": [
+      {
+        "required": [
+          "for",
+          "file"
+        ]
+      }
+    ]
+  },
+  "file-action": {
+    "title": "File Action",
+    "description": "Action that is defined in a file.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "file": {
+        "description": "The file that contains the action.",
+        "type": "string"
+      },
+      "parameters": {
+        "$ref": "#/parameters"
+      },
+      "excludeDuring": {
+        "type": "array",
+        "title": "Exclude during",
+        "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+        "items": {
+          "$ref": "#/lifecycle"
+        }
+      },
+      "environment": {
+        "description": "Environment variables for this file action.",
+        "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+        "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
+      },
+      "run_always": {
+        "description": "If this is set to true, the action is always executed, even if other actions fail.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "file"
+    ]
+  },
+  "internal-action": {
+    "title": "Internal Action",
+    "description": "Internally defined action that can be executed.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "script": {
+        "description": "The script of the internal action. Written in aeolus DSL",
+        "type": "string"
+      },
+      "excludeDuring": {
+        "type": "array",
+        "title": "Exclude during",
+        "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+        "items": {
+          "$ref": "#/lifecycle"
+        }
+      },
+      "parameters": {
+        "$ref": "#/parameters"
+      },
+      "environment": {
+        "description": "Environment variables for this internal action.",
+        "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+        "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
+      },
+      "run_always": {
+        "description": "If this is set to true, the action is always executed, even if other actions fail.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "script"
+    ]
+  },
+  "external-action": {
+    "title": "External Action",
+    "description": "External action that can be executed with or without parameters.",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "use": {
+        "description": "The name of the external action.",
+        "title": "Name of the external action.",
+        "type": "string"
+      },
+      "parameters": {
+        "$ref": "#/parameters"
+      },
+      "excludeDuring": {
+        "type": "array",
+        "title": "Exclude during",
+        "description": "Exclude this action during the specified parts of the lifetime of an exercise.",
+        "items": {
+          "$ref": "#/lifecycle"
+        }
+      },
+      "environment": {
+        "description": "Environment variables for this external action.",
+        "$ref": "#/environment"
+      },
+      "platform": {
+        "description": "The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+        "$ref": "#/target"
+      },
+      "docker": {
+        "description": "The docker configuration that is used to execute the action",
+        "$ref": "#/docker"
+      },
+      "run_always": {
+        "description": "If this is set to true, the action is always executed, even if other actions fail.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [
+      "use"
+    ]
+  },
+  "parameters": {
+    "description": "The parameters of an action.",
+    "title": "Parameters of an action.",
+    "$ref": "#/dictionary"
+  },
+  "dictionary": {
+    "type": "object",
+    "patternProperties": {
+      ".+": {
+        "type": [
+          "string",
+          "number",
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "additionalProperties": false,
+    "uniqueItems": true
+  },
+  "lifecycle": {
+    "title": "Lifecycle",
+    "description": "Defines a part of the lifecycle of a job.",
+    "type": "string",
+    "enum": [
+      "preparation",
+      "working_time",
+      "post_deadline",
+      "evaluation",
+      "all"
+    ],
+    "examples": [
+      "preparation"
+    ]
+  },
+  "target": {
+    "title": "Targets",
+    "description": "The CI platforms that are able to run this windfile.",
+    "type": "string",
+    "enum": [
+      "cli",
+      "jenkins",
+      "bamboo"
+    ],
+    "examples": [
+      "jenkins"
+    ]
+  },
+  "environment": {
+    "title": "Environment",
+    "description": "Environment variables for actions.",
+    "$ref": "#/dictionary"
+  },
+  "git-credentials": {
+    "title": "Git Credentials",
+    "description": "Git credentials that are used to clone the repositories.",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "username": {
+        "description": "The username of the git credentials.",
+        "type": "string",
+        "examples": [
+          "aeolus"
+        ]
+      },
+      "password": {
+        "description": "The password of the git credentials.",
+        "type": "string",
+        "examples": [
+          "aeolus"
+        ]
+      }
+    },
+    "required": [
+      "username",
+      "password"
+    ]
+  },
+  "repository": {
+    "title": "Repository",
+    "description": "Repository to be checked out during the execution of the actions",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "url": {
+        "description": "The url of the repository",
+        "type": "string",
+        "examples": [
+          "https://github.com/ls1intum/Aeolus.git"
+        ]
+      },
+      "branch": {
+        "description": "The branch to check out",
+        "type": "string",
+        "examples": [
+          "main"
+        ],
+        "default": "main"
+      },
+      "path": {
+        "description": "The path where the content of the repository should be checked out",
+        "type": "string",
+        "examples": [
+          ".",
+          "tests"
+        ],
+        "default": "."
+      }
+    },
+    "required": [
+      "url",
+      "branch",
+      "path"
+    ]
+  },
+  "docker": {
+    "title": "Docker",
+    "description": "Docker configuration that is used to execute the actions",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "image": {
+        "description": "The docker image that is used to execute the action",
+        "type": "string",
+        "examples": [
+          "rust:latest"
+        ]
+      },
+      "tag": {
+        "description": "The tag of the docker image that is used to execute the action",
+        "type": "string",
+        "examples": [
+          "latest"
+        ],
+        "default": "latest"
+      },
+      "volumes": {
+        "description": "The volumes that are mounted into the docker container",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "examples": [
+            "/var/run/docker.sock:/var/run/docker.sock"
+          ]
+        }
+      },
+      "parameters": {
+        "description": "The parameters that are passed to the docker daemon, e.g. --cpus=2",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "examples": [
+            "--cpus=2"
+          ]
+        }
+      }
+    },
+    "required": [
+      "image"
+    ]
+  }
+}

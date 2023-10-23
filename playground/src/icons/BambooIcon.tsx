@@ -9,6 +9,7 @@ export function BambooIcon({size, style, ...others}: AddressBookIconProps) {
         <img
             style={{width: rem(size), height: rem(size), ...style}}
             src="/static/bamboo.svg"
+            alt="Bamboo"
         />
     );
 }

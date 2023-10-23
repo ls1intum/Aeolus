@@ -9,6 +9,7 @@ export function BashIcon({size, style, ...others}: AddressBookIconProps) {
         <img
             style={{width: rem(size), height: rem(size), color: "white", ...style}}
             src="/static/bash.svg"
+            alt="Bash"
         />
     );
 }
