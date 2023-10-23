@@ -1,4 +1,4 @@
-FROM openjdk:22-slim as jar-builder
+FROM openjdk:17-slim as jar-builder
 
 ADD bamboo-generator/ .
 RUN ./gradlew shadowJar --no-daemon -x :generateJsonSchema2Pojo
@@ -8,17 +8,20 @@ FROM python:3.11-slim AS cli
 
 RUN apt-get update && apt-get install -y default-jre git && rm -rf /var/cache
 
-COPY --from=jar-builder /bamboo-generator.jar bamboo-generator.jar
+COPY --from=jar-builder /bamboo-generator.jar /fastapi/api/bamboo-generator.jar
 
 COPY ../../api/requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt && rm /requirements.txt
 
-COPY ../../cli/ /cli
-WORKDIR /cli
+COPY ../../cli/ /fastapi/cli
+WORKDIR /fastapi/cli
 RUN rm requirements.txt requirements.in
 
-COPY ../../api /api
-WORKDIR /api
+COPY ../../api /fastapi/api
+COPY schemas /fastapi/schemas
+WORKDIR /fastapi/api
 RUN rm requirements.txt requirements.in
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]
+EXPOSE 80
+
+ENTRYPOINT ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]

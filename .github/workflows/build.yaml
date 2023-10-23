@@ -1,13 +1,14 @@
 name: create docker image
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
     paths-ignore:
-      - 'README.md'
-      - '.github/workflows/build-pr.yaml'
-      - '.github/workflows/python-**.yaml'
+      - "README.md"
+      - ".github/workflows/build-pr.yaml"
+      - ".github/workflows/python-**.yaml"
 
 env:
   REGISTRY: ghcr.io
@@ -73,3 +74,4 @@ jobs:
           push: ${{ github.ref_name == 'develop' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+

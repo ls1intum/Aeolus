@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.aeolus-playground.rule=Host(`<your-host>`)"
+      - "traefik.http.routers.aeolus-playground.rule=(Host(`<your-host>`) && !PathPrefix(`/api`))"
       - "traefik.http.routers.aeolus-playground.entrypoints=https"
       - "traefik.http.routers.aeolus-playground.tls=true"
       - "traefik.http.routers.aeolus-playground.tls.certResolver=leresolver"
@@ -22,11 +22,13 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.aeolus-playground.rule=Host(`<your-host>`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.aeolus-playground.entrypoints=https"
-      - "traefik.http.routers.aeolus-playground.tls=true"
-      - "traefik.http.routers.aeolus-playground.tls.certResolver=leresolver"
-      - 'traefik.services.aeolus-playground.loadbalancer.passHostHeader=true'
+      - "traefik.http.routers.aeolus-api.rule=(Host(`<your-host>`) && PathPrefix(`/api`))"
+      - "traefik.http.routers.aeolus-api.entrypoints=https"
+      - "traefik.http.routers.aeolus-api.tls=true"
+      - "traefik.http.routers.aeolus-api.tls.certResolver=leresolver"
+      - 'traefik.services.aeolus-api.loadbalancer.passHostHeader=true'
+      - "traefik.http.middlewares.aeolus-api.stripprefix.prefixes=/api"
+      - 'traefik.http.routers.aeolus-api.middlewares=aeolus-api'
     networks:
       - traefik
 

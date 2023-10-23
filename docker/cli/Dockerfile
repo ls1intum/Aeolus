@@ -1,4 +1,4 @@
-FROM openjdk:22-slim as jar-builder
+FROM openjdk:17-slim as jar-builder
 
 ADD bamboo-generator/ .
 RUN ./gradlew shadowJar --no-daemon -x :generateJsonSchema2Pojo
