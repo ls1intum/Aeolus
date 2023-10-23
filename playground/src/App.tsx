@@ -8,6 +8,7 @@ import {
 import Playground from "./playground/Playground";
 import ThemeSwitcher from "./themeSwitcher/ThemeSwitcher";
 import {useDisclosure} from "@mantine/hooks";
+import AeolusIcon from "./icons/AeolusIcon";
 
 function App() {
     const [mobileOpened, {toggle: toggleMobile}] = useDisclosure();
@@ -33,7 +34,8 @@ function App() {
                         <Group h="100%" px="md">
                             <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm"/>
                             <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm"/>
-                            <Title order={2}>Aeolus</Title>
+                            <AeolusIcon size={48}/>
+                            <Title order={2} >Aeolus</Title>
                             <ThemeSwitcher/>
                         </Group>
                         {/*<Grid grow justify="space-between">*/}

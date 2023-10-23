@@ -10,7 +10,7 @@ function ThemeSwitcher() {
         <ActionIcon
             onClick={() => setColorScheme(computedColorScheme === 'light' ? 'dark' : 'light')}
             variant="default"
-            size="xl"
+            size="lg"
             aria-label="Toggle color scheme"
         >
             <IconSun className={classes.icon} style={{

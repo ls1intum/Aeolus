@@ -21,7 +21,7 @@ function Playground(props: PlaygroundProps) {
                         new URL('monaco-editor/esm/vs/language/json/json.worker', import.meta.url)
                     )
                 case 'yaml':
-                    return new Worker(new URL('monaco-yaml/yaml.worker.js?worker', import.meta.url))
+                    return new Worker(new URL('monaco-yaml/yaml.worker.js.map?worker', import.meta.url))
                 default:
                     throw new Error(`Unknown label ${label}`)
             }
@@ -133,7 +133,7 @@ actions:
                 <Title style={{
                     margin: '4px',
                 }} order={4}>Define your job:</Title>
-                <Editor height="100vh" defaultLanguage="yaml" path="windfile.yaml"
+                <Editor height="80vh" defaultLanguage="yaml" path="windfile.yaml"
                         defaultValue={default_windfile} theme={editorTheme} beforeMount={handleEditorWillMount}
                         onMount={handleEditorDidMount} onChange={handleEditorChange}/>
             </Grid.Col>
@@ -144,6 +144,9 @@ actions:
                         if (tab === 1) setTarget('bamboo');
                         if (tab === 2) setTarget('jenkins');
                     }}
+                    withExpandButton
+                    defaultExpanded={false}
+                    maxCollapsedHeight="80vh"
                     code={[
                         {
                             fileName: 'generated.sh',
