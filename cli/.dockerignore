@@ -1,0 +1,5 @@
+.github
+.idea
+out
+.mypy_cache
+venv

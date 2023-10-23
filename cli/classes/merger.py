@@ -32,8 +32,8 @@ from classes.validator import (
     Validator,
     get_internal_actions_with_names,
 )
-from utils import logger
-from utils.utils import get_content_of, get_path_to_file, file_exists
+from cli_utils import logger
+from cli_utils.utils import get_content_of, get_path_to_file, file_exists
 
 
 def merge_parameters(parameters: Parameters | None, action: Action) -> None:
@@ -530,8 +530,6 @@ class Merger(PassSettings):
             validated: Optional[WindFile] = validator.validate_wind_file()
             if validated:
                 self.windfile = validated
-        else:
-            return None
         if (
             not self.merge_internal_actions()
             or not self.merge_file_actions()

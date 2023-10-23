@@ -2,6 +2,7 @@
 python_version = "3.11"
 check_untyped_defs = true
 disallow_untyped_defs = true
+mypy_path = "../cli"
 
 [[tool.mypy.overrides]]
 # ignore generated classes
@@ -10,8 +11,8 @@ ignore_errors = true
 
 [tool.black]
 force-exclude = '''
-    cli/classes/generated
-    | cli/venv
+    classes/generated
+    | venv
     | docs/lib
     | docs/bin
     | docs/source
@@ -27,3 +28,4 @@ ignore = ['venv', 'generated', 'examples', 'docs']
 max-line-length = 120
 min-similarity-lines=10
 disable = "missing-module-docstring,missing-class-docstring,missing-function-docstring,too-few-public-methods"
+init-hook='import sys; sys.path.append("../cli")'

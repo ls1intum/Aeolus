@@ -1,6 +1,6 @@
 import typing
 
-from utils import logger
+from cli_utils import logger
 
 
 class PassMetadata:

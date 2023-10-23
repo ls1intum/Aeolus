@@ -1,7 +1,6 @@
 name: CLI Unit tests
 
 on:
-  pull_request:
   push:
     paths:
       - '*.py'

@@ -7,6 +7,7 @@ on:
     paths-ignore:
       - 'README.md'
       - '.github/workflows/build-pr.yaml'
+      - '.github/workflows/python-**.yaml'
 
 env:
   REGISTRY: ghcr.io
@@ -29,6 +30,10 @@ jobs:
             image: ghcr.io/${{ github.repository }}/worker
           - dockerfile: ./docker/bamboo-generator/Dockerfile
             image: ghcr.io/${{ github.repository }}/bamboo-generator
+          - dockerfile: ./docker/api/Dockerfile
+            image: ghcr.io/${{ github.repository }}/api
+          - dockerfile: ./docker/playground/Dockerfile
+            image: ghcr.io/${{ github.repository }}/playground
     steps:
       - name: Checkout
         uses: actions/checkout@v3

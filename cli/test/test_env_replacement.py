@@ -2,7 +2,6 @@ import logging
 import unittest
 from typing import Optional, List, Union, Type
 
-from test.testutils import TemporaryFileWithContent
 from test.windfile_definitions import (
     VALID_WINDFILE_WITH_ENV_VARIABLES_AND_DOCKER,
 )
@@ -16,6 +15,7 @@ from classes.input_settings import InputSettings
 from classes.merger import Merger
 from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
+from cli_utils.utils import TemporaryFileWithContent
 
 
 class EnvironmentReplacementTests(unittest.TestCase):

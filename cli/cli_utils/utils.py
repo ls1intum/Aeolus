@@ -1,5 +1,6 @@
 import os
-import traceback
+import tempfile
+import traceback as tb
 import typing
 from io import TextIOWrapper
 from types import ModuleType
@@ -13,7 +14,7 @@ from classes.generated.definitions import Target, Docker, Environment, Dictionar
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.output_settings import OutputSettings
-from utils import logger
+from cli_utils import logger
 
 T = typing.TypeVar("T")
 
@@ -117,7 +118,7 @@ def read_file(
         logger.info("❌ ", f"{file.name} is invalid", output_settings.emoji)
         logger.error("❌ ", str(validation_error), output_settings.emoji)
         if output_settings.debug:
-            traceback.print_exc()
+            tb.print_exc()
         return None
 
 
@@ -247,3 +248,23 @@ def replace_environment_variables_in_windfile(environment: EnvironmentSchema, wi
         if isinstance(action.root, InternalAction):
             action.root.script = replace_environment_variable(environment=environment, haystack=action.root.script)
         action.root.environment = replace_environment_dictionary(environment=environment, env=action.root.environment)
+
+
+class TemporaryFileWithContent:
+    """
+    A temporary file with content.
+    """
+
+    file: typing.Any
+
+    def __init__(self, content: str):
+        # pylint: disable=consider-using-with
+        self.file = tempfile.NamedTemporaryFile(mode="w+")
+        self.file.write(content)
+        self.file.seek(0)
+
+    def __enter__(self) -> typing.Any:
+        return self.file.__enter__()
+
+    def __exit__(self, exc_type: typing.Any, exc_value: typing.Any, traceback: typing.Any) -> None:
+        self.file.__exit__(exc_type, exc_value, traceback)

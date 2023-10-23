@@ -1,0 +1,336 @@
+# Test your FastAPI endpoints
+
+GET http://127.0.0.1:8000/health
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/validate
+Accept: application/json
+Content-Type: application/json
+
+{
+  "api": "v0.0.1",
+  "metadata": {
+    "name": "example windfile",
+    "id": "example-windfile",
+    "description": "This is a windfile with an internal action",
+    "author": "Andreas Resch",
+    "gitCredentials": "artemis_gitlab_admin_credentials",
+    "docker": {
+      "image": "ls1tum/artemis-maven-template",
+      "tag": "java17-20",
+      "volumes": [
+        "${WORKDIR}:/aeolus"
+      ],
+      "parameters": [
+        "--cpus",
+        "\"2\"",
+        "--memory",
+        "\"2g\"",
+        "--memory-swap",
+        "\"2g\"",
+        "--pids-limit",
+        "\"1000\""
+      ]
+    }
+  },
+  "repositories": {
+    "aeolus": {
+      "url": "https://github.com/ls1intum/Aeolus.git",
+      "branch": "develop",
+      "path": "aeolus"
+    }
+  },
+  "actions": {
+    "set-java-container": {
+      "script": "set",
+      "docker": {
+        "image": "ls1tum/artemis-maven-template",
+        "tag": "java17-20",
+        "volumes": [
+          "${WORKDIR}:/aeolus"
+        ],
+        "parameters": [
+          "--cpus",
+          "\"2\"",
+          "--memory",
+          "\"2g\"",
+          "--memory-swap",
+          "\"2g\"",
+          "--pids-limit",
+          "\"1000\""
+        ]
+      },
+      "run_always": false
+    },
+    "set-c-container": {
+      "script": "set",
+      "docker": {
+        "image": "ghcr.io/ls1intum/artemis-c-docker",
+        "tag": "latest"
+      },
+      "run_always": false
+    },
+    "internal-action": {
+      "script": "echo \"This is an internal action\"\n",
+      "docker": {
+        "image": "ls1tum/artemis-maven-template",
+        "tag": "java17-20",
+        "volumes": [
+          "${WORKDIR}:/aeolus"
+        ],
+        "parameters": [
+          "--cpus",
+          "\"2\"",
+          "--memory",
+          "\"2g\"",
+          "--memory-swap",
+          "\"2g\"",
+          "--pids-limit",
+          "\"1000\""
+        ]
+      },
+      "run_always": false
+    },
+    "clean_up": {
+      "script": "rm -rf aeolus/\n",
+      "docker": {
+        "image": "ls1tum/artemis-maven-template",
+        "tag": "java17-20",
+        "volumes": [
+          "${WORKDIR}:/aeolus"
+        ],
+        "parameters": [
+          "--cpus",
+          "\"2\"",
+          "--memory",
+          "\"2g\"",
+          "--memory-swap",
+          "\"2g\"",
+          "--pids-limit",
+          "\"1000\""
+        ]
+      },
+      "run_always": true
+    },
+    "external-action_0": {
+      "script": "echo \"Hello ${WHO_TO_GREET}\"",
+      "excludeDuring": [
+        "working_time",
+        "preparation"
+      ],
+      "parameters": {
+        "WHO_TO_GREET": "world"
+      },
+      "docker": {
+        "image": "ls1tum/artemis-maven-template",
+        "tag": "java17-20",
+        "volumes": [
+          "${WORKDIR}:/aeolus"
+        ],
+        "parameters": [
+          "--cpus",
+          "\"2\"",
+          "--memory",
+          "\"2g\"",
+          "--memory-swap",
+          "\"2g\"",
+          "--pids-limit",
+          "\"1000\""
+        ]
+      },
+      "run_always": false
+    }
+  }
+}
+
+###
+
+POST http://127.0.0.1:8000/generate/cli
+Accept: application/json
+Content-Type: application/json
+
+{
+  "api": "v0.0.1",
+  "metadata": {
+    "name": "example windfile",
+    "id": "example-windfile",
+    "description": "This is a windfile with an internal action",
+    "author": "Andreas Resch",
+    "gitCredentials": "artemis_gitlab_admin_credentials",
+    "docker": {
+      "image": "ls1tum/artemis-maven-template",
+      "tag": "java17-20",
+      "volumes": [
+        "${WORKDIR}:/aeolus"
+      ],
+      "parameters": [
+        "--cpus",
+        "\"2\"",
+        "--memory",
+        "\"2g\"",
+        "--memory-swap",
+        "\"2g\"",
+        "--pids-limit",
+        "\"1000\""
+      ]
+    }
+  },
+  "repositories": {
+    "aeolus": {
+      "url": "https://github.com/ls1intum/Aeolus.git",
+      "branch": "develop",
+      "path": "aeolus"
+    }
+  },
+  "actions": {
+    "set-java-container": {
+      "script": "set",
+      "docker": {
+        "image": "ls1tum/artemis-maven-template",
+        "tag": "java17-20",
+        "volumes": [
+          "${WORKDIR}:/aeolus"
+        ],
+        "parameters": [
+          "--cpus",
+          "\"2\"",
+          "--memory",
+          "\"2g\"",
+          "--memory-swap",
+          "\"2g\"",
+          "--pids-limit",
+          "\"1000\""
+        ]
+      },
+      "run_always": false
+    },
+    "set-c-container": {
+      "script": "set",
+      "docker": {
+        "image": "ghcr.io/ls1intum/artemis-c-docker",
+        "tag": "latest"
+      },
+      "run_always": false
+    },
+    "internal-action": {
+      "script": "echo \"This is an internal action\"\n",
+      "docker": {
+        "image": "ls1tum/artemis-maven-template",
+        "tag": "java17-20",
+        "volumes": [
+          "${WORKDIR}:/aeolus"
+        ],
+        "parameters": [
+          "--cpus",
+          "\"2\"",
+          "--memory",
+          "\"2g\"",
+          "--memory-swap",
+          "\"2g\"",
+          "--pids-limit",
+          "\"1000\""
+        ]
+      },
+      "run_always": false
+    },
+    "clean_up": {
+      "script": "rm -rf aeolus/\n",
+      "docker": {
+        "image": "ls1tum/artemis-maven-template",
+        "tag": "java17-20",
+        "volumes": [
+          "${WORKDIR}:/aeolus"
+        ],
+        "parameters": [
+          "--cpus",
+          "\"2\"",
+          "--memory",
+          "\"2g\"",
+          "--memory-swap",
+          "\"2g\"",
+          "--pids-limit",
+          "\"1000\""
+        ]
+      },
+      "run_always": true
+    },
+    "external-action_0": {
+      "script": "echo \"Hello ${WHO_TO_GREET}\"",
+      "excludeDuring": [
+        "working_time",
+        "preparation"
+      ],
+      "parameters": {
+        "WHO_TO_GREET": "world"
+      },
+      "docker": {
+        "image": "ls1tum/artemis-maven-template",
+        "tag": "java17-20",
+        "volumes": [
+          "${WORKDIR}:/aeolus"
+        ],
+        "parameters": [
+          "--cpus",
+          "\"2\"",
+          "--memory",
+          "\"2g\"",
+          "--memory-swap",
+          "\"2g\"",
+          "--pids-limit",
+          "\"1000\""
+        ]
+      },
+      "run_always": false
+    }
+  }
+}
+###
+
+POST http://127.0.0.1:8000/generate/jenkins/yaml
+Accept: application/json
+Content-Type: application/x-yaml
+
+api: v0.0.1
+metadata:
+  name: example windfile
+  id: example-windfile
+  description: This is a windfile with an internal action
+  author: Andreas Resch
+  docker:
+    image: ls1tum/artemis-maven-template
+    tag: java17-20
+    volumes:
+      - ${WORKDIR}:/aeolus
+    parameters:
+      - --cpus
+      - '"2"'
+      - --memory
+      - '"2g"'
+      - --memory-swap
+      - '"2g"'
+      - --pids-limit
+      - '"1000"'
+  gitCredentials: artemis_gitlab_admin_credentials
+repositories:
+  aeolus:
+    url: https://github.com/ls1intum/Aeolus.git
+    branch: develop
+    path: aeolus
+actions:
+  set-java-container:
+    script: set
+  set-c-container:
+    docker:
+      image: ghcr.io/ls1intum/artemis-c-docker
+    script: set
+  internal-action:
+    script: |
+      echo "This is an internal action"
+  clean_up:
+    script: |
+      rm -rf aeolus/
+    run_always: true
+
+###

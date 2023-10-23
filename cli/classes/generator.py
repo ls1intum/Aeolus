@@ -12,7 +12,7 @@ from classes.validator import Validator
 from generators.bamboo import BambooGenerator
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
-from utils import logger
+from cli_utils import logger
 
 
 class Generator(PassSettings):

@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 import logging
+import sys
 import typing
 from io import TextIOWrapper
 
 import argparse
-import sys
 
 from classes.ci_credentials import CICredentials
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.run_settings import RunSettings
+from cli_utils import utils
 from commands.generate import Generate
 from commands.merge import Merge
 from commands.translate import Translate
 from commands.validate import Validate
-from utils import utils
 
 
 def add_argparse() -> argparse.ArgumentParser:

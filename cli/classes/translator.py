@@ -38,7 +38,7 @@ from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_settings import PassSettings
-from utils import logger, utils
+from cli_utils import logger, utils
 
 
 def parse_docker(docker_config: Optional[BambooDockerConfig], environment: EnvironmentSchema) -> Optional[Docker]:

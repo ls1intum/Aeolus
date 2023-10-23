@@ -6,7 +6,7 @@ RUN cp ./build/libs/bamboo-generator*-all.jar bamboo-generator.jar
 
 FROM python:3.11-slim AS cli
 
-RUN apt-get update && apt-get install -y default-jre && rm -rf /var/cache
+RUN apt-get update && apt-get install -y default-jre git && rm -rf /var/cache
 
 COPY --from=jar-builder /bamboo-generator.jar bamboo-generator.jar
 
