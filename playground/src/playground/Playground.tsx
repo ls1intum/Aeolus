@@ -21,7 +21,7 @@ function Playground(props: PlaygroundProps) {
                         new URL('monaco-editor/esm/vs/language/json/json.worker', import.meta.url)
                     )
                 case 'yaml':
-                    return new Worker(new URL('monaco-yaml/yaml.worker.js.map?worker', import.meta.url))
+                    return new Worker(new URL('monaco-yaml/yaml.worker?worker', import.meta.url))
                 default:
                     throw new Error(`Unknown label ${label}`)
             }
@@ -68,6 +68,7 @@ actions:
       rm -rf aeolus/
     run_always: true`;
     const [data, setData] = useState<string>(default_windfile);
+    const [markers, setMarkers] = useState<any[]>([]);
 
     const monacoRef = useRef<any>(null);
 
@@ -99,8 +100,14 @@ actions:
     const [target, setTarget] = React.useState<"cli" | "jenkins" | "bamboo">('cli');
     const [input, setInput] = React.useState<string>(default_windfile);
 
+    const host = process.env.NODE_ENV === 'production' ? '/api' : 'http://127.0.0.1:8000';
+
     useEffect(() => {
-        fetch('http://127.0.0.1:8000/generate/' + target + '/yaml', {
+        if (markers.length > 0) {
+            return;
+        }
+
+        fetch(host + '/generate/' + target + '/yaml', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',
@@ -111,7 +118,7 @@ actions:
             .then(response => response.json())
             .catch(error => console.error('Error:', error))
             .then(data => data ? setData(data.result) : setData(''));
-    }, [target, input]);
+    }, [target, input, markers.length, host]);
 
 
     function handleEditorChange(value: string | undefined, _: any) {
@@ -120,6 +127,10 @@ actions:
         } else {
             setInput(value);
         }
+    }
+
+    function handleValidate(markers: any[]) {
+        setMarkers(markers);
     }
 
     return (
@@ -132,7 +143,7 @@ actions:
                 }} order={4}>Define your job:</Title>
                 <Editor height="80vh" defaultLanguage="yaml" path="windfile.yaml" defaultPath="windfile.yaml"
                         defaultValue={default_windfile} theme={editorTheme} beforeMount={handleEditorWillMount}
-                        onMount={handleEditorDidMount} onChange={handleEditorChange}/>
+                        onMount={handleEditorDidMount} onChange={handleEditorChange} onValidate={handleValidate}/>
             </Grid.Col>
             <Grid.Col span={6}>
                 <CodeHighlightTabs

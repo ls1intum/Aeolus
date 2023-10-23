@@ -3,7 +3,7 @@ name: python lint
 on:
   push:
     paths:
-      - '*.py'
+      - '**.py'
       - '.github/workflows/python-lint.yaml'
       - 'api/setup.cfg'
       - 'cli/setup.cfg'

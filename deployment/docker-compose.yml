@@ -1,0 +1,35 @@
+services:
+  playground:
+    container_name: aeolus-playground
+    hostname: aeolus-playground
+    image: ghcr.io/ls1intum/aeolus/playground:nightly
+    pull_policy: if_not_present
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.aeolus-playground.rule=Host(`<your-host>`)"
+      - "traefik.http.routers.aeolus-playground.entrypoints=https"
+      - "traefik.http.routers.aeolus-playground.tls=true"
+      - "traefik.http.routers.aeolus-playground.tls.certResolver=leresolver"
+      - 'traefik.services.aeolus-playground.loadbalancer.passHostHeader=true'
+    networks:
+      - traefik
+  api:
+    container_name: aeolus-api
+    hostname: aeolus-api
+    image: ghcr.io/ls1intum/aeolus/api:nightly
+    pull_policy: if_not_present
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.aeolus-playground.rule=Host(`<your-host>`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.aeolus-playground.entrypoints=https"
+      - "traefik.http.routers.aeolus-playground.tls=true"
+      - "traefik.http.routers.aeolus-playground.tls.certResolver=leresolver"
+      - 'traefik.services.aeolus-playground.loadbalancer.passHostHeader=true'
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true

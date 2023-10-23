@@ -24,10 +24,7 @@ from generators.jenkins import JenkinsGenerator
 
 app = FastAPI()
 
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-]
+origins = ["http://localhost", "http://localhost:3000", "https://aeolus.resch.io"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,6 +33,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next: Any) -> Any:
