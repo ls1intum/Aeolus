@@ -133,48 +133,52 @@ actions:
         setMarkers(markers);
     }
 
+    const codeTabs: any[] = [
+        {
+            fileName: 'generated.sh',
+            code: data ? data : 'enter a valid windfile to generate bash script',
+            language: 'bash',
+            icon: bashIcon,
+        },
+        {
+            fileName: 'Bamboo Build Plan',
+            code: data ? data : 'enter a valid windfile to generate Bamboo Build Plan',
+            language: 'yaml',
+            icon: bambooIcon,
+        },
+        {
+            fileName: 'Jenkinsfile',
+            code: data ? data : 'enter a valid windfile to generate Jenkinsfile',
+            language: 'groovy',
+            icon: jenkinsIcon,
+        },
+    ];
+
     return (
-        <Grid grow style={{
-            margin: '16px',
-        }} gutter="md">
-            <Grid.Col span={6}>
+        <Grid gutter="md">
+            <Grid.Col span={{base: 12, md: 6, lg: 6}}>
                 <Title style={{
                     margin: '4px',
-                }} order={4}>Define your job:</Title>
-                <Editor height="80vh" defaultLanguage="yaml" path="windfile.yaml" defaultPath="windfile.yaml"
+                }} order={4}>Define your job in aeolus:</Title>
+                <Editor height="82vh" defaultLanguage="yaml" path="windfile.yaml" defaultPath="windfile.yaml"
                         defaultValue={default_windfile} theme={editorTheme} beforeMount={handleEditorWillMount}
                         onMount={handleEditorDidMount} onChange={handleEditorChange} onValidate={handleValidate}/>
             </Grid.Col>
-            <Grid.Col span={6}>
+            <Grid.Col span={{base: 12, md: 6, lg: 6}}>
+                <Title style={{
+                    margin: '4px',
+                }} order={4}>...and watch what aeolus would generate:</Title>
                 <CodeHighlightTabs
                     onTabChange={(tab) => {
-                        if (tab === 0) setTarget('cli');
-                        if (tab === 1) setTarget('bamboo');
-                        if (tab === 2) setTarget('jenkins');
+                        const filename: string = codeTabs[tab].fileName;
+                        if (filename === 'generated.sh') setTarget('cli');
+                        else if (filename === 'Bamboo Build Plan') setTarget('bamboo');
+                        else if (filename === 'Jenkinsfile') setTarget('jenkins');
                     }}
                     withExpandButton
                     defaultExpanded={false}
-                    maxCollapsedHeight="80vh"
-                    code={[
-                        {
-                            fileName: 'generated.sh',
-                            code: data ? data : 'enter a valid windfile to generate bash script',
-                            language: 'bash',
-                            icon: bashIcon,
-                        },
-                        {
-                            fileName: 'Bamboo Build Plan',
-                            code: data ? data : 'enter a valid windfile to generate Bamboo Build Plan',
-                            language: 'yaml',
-                            icon: bambooIcon,
-                        },
-                        {
-                            fileName: 'Jenkinsfile',
-                            code: data ? data : 'enter a valid windfile to generate Jenkinsfile',
-                            language: 'groovy',
-                            icon: jenkinsIcon,
-                        },
-                    ]}
+                    maxCollapsedHeight="78.25vh"
+                    code={codeTabs}
                 >
                 </CodeHighlightTabs>
             </Grid.Col>

@@ -7,7 +7,7 @@ interface AddressBookIconProps extends React.ComponentPropsWithoutRef<'svg'> {
 export function JenkinsIcon({size, style, ...others}: AddressBookIconProps) {
     return (
         <img
-            style={{width: rem(size), height: rem(size), ...style}}
+            style={{maxWidth: rem(size), height: rem(size), ...style}}
             src="/static/jenkins.svg"
             alt="Jenkins"
         />
