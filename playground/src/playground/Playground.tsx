@@ -1,7 +1,7 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Editor} from "@monaco-editor/react";
 import {configureMonacoYaml} from "monaco-yaml";
-import {Grid, Title, useComputedColorScheme} from "@mantine/core";
+import {Grid, ScrollArea, Text, Title, useComputedColorScheme} from "@mantine/core";
 import {CodeHighlightTabs} from "@mantine/code-highlight";
 import BashIcon from "../icons/BashIcon";
 import BambooIcon from "../icons/BambooIcon";
@@ -99,6 +99,7 @@ actions:
 
     const [target, setTarget] = React.useState<"cli" | "jenkins" | "bamboo">('cli');
     const [input, setInput] = React.useState<string>(default_windfile);
+    const [generationTime, setGenerationTime] = React.useState<number>(0.0);
 
     const host = process.env.NODE_ENV === 'production' ? '/api' : 'http://127.0.0.1:8000';
 
@@ -115,9 +116,14 @@ actions:
             },
             body: input,
         })
-            .then(response => response.json())
+            .then(response => {
+                setGenerationTime(parseFloat(response.headers.get('x-process-time') || '0.0'));
+                return response.json();
+            })
             .catch(error => console.error('Error:', error))
-            .then(data => data ? setData(data.result) : setData(''));
+            .then(data => {
+                data ? setData(data.result) : setData('');
+            });
     }, [target, input, markers.length, host]);
 
 
@@ -155,7 +161,7 @@ actions:
     ];
 
     return (
-        <Grid gutter="md">
+        <Grid gutter="xl">
             <Grid.Col span={{base: 12, md: 6, lg: 6}}>
                 <Title style={{
                     margin: '4px',
@@ -165,22 +171,35 @@ actions:
                         onMount={handleEditorDidMount} onChange={handleEditorChange} onValidate={handleValidate}/>
             </Grid.Col>
             <Grid.Col span={{base: 12, md: 6, lg: 6}}>
-                <Title style={{
-                    margin: '4px',
-                }} order={4}>...and watch what aeolus would generate:</Title>
-                <CodeHighlightTabs
-                    onTabChange={(tab) => {
-                        const filename: string = codeTabs[tab].fileName;
-                        if (filename === 'generated.sh') setTarget('cli');
-                        else if (filename === 'Bamboo Build Plan') setTarget('bamboo');
-                        else if (filename === 'Jenkinsfile') setTarget('jenkins');
-                    }}
-                    withExpandButton
-                    defaultExpanded={false}
-                    maxCollapsedHeight="78.25vh"
-                    code={codeTabs}
-                >
-                </CodeHighlightTabs>
+                <Title m="4px" order={4}>...and watch what aeolus would generate:</Title>
+                <ScrollArea h="82vh">
+                    <CodeHighlightTabs
+                        onTabChange={(tab) => {
+                            const filename: string = codeTabs[tab].fileName;
+                            let newTarget: "cli" | "jenkins" | "bamboo" = 'cli';
+                            let loadingData: string = 'echo "loading..."';
+                            if (filename === 'generated.sh') {
+                                newTarget = 'cli';
+                                loadingData = 'echo "loading..."';
+                            } else if (filename === 'Bamboo Build Plan') {
+                                newTarget = 'bamboo';
+                                loadingData = 'loading: true';
+                            } else if (filename === 'Jenkinsfile') {
+                                newTarget = 'jenkins';
+                                loadingData = 'def loading = true';
+                            }
+                            setTarget(newTarget);
+                            setData(loadingData);
+                        }}
+                        withExpandButton
+                        style={{
+                            minHeight: '82vh',
+                        }}
+                        code={codeTabs}
+                    >
+                    </CodeHighlightTabs>
+                </ScrollArea>
+                <Text size="sm" m="4px" c="dimmed">Generated in {generationTime.toFixed(5)} s</Text>
             </Grid.Col>
         </Grid>
     );

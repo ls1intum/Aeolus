@@ -1,4 +1,4 @@
-import {Grid} from "@mantine/core";
+import {Grid, Paper, Text, Title} from "@mantine/core";
 import React, {ReactElement} from "react";
 import {CodeHighlight, CodeHighlightTabs} from "@mantine/code-highlight";
 import BashIcon from "../icons/BashIcon";
@@ -7,6 +7,7 @@ import JenkinsIcon from "../icons/JenkinsIcon";
 
 
 export interface ExplanationItemProps {
+    title: string,
     explanationText: string,
     inputCode?: string,
     bash?: string,
@@ -19,7 +20,8 @@ export interface ExplanationItemProps {
 
 function ExplanationItem(props: ExplanationItemProps) {
     const leftHand: ReactElement = <>
-        {props.explanationText}
+        <Title order={3} mb="xl">{props.title}</Title>
+        <Text>{props.explanationText}</Text>
         {props.inputCode ? <CodeHighlight code={props.inputCode} language="yaml"/> : <></>}
     </>;
 
@@ -58,28 +60,32 @@ function ExplanationItem(props: ExplanationItemProps) {
 
 
     const rightHand: ReactElement = <>
-        <CodeHighlightTabs
-            onTabChange={(tab) => {
-                const filename: string = codeTabs[tab].fileName;
-                if (filename === 'generated.sh') setExplanation('cli');
-                else if (filename === 'Bamboo Build Plan') setExplanation('bamboo');
-                else if (filename === 'Jenkinsfile') setExplanation('jenkins');
-            }}
-            code={codeTabs}
+        <CodeHighlightTabs mb="xl"
+                           onTabChange={(tab) => {
+                               const filename: string = codeTabs[tab].fileName;
+                               if (filename === 'generated.sh') setExplanation('cli');
+                               else if (filename === 'Bamboo Build Plan') setExplanation('bamboo');
+                               else if (filename === 'Jenkinsfile') setExplanation('jenkins');
+                           }}
+                           code={codeTabs}
         >
         </CodeHighlightTabs>
-        {explanation === 'cli' ? props.bashExplanation : <></>}
-        {explanation === 'bamboo' ? props.bambooExplanation : <></>}
-        {explanation === 'jenkins' ? props.jenkinsExplanation : <></>}
+        {explanation === 'cli' ? <Text>{props.bashExplanation}</Text> : <></>}
+        {explanation === 'bamboo' ? <Text>{props.bambooExplanation}</Text> : <></>}
+        {explanation === 'jenkins' ? <Text>{props.jenkinsExplanation}</Text> : <></>}
     </>
-    return <Grid>
-        <Grid.Col span={{base: 12, md: 6, lg: 6}}>
-            {leftHand}
-        </Grid.Col>
-        <Grid.Col span={{base: 12, md: 6, lg: 6}}>
-            {rightHand}
-        </Grid.Col>
-    </Grid>;
+    return <Paper shadow="xs" withBorder p="xl">
+        <Grid style={{
+            minHeight: "18vh"
+        }}>
+            <Grid.Col span={{base: 12, md: 6, lg: 6}}>
+                {leftHand}
+            </Grid.Col>
+            <Grid.Col span={{base: 12, md: 6, lg: 6}}>
+                {rightHand}
+            </Grid.Col>
+        </Grid>
+    </Paper>;
 }
 
 export default ExplanationItem;
