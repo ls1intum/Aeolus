@@ -104,7 +104,7 @@ class Generator(PassSettings):
                 self.output_settings.run_settings is not None
                 and self.windfile is not None
                 and self.windfile.metadata is not None
-                and self.windfile.metadata.id is not None
+                and (self.windfile.metadata.id is not None or self.target == Target.cli.value)
             ):
                 actual_generator.run(job_id=self.windfile.metadata.id)
         return None
