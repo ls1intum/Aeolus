@@ -131,7 +131,7 @@ if __name__ == "__main__":
                     output_settings.emoji,
                 )
                 raise ValueError(f"Running in {args.target} is only supported with credentials")
-            elif args.target == "cli" or (args.url and args.token):
+            if args.target == "cli" or (args.url and args.token):
                 output_settings.run_settings = RunSettings(stage=args.run)
 
         generator: Generate = Generate(

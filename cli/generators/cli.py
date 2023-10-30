@@ -25,8 +25,7 @@ class CliGenerator(BaseGenerator):
     functions: List[str] = []
 
     def __init__(
-            self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings,
-            metadata: PassMetadata
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
         input_settings.target = Target.cli
         self.functions = []
@@ -168,7 +167,7 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"# step {name}")
         self.result.append(f"# generated from repository {name}")
         self.result.append(f"{clone_method} () " + "{")
-        self.add_line(indentation=2, line=f"if [[ $USE_GIT -eq 0 ]]; then")
+        self.add_line(indentation=2, line="if [[ $USE_GIT -eq 0 ]]; then")
         self.add_line(indentation=4, line=f"echo '🖨️ copying {name}'")
         self.add_line(indentation=4, line=f"cp -r {repository.url} {directory}")
         self.add_line(indentation=2, line="elif [[ $USE_GIT -eq 1 ]]; then")
