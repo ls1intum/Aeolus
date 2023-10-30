@@ -13,8 +13,8 @@ from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
-from generators.base import BaseGenerator
 from cli_utils import logger, utils
+from generators.base import BaseGenerator
 
 
 class CliGenerator(BaseGenerator):
@@ -25,7 +25,8 @@ class CliGenerator(BaseGenerator):
     functions: List[str] = []
 
     def __init__(
-        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
+            self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings,
+            metadata: PassMetadata
     ):
         input_settings.target = Target.cli
         self.functions = []
@@ -41,6 +42,14 @@ class CliGenerator(BaseGenerator):
         if self.windfile.environment:
             for env_var in self.windfile.environment.root.root:
                 self.result.append(f'export {env_var}="' f'{self.windfile.environment.root.root[env_var]}"')
+
+        # sometimes, git is not available, for thos e cases, we need to clone the repository by copying
+        # the files from the source (we abuse the field url for that)
+        self.result.append("if ! type git &> /dev/null; then")
+        self.add_line(indentation=2, line="USE_GIT=0")
+        self.result.append("else")
+        self.add_line(indentation=2, line="USE_GIT=1")
+        self.result.append("fi")
 
     def add_postfix(self) -> None:
         """
@@ -159,8 +168,13 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"# step {name}")
         self.result.append(f"# generated from repository {name}")
         self.result.append(f"{clone_method} () " + "{")
-        self.add_line(indentation=2, line=f"echo '🖨️ cloning {name}'")
-        self.add_line(indentation=2, line=f"git clone {repository.url} --branch {repository.branch} {directory}")
+        self.add_line(indentation=2, line=f"if [[ $USE_GIT -eq 0 ]]; then")
+        self.add_line(indentation=4, line=f"echo '🖨️ copying {name}'")
+        self.add_line(indentation=4, line=f"cp -r {repository.url} {directory}")
+        self.add_line(indentation=2, line="elif [[ $USE_GIT -eq 1 ]]; then")
+        self.add_line(indentation=4, line=f"echo '🖨️ cloning {name}'")
+        self.add_line(indentation=4, line=f"git clone {repository.url} --branch {repository.branch} {directory}")
+        self.add_line(indentation=2, line="fi")
         self.result.append("}")
         self.functions.append(clone_method)
 

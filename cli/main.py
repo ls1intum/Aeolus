@@ -130,8 +130,9 @@ if __name__ == "__main__":
                     " if you use also pass a ci url (--url) and token (--token)",
                     output_settings.emoji,
                 )
-                raise ValueError("Running is only supported with the CLI target")
-            output_settings.run_settings = RunSettings(stage=args.run)
+                raise ValueError(f"Running in {args.target} is only supported with credentials")
+            elif args.target == "cli" or (args.url and args.token):
+                output_settings.run_settings = RunSettings(stage=args.run)
 
         generator: Generate = Generate(
             input_settings=input_settings,
