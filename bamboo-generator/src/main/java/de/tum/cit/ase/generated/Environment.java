@@ -21,7 +21,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "JOB_URI",
     "JOB_URL",
     "RUNNER_NAME",
-    "BRANCH_NAME"
+    "BRANCH_NAME",
+    "WORKDIR",
+    "TMPDIR"
 })
 @Generated("jsonschema2pojo")
 public class Environment {
@@ -74,6 +76,22 @@ public class Environment {
     @JsonProperty("BRANCH_NAME")
     @JsonPropertyDescription("The name of the branch that is currently executed.")
     private String branchName;
+    /**
+     * The directory where the job is executed.
+     * (Required)
+     * 
+     */
+    @JsonProperty("WORKDIR")
+    @JsonPropertyDescription("The directory where the job is executed.")
+    private String workdir;
+    /**
+     * The directory where temporary files are stored.
+     * (Required)
+     * 
+     */
+    @JsonProperty("TMPDIR")
+    @JsonPropertyDescription("The directory where temporary files are stored.")
+    private String tmpdir;
 
     /**
      * No args constructor for use in serialization
@@ -86,10 +104,14 @@ public class Environment {
      * 
      * @param jobName
      *     The name of the job that is currently executed.
+     * @param tmpdir
+     *     The directory where temporary files are stored.
      * @param jobId
      *     The id of the job that is currently executed.
      * @param jobUri
      *     The identifier of the job that is currently executed.
+     * @param workdir
+     *     The directory where the job is executed.
      * @param runnerName
      *     The name of the runner that is executing the job.
      * @param jobUrl
@@ -97,7 +119,7 @@ public class Environment {
      * @param branchName
      *     The name of the branch that is currently executed.
      */
-    public Environment(String jobName, String jobId, String jobUri, String jobUrl, String runnerName, String branchName) {
+    public Environment(String jobName, String jobId, String jobUri, String jobUrl, String runnerName, String branchName, String workdir, String tmpdir) {
         super();
         this.jobName = jobName;
         this.jobId = jobId;
@@ -105,6 +127,8 @@ public class Environment {
         this.jobUrl = jobUrl;
         this.runnerName = runnerName;
         this.branchName = branchName;
+        this.workdir = workdir;
+        this.tmpdir = tmpdir;
     }
 
     /**
@@ -257,6 +281,56 @@ public class Environment {
         return this;
     }
 
+    /**
+     * The directory where the job is executed.
+     * (Required)
+     * 
+     */
+    @JsonProperty("WORKDIR")
+    public String getWorkdir() {
+        return workdir;
+    }
+
+    /**
+     * The directory where the job is executed.
+     * (Required)
+     * 
+     */
+    @JsonProperty("WORKDIR")
+    public void setWorkdir(String workdir) {
+        this.workdir = workdir;
+    }
+
+    public Environment withWorkdir(String workdir) {
+        this.workdir = workdir;
+        return this;
+    }
+
+    /**
+     * The directory where temporary files are stored.
+     * (Required)
+     * 
+     */
+    @JsonProperty("TMPDIR")
+    public String getTmpdir() {
+        return tmpdir;
+    }
+
+    /**
+     * The directory where temporary files are stored.
+     * (Required)
+     * 
+     */
+    @JsonProperty("TMPDIR")
+    public void setTmpdir(String tmpdir) {
+        this.tmpdir = tmpdir;
+    }
+
+    public Environment withTmpdir(String tmpdir) {
+        this.tmpdir = tmpdir;
+        return this;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -285,6 +359,14 @@ public class Environment {
         sb.append('=');
         sb.append(((this.branchName == null)?"<null>":this.branchName));
         sb.append(',');
+        sb.append("workdir");
+        sb.append('=');
+        sb.append(((this.workdir == null)?"<null>":this.workdir));
+        sb.append(',');
+        sb.append("tmpdir");
+        sb.append('=');
+        sb.append(((this.tmpdir == null)?"<null>":this.tmpdir));
+        sb.append(',');
         if (sb.charAt((sb.length()- 1)) == ',') {
             sb.setCharAt((sb.length()- 1), ']');
         } else {
@@ -297,8 +379,10 @@ public class Environment {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.jobName == null)? 0 :this.jobName.hashCode()));
+        result = ((result* 31)+((this.tmpdir == null)? 0 :this.tmpdir.hashCode()));
         result = ((result* 31)+((this.jobId == null)? 0 :this.jobId.hashCode()));
         result = ((result* 31)+((this.jobUri == null)? 0 :this.jobUri.hashCode()));
+        result = ((result* 31)+((this.workdir == null)? 0 :this.workdir.hashCode()));
         result = ((result* 31)+((this.runnerName == null)? 0 :this.runnerName.hashCode()));
         result = ((result* 31)+((this.jobUrl == null)? 0 :this.jobUrl.hashCode()));
         result = ((result* 31)+((this.branchName == null)? 0 :this.branchName.hashCode()));
@@ -314,7 +398,7 @@ public class Environment {
             return false;
         }
         Environment rhs = ((Environment) other);
-        return (((((((this.jobName == rhs.jobName)||((this.jobName!= null)&&this.jobName.equals(rhs.jobName)))&&((this.jobId == rhs.jobId)||((this.jobId!= null)&&this.jobId.equals(rhs.jobId))))&&((this.jobUri == rhs.jobUri)||((this.jobUri!= null)&&this.jobUri.equals(rhs.jobUri))))&&((this.runnerName == rhs.runnerName)||((this.runnerName!= null)&&this.runnerName.equals(rhs.runnerName))))&&((this.jobUrl == rhs.jobUrl)||((this.jobUrl!= null)&&this.jobUrl.equals(rhs.jobUrl))))&&((this.branchName == rhs.branchName)||((this.branchName!= null)&&this.branchName.equals(rhs.branchName))));
+        return (((((((((this.jobName == rhs.jobName)||((this.jobName!= null)&&this.jobName.equals(rhs.jobName)))&&((this.tmpdir == rhs.tmpdir)||((this.tmpdir!= null)&&this.tmpdir.equals(rhs.tmpdir))))&&((this.jobId == rhs.jobId)||((this.jobId!= null)&&this.jobId.equals(rhs.jobId))))&&((this.jobUri == rhs.jobUri)||((this.jobUri!= null)&&this.jobUri.equals(rhs.jobUri))))&&((this.workdir == rhs.workdir)||((this.workdir!= null)&&this.workdir.equals(rhs.workdir))))&&((this.runnerName == rhs.runnerName)||((this.runnerName!= null)&&this.runnerName.equals(rhs.runnerName))))&&((this.jobUrl == rhs.jobUrl)||((this.jobUrl!= null)&&this.jobUrl.equals(rhs.jobUrl))))&&((this.branchName == rhs.branchName)||((this.branchName!= null)&&this.branchName.equals(rhs.branchName))));
     }
 
 }
