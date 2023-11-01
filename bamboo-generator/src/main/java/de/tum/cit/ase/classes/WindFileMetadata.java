@@ -11,7 +11,7 @@ public class WindFileMetadata {
     private String description;
     private Author author;
     private DockerConfig docker;
-    private Optional<String> gitCredentials;
+    private String gitCredentials;
 
     public static WindFileMetadata fromMap(Map<String, Object> map) {
         WindFileMetadata metadata = new WindFileMetadata();
@@ -19,7 +19,7 @@ public class WindFileMetadata {
         metadata.setDescription((String) map.get("description"));
         Object author = map.get("author");
         metadata.setAuthor(Author.fromObject(author));
-        metadata.setGitCredentials(Optional.ofNullable((String) map.getOrDefault("gitCredentials", null)));
+        metadata.setGitCredentials((String) map.getOrDefault("gitCredentials", null));
         metadata.setId((String) map.get("id"));
         metadata.setDocker(DockerConfig.fromMap((Map<String, Object>) map.getOrDefault("docker", null)));
         return metadata;
@@ -49,11 +49,11 @@ public class WindFileMetadata {
         this.author = author;
     }
 
-    public Optional<String> getGitCredentials() {
+    public String getGitCredentials() {
         return gitCredentials;
     }
 
-    private void setGitCredentials(Optional<String> gitCredentials) {
+    private void setGitCredentials(String gitCredentials) {
         this.gitCredentials = gitCredentials;
     }
 

@@ -545,3 +545,19 @@ Every type of job can have the following properties:
 | single docker image        |    ✅     |    ✅    |   ✅    |
 | multiple docker images     |    ❌     |    ✅    |   ✅    |
 | translating back to Aeolus |    ❌     |    ❌    |   ✅    |
+
+
+## Translating back to Aeolus
+
+If you have build plans in Bamboo and want to migrate away, or simply edit these plans, aeolus can help you.
+You can use the `translate` command to translate a build plan into a windfile. This windfile can then be used to
+generate the build plan again, or to edit it and generate a new build plan.
+
+To be able to translate a build plan, you need access to it's definition using an access token. You can create an
+access token in Bamboo under `Profile` -> `Personal access tokens`. You can then use this token to translate the build plan
+with the CLI tool using the following command:
+
+```
+python main.py translate -k <bamboo-build-plan-key> --url <bamboo-url> -t <bamboo-token>
+```
+The tool will connect to bamboo, retrieve the build plan and translate it into a windfile. The windfile will be printed to stdout.

@@ -1,30 +1,18 @@
 package de.tum.cit.ase;
 
-import com.atlassian.bamboo.specs.api.builders.BambooKey;
-import com.atlassian.bamboo.specs.api.builders.Variable;
-import com.atlassian.bamboo.specs.api.builders.plan.Job;
-import com.atlassian.bamboo.specs.api.builders.plan.Plan;
-import com.atlassian.bamboo.specs.api.builders.plan.Stage;
-import com.atlassian.bamboo.specs.api.builders.project.Project;
-import com.atlassian.bamboo.specs.api.builders.repository.VcsRepository;
-import com.atlassian.bamboo.specs.api.builders.task.Task;
-import com.atlassian.bamboo.specs.builders.repository.git.GitRepository;
-import com.atlassian.bamboo.specs.builders.task.CheckoutItem;
-import com.atlassian.bamboo.specs.builders.task.VcsCheckoutTask;
-import com.atlassian.bamboo.specs.util.BambooSpecSerializer;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import de.tum.cit.ase.bamboo.BuildPlanService;
 import de.tum.cit.ase.bamboo.Publisher;
 import de.tum.cit.ase.classes.*;
+import de.tum.cit.ase.generator.Generator;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.List;
 
 /**
  * This is the main class of the bamboo-generator, it is responsible for parsing the input and calling the correct
@@ -44,9 +32,12 @@ import java.util.List;
  * yaml, which is then printed to stdout. Every other output needs to be printed to stderr, so that it can be
  * redirected to a file, while the yaml is printed to stdout and can be piped to the python cli tool.
  */
+
+@SpringBootApplication
 public class Main {
 
     private static final String FILE_INPUT_ARGUMENT = "--file";
+    private static final String API_ARGUMENT = "--api";
     private static final String STDIN_ARGUMENT = "--stdin";
     private static final String JSON_ARGUMENT = "--json";
     private static final String BASE64_ARGUMENT = "--base64";
@@ -87,6 +78,9 @@ public class Main {
 
 
     private static Mode getMode(String[] args) {
+        if (Arrays.asList(args).contains(API_ARGUMENT)) {
+            return Mode.API;
+        }
         if (Arrays.asList(args).contains(GET_YAML_ARGUMENT)) {
             return Mode.FETCH_YAML;
         }
@@ -101,7 +95,7 @@ public class Main {
      */
     private static WindFile getInput(String[] args) {
         if (args.length < 1) {
-            System.err.println("Usage: java -jar bamboo-generator.jar " + FILE_INPUT_ARGUMENT + "|" + STDIN_ARGUMENT + "|" + JSON_ARGUMENT + "|" + BASE64_ARGUMENT + "|" + GET_YAML_ARGUMENT + " [path|json|base64|buildplankey]" + "--publish --server <bamboo-server-url> --token <bamboo-token>");
+            System.err.println("Usage: java -jar bamboo-generator.jar " + API_ARGUMENT + "|" + FILE_INPUT_ARGUMENT + "|" + STDIN_ARGUMENT + "|" + JSON_ARGUMENT + "|" + BASE64_ARGUMENT + "|" + GET_YAML_ARGUMENT + " [path|json|base64|buildplankey]" + "--publish --server <bamboo-server-url> --token <bamboo-token>");
             System.exit(1);
         }
         String source = args[0];
@@ -180,135 +174,6 @@ public class Main {
     }
 
     /**
-     * If no docker configuration is specified, we can put all tasks in one stage, this is easier to read
-     * @param windFile the parsed Windfile
-     * @return true if all tasks can be put in one stage, false otherwise
-     */
-    private static boolean canBePutInOneStage(WindFile windFile) {
-        return windFile.getActions().stream().noneMatch(action -> action.getDocker() != null);
-    }
-
-    /**
-     * This method is used to generate the build plan from the parsed Windfile, it creates a bamboo plan that
-     * consists of a checkout task (if repositories are specified), and a task for each action in the Windfile.
-     * If the given Windfile contains a docker configuration, the tasks are run in the specified docker container.
-     *
-     * @param args the arguments passed to the application
-     */
-    private static void generateBuildPlan(String[] args) {
-
-        WindFile windFile = getInput(args);
-
-        BuildPlanService buildPlanService = new BuildPlanService();
-        Project project = getEmptyProject(windFile.getMetadata());
-        Plan plan = new Plan(project, windFile.getMetadata().getName(), windFile.getMetadata().getPlanName()).description("Plan created from " + windFile.getFilePath()).variables(new Variable("lifecycle_stage", "working_time"));
-        boolean oneStageIsEnough = canBePutInOneStage(windFile);
-
-        Stage defaultStage = new Stage("Default Stage");
-        Job defaultJob = new Job("Default Job", new BambooKey("JOB1"));
-        if (oneStageIsEnough) {
-            defaultJob.dockerConfiguration(BuildPlanService.convertDockerConfig(windFile.getMetadata().getDocker()));
-        }
-
-        List<Stage> stageList = new ArrayList<>();
-        List<GitRepository> repos = new ArrayList<>();
-
-        if (!windFile.getRepositories().isEmpty()) {
-            List<CheckoutItem> checkoutItems = new ArrayList<>();
-
-            for (Repository repository : windFile.getRepositories()) {
-                repos.add(buildPlanService.addRepository(repository, windFile.getMetadata().getGitCredentials().orElse(null)));
-                checkoutItems.add(new CheckoutItem().repository(repository.getName()).path(repository.getPath()));
-            }
-            VcsCheckoutTask checkoutTask = new VcsCheckoutTask().description("Checkout Default Repository").checkoutItems(checkoutItems.toArray(new CheckoutItem[]{})).cleanCheckout(true);
-            plan = plan.planRepositories(repos.toArray(new VcsRepository[]{}));
-            if (oneStageIsEnough) {
-                defaultJob.tasks(checkoutTask);
-            } else {
-                stageList.add(new Stage("Checkout").jobs(new Job("Checkout", "CHECKOUT1").tasks(checkoutTask)));
-            }
-        }
-        /*
-         * If we have one global docker configuration, we run every single task in the same docker container
-         * this means we need only one stage and one job with all tasks in it
-         */
-        List<Task<?, ?>> defaultTasks = new ArrayList<>();
-        List<Task<?, ?>> defaultFinalTasks = new ArrayList<>();
-        for (Action action : windFile.getActions()) {
-            if (action instanceof ExternalAction) {
-                continue;
-            }
-            if (action instanceof InternalAction internalAction) {
-                var keyInput = internalAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
-                var key = new BambooKey(keyInput);
-                var tasks = buildPlanService.handleAction(internalAction);
-                if (oneStageIsEnough) {
-                    if (internalAction.isRunAlways()) {
-                        defaultFinalTasks.addAll(tasks);
-                    } else {
-                        defaultTasks.addAll(tasks);
-                    }
-                } else {
-                    var job = new Job(internalAction.getName(), key);
-                    if (internalAction.isRunAlways()) {
-                        job = job.finalTasks(tasks.toArray(new Task[]{}));
-                    } else {
-                        job = job.tasks(tasks.toArray(new Task[]{}));
-                    }
-                    var docker = BuildPlanService.convertDockerConfig(internalAction.getDocker());
-                    if (docker != null) {
-                        job = job.dockerConfiguration(docker);
-                    }
-                    Stage stage = new Stage(internalAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(
-                            job
-                    );
-                    stageList.add(stage);
-                }
-            }
-            if (action instanceof PlatformAction platformAction) {
-                var keyInput = platformAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
-                var key = new BambooKey(keyInput);
-                var tasks = buildPlanService.handleSpecialAction(platformAction);
-                if (oneStageIsEnough) {
-                    if (platformAction.isRunAlways()) {
-                        defaultFinalTasks.addAll(tasks);
-                    } else {
-                        defaultTasks.addAll(tasks);
-                    }
-                } else {
-                    var job = new Job(platformAction.getName(), key);
-                    if (platformAction.isRunAlways()) {
-                        job = job.finalTasks(tasks.toArray(new Task[]{}));
-                    } else {
-                        job = job.tasks(tasks.toArray(new Task[]{}));
-                    }
-                    var docker = BuildPlanService.convertDockerConfig(platformAction.getDocker());
-                    if (docker != null) {
-                        job = job.dockerConfiguration(docker);
-                    }
-                    Stage stage = new Stage(platformAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(job);
-                    stageList.add(stage);
-                }
-            }
-        }
-        if (oneStageIsEnough) {
-            defaultJob.tasks(defaultTasks.toArray(new Task[]{}));
-            defaultJob.finalTasks(defaultFinalTasks.toArray(new Task[]{}));
-            defaultStage.jobs(defaultJob);
-            stageList.add(defaultStage);
-        }
-        plan = plan.stages(stageList.toArray(new Stage[]{}));
-        final String yaml = BambooSpecSerializer.dump(plan);
-        System.err.println("✅ Generation done, printing result to stdout");
-        System.out.println(yaml);
-        if (publish) {
-            Publisher publisher = new Publisher(bambooUrl, bambooToken);
-            publisher.publish(plan);
-            System.err.println("✅ Published to Bamboo");
-        }
-    }
-
-    /**
      * If --get-yaml is passed, we parse the credentials and the build plan key, and then fetch the yaml from bamboo
      * and print it to stdout
      *
@@ -330,19 +195,15 @@ public class Main {
         // can be passed if the first argument is --file
         Mode mode = getMode(args);
         switch (mode) {
-            case GENERATION -> generateBuildPlan(args);
+            case GENERATION -> {
+                WindFile windFile = getInput(args);
+                Generator generator = new Generator(publish, bambooUrl, bambooToken);
+                generator.generateBuildPlan(windFile);
+                System.out.println(generator.getResult());
+                generator.publish();
+            }
             case FETCH_YAML -> getYAML(args);
+            case API -> SpringApplication.run(Main.class, args);
         }
-    }
-
-    /**
-     * This method is used to create a project object from the metadata of the windfile.
-     *
-     * @param metadata the metadata of the windfile
-     * @return a project object
-     */
-    private static Project getEmptyProject(WindFileMetadata metadata) {
-        String id = metadata.getProjectKey();
-        return new Project().key(id).name(id).description(metadata.getDescription() + "\n---created using aeolus");
     }
 }

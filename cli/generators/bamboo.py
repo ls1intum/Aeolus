@@ -2,6 +2,7 @@
 import base64
 import os
 import subprocess
+import time
 from typing import List, Any
 
 import requests
@@ -15,8 +16,8 @@ from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
-from generators.base import BaseGenerator
 from cli_utils import logger, utils
+from generators.base import BaseGenerator
 
 
 def docker_available() -> bool:
@@ -54,19 +55,50 @@ class BambooGenerator(BaseGenerator):
         so we simply call docker
         :return: bamboo yaml specs
         """
+        start = time.time()
         utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
+        end = time.time()
+        print("replaced in ", end - start)
         logger.info("🔨", "Generating Bamboo YAML Spec file...", self.output_settings.emoji)
 
+        start = time.time()
         json: str = self.windfile.model_dump_json(exclude_none=True)
-        # we use base64 a base64 encoded json string, so we do not have to handle any escaping
-        escaped: str = base64.b64encode(json.encode("utf-8")).decode("utf-8")
-        if docker_available():
-            logger.debug("🐳", "Docker is available, using docker container", self.output_settings.emoji)
-            self.generate_in_docker(base64_str=escaped)
-        else:
-            logger.debug("☕️", "Docker is not available, using java jar", self.output_settings.emoji)
-            self.generate_in_java(base64_str=escaped)
+        end = time.time()
+        print("json in ", end - start)
+        start = time.time()
+        if not self.generate_in_api(json=json):
+            # we use base64 a base64 encoded json string, so we do not have to handle any escaping
+            escaped: str = base64.b64encode(json.encode("utf-8")).decode("utf-8")
+            if docker_available():
+                logger.debug("🐳", "Docker is available, using docker container", self.output_settings.emoji)
+                self.generate_in_docker(base64_str=escaped)
+            else:
+                logger.debug("☕️", "Docker is not available, using java jar", self.output_settings.emoji)
+                self.generate_in_java(base64_str=escaped)
+        end = time.time()
+        print("call in ", end - start)
         return super().generate()
+
+    def generate_in_api(self, json: str) -> bool:
+        """
+        Generate the bamboo specs that can be used to create a plan in bamboo. We call the REST API, this is
+        faster than calling the docker container or starting the java jar.
+        :param json: json string of the windfile definition
+        """
+        try:
+            host: str = os.getenv("BAMBOO_GENERATOR_API_HOST", "http://localhost:8080")
+            endpoint: str = f"{host}/generate"
+            headers: dict[str, str] = {"Content-Type": "application/json"}
+            response = requests.post(endpoint, headers=headers, data=json, timeout=30)
+            if response.status_code == 200:
+                logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
+                self.result.append(response.text)
+            else:
+                logger.error("❌", "Bamboo YAML Spec file generation failed", self.output_settings.emoji)
+                raise ValueError("Bamboo YAML Spec file generation failed")
+        except requests.exceptions.ConnectionError:
+            return False
+        return True
 
     def generate_in_java(self, base64_str: str) -> None:
         """
