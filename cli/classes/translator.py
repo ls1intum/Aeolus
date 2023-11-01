@@ -106,7 +106,6 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
                     environment=environment, haystack=updated
                 )
             param_dictionary[key] = updated
-    print(param_dictionary)
     return Parameters(root=Dictionary(root=param_dictionary))
 
 

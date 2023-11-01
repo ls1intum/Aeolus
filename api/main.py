@@ -1,6 +1,6 @@
-import time
 from typing import Optional, Dict, Any
 
+import time
 import yaml
 from fastapi import FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
@@ -17,6 +17,7 @@ from classes.merger import Merger
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
 from classes.validator import Validator
+from cli_utils import logger
 from cli_utils.utils import TemporaryFileWithContent
 from generators.bamboo import BambooGenerator
 from generators.cli import CliGenerator
@@ -51,8 +52,8 @@ async def add_process_time_header(request: Request, call_next: Any) -> Any:
     return response
 
 
-@app.get("/health")
-async def health() -> dict[str, str]:
+@app.get("/healthz")
+async def healthz() -> dict[str, str]:
     """
     Health check endpoint.
     :return: ok if everything is fine
@@ -134,7 +135,10 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
         merger: Merger = Merger(
             windfile=windfile, input_settings=input_settings, output_settings=output_settings, metadata=metadata
         )
+        start: float = time.time()
         merged: Optional[WindFile] = merger.merge()
+        end: float = time.time()
+        logger.info("⏰", f"Merged windfile in {end - start}", output_settings.emoji)
         if not merged:
             return None
         generator: Optional[CliGenerator | JenkinsGenerator | BambooGenerator] = None
