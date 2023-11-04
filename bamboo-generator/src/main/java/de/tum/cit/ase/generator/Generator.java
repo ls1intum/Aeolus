@@ -28,6 +28,7 @@ public class Generator {
     private String bambooToken = "";
     private String result = "";
     private Plan plan;
+    private Project project;
 
     public Generator(boolean publish, String bambooUrl, String bambooToken) {
         this.publish = publish;
@@ -65,14 +66,17 @@ public class Generator {
     public void generateBuildPlan(@NonNull WindFile windFile) {
 
         BuildPlanService buildPlanService = new BuildPlanService();
-        Project project = getEmptyProject(windFile.getMetadata());
-        plan = new Plan(project, windFile.getMetadata().getName(), windFile.getMetadata().getPlanName()).description("Plan created from " + windFile.getFilePath()).variables(new Variable("lifecycle_stage", "working_time"));
+        project = getEmptyProject(windFile.getMetadata());
+        plan = new Plan(project, windFile.getMetadata().getId(), windFile.getMetadata().getPlanName()).description("Plan created from " + windFile.getFilePath()).variables(new Variable("lifecycle_stage", "working_time"));
         boolean oneStageIsEnough = canBePutInOneStage(windFile);
 
         Stage defaultStage = new Stage("Default Stage");
         Job defaultJob = new Job("Default Job", new BambooKey("JOB1"));
         if (oneStageIsEnough) {
-            defaultJob.dockerConfiguration(BuildPlanService.convertDockerConfig(windFile.getMetadata().getDocker()));
+            var docker = BuildPlanService.convertDockerConfig(windFile.getMetadata().getDocker());
+            if (docker != null) {
+                defaultJob.dockerConfiguration(docker);
+            }
         }
 
         List<Stage> stageList = new ArrayList<>();
@@ -168,6 +172,10 @@ public class Generator {
 
     public String getResult() {
         return result;
+    }
+
+    public String getKey() {
+        return project.getKey() + "-" + plan.getKey();
     }
 
     public void publish() {

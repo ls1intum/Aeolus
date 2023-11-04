@@ -185,19 +185,6 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
     return actions
 
 
-def clean_up(windfile: WindFile) -> None:
-    """
-    Removes empty environment and parameters from the given windfile.
-    :param windfile:
-    """
-    for action in windfile.actions:
-        root_action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.actions[action].root
-        if root_action.environment is not None and len(root_action.environment.root.root) == 0:
-            root_action.environment = None
-        if root_action.parameters is not None and len(root_action.parameters.root.root) == 0:
-            root_action.parameters = None
-        if root_action.excludeDuring is not None and len(root_action.excludeDuring) == 0:
-            root_action.excludeDuring = None
 
 
 def extract_repositories(
@@ -259,28 +246,6 @@ class BambooTranslator(PassSettings):
                     environment=self.environment, haystack=action.root.script
                 )
 
-    def combine_docker_config(self, windfile: WindFile) -> None:
-        """
-        Checks if all docker configurations are identical. If a bamboo plan is
-        configured to be run in docker, the docker configuration can be equal
-        in every action. So we can move the docker configuration to the metadata to make it easier to read.
-        :param windfile: Windfile to check
-        """
-        docker_configs: dict[str, Optional[Docker]] = {}
-        for action in windfile.actions:
-            docker_configs[action] = windfile.actions[action].root.docker
-        first: Optional[Docker] = list(docker_configs.values())[0]
-        are_identical: bool = True
-        for _, config in docker_configs.items():
-            if first != config:
-                logger.info("🚧", "Docker configurations are not identical", self.output_settings.emoji)
-                are_identical = False
-                break
-        if are_identical:
-            logger.info("🚀", "Docker configurations are identical", self.output_settings.emoji)
-            windfile.metadata.docker = first
-            for action in windfile.actions:
-                windfile.actions[action].root.docker = None
 
     def translate(self, plan_key: str) -> Optional[WindFile]:
         """
@@ -307,8 +272,7 @@ class BambooTranslator(PassSettings):
         windfile: WindFile = WindFile(
             api=Api(root="v0.0.1"), metadata=metadata, actions=actions, repositories=repositories
         )
-        self.combine_docker_config(windfile=windfile)
-        clean_up(windfile=windfile)
+        utils.clean_up(windfile=windfile, output_settings=self.output_settings)
         # work-around as enums do not get cleanly printed with model_dump
         json: str = windfile.model_dump_json(exclude_none=True)
         logger.info("🪄", "Translated windfile", self.output_settings.emoji)

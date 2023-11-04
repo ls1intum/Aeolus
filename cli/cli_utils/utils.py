@@ -10,7 +10,8 @@ import inspect
 import pydantic
 import yaml
 
-from classes.generated.definitions import Target, Docker, Environment, Dictionary, InternalAction
+from classes.generated.definitions import Target, Docker, Environment, Dictionary, InternalAction, FileAction, \
+    PlatformAction, ExternalAction
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.output_settings import OutputSettings
@@ -96,9 +97,9 @@ def file_exists(path: str, output_settings: OutputSettings) -> bool:
 
 
 def read_file(
-    filetype: T,
-    file: TextIOWrapper,
-    output_settings: OutputSettings,
+        filetype: T,
+        file: TextIOWrapper,
+        output_settings: OutputSettings,
 ) -> Optional[T]:
     """
     Validates the given file. If the file is valid,
@@ -144,7 +145,7 @@ def get_ci_environment(target: Target, output_settings: OutputSettings) -> Optio
 
 
 def replace_environment_variables(
-    environment: EnvironmentSchema, haystack: typing.List[str], reverse: bool = False
+        environment: EnvironmentSchema, haystack: typing.List[str], reverse: bool = False
 ) -> list[str]:
     """
     Replaces the environment variables in the given list.
@@ -185,7 +186,7 @@ def replace_bamboo_environment_variable_with_aeolus(environment: EnvironmentSche
 
 
 def replace_bamboo_environment_variables_with_aeolus(
-    environment: EnvironmentSchema, haystack: Optional[typing.List[str]]
+        environment: EnvironmentSchema, haystack: Optional[typing.List[str]]
 ) -> typing.List[str]:
     """
     Replaces the bamboo environment variables with aeolus environment variables.
@@ -199,7 +200,7 @@ def replace_bamboo_environment_variables_with_aeolus(
 
 
 def replace_env_variables_in_docker_config(
-    environment: EnvironmentSchema, docker: Optional[Docker]
+        environment: EnvironmentSchema, docker: Optional[Docker]
 ) -> Optional[Docker]:
     """
     Replaces the environment variables in the given docker config.
@@ -250,6 +251,48 @@ def replace_environment_variables_in_windfile(environment: EnvironmentSchema, wi
         action.root.environment = replace_environment_dictionary(environment=environment, env=action.root.environment)
 
 
+def combine_docker_config(windfile: WindFile, output_settings: OutputSettings) -> None:
+    """
+    Checks if all docker configurations are identical. If a bamboo plan is
+    configured to be run in docker, the docker configuration can be equal
+    in every action. So we can move the docker configuration to the metadata to make it easier to read.
+    :param output_settings: OutputSettings
+    :param windfile: Windfile to check
+    """
+    docker_configs: dict[str, Optional[Docker]] = {}
+    for action in windfile.actions:
+        docker_configs[action] = windfile.actions[action].root.docker
+    first: Optional[Docker] = list(docker_configs.values())[0]
+    are_identical: bool = True
+    for _, config in docker_configs.items():
+        if first != config:
+            logger.info("🚧", "Docker configurations are not identical", output_settings.emoji)
+            are_identical = False
+            break
+    if are_identical:
+        logger.info("🚀", "Docker configurations are identical", output_settings.emoji)
+        windfile.metadata.docker = first
+        for action in windfile.actions:
+            windfile.actions[action].root.docker = None
+
+
+def clean_up(windfile: WindFile, output_settings: OutputSettings) -> None:
+    """
+    Removes empty environment and parameters from the given windfile.
+    :param windfile: Windfile to clean up
+    :param output_settings: OutputSettings
+    """
+    combine_docker_config(windfile=windfile, output_settings=output_settings)
+    for action in windfile.actions:
+        root_action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.actions[action].root
+        if root_action.environment is not None and len(root_action.environment.root.root) == 0:
+            root_action.environment = None
+        if root_action.parameters is not None and len(root_action.parameters.root.root) == 0:
+            root_action.parameters = None
+        if root_action.excludeDuring is not None and len(root_action.excludeDuring) == 0:
+            root_action.excludeDuring = None
+
+
 class TemporaryFileWithContent:
     """
     A temporary file with content.
@@ -268,3 +311,4 @@ class TemporaryFileWithContent:
 
     def __exit__(self, exc_type: typing.Any, exc_value: typing.Any, traceback: typing.Any) -> None:
         self.file.__exit__(exc_type, exc_value, traceback)
+
