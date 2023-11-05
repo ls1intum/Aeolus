@@ -1,8 +1,10 @@
+import re
 import typing
 from typing import Optional, Tuple, Any
-import re
+
 import yaml
 
+from classes.bamboo_client import BambooClient
 from classes.bamboo_specs import (
     BambooSpecs,
     BambooPlan,
@@ -14,7 +16,6 @@ from classes.bamboo_specs import (
     BambooSpecialTask,
     BambooDockerConfig,
 )
-from classes.bamboo_client import BambooClient
 from classes.ci_credentials import CICredentials
 from classes.generated.definitions import (
     Target,
@@ -29,8 +30,6 @@ from classes.generated.definitions import (
     Action,
     Dictionary,
     PlatformAction,
-    FileAction,
-    ExternalAction,
     Parameters,
 )
 from classes.generated.environment import EnvironmentSchema
@@ -185,10 +184,8 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
     return actions
 
 
-
-
 def extract_repositories(
-    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.
@@ -245,7 +242,6 @@ class BambooTranslator(PassSettings):
                 action.root.script = utils.replace_bamboo_environment_variable_with_aeolus(
                     environment=self.environment, haystack=action.root.script
                 )
-
 
     def translate(self, plan_key: str) -> Optional[WindFile]:
         """

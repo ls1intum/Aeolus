@@ -8,7 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
-from api_classes.PublishPayload import PublishPayload
+from api_classes.publish_payload import PublishPayload
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
 from classes.ci_credentials import CICredentials
@@ -122,8 +122,9 @@ async def generate_from_yaml(request: Request, target: Target) -> Optional[Dict[
         raise HTTPException(status_code=422, detail="Invalid YAML") from exc
 
 
-def generate_target_script(windfile: WindFile, target: Target, credentials: Optional[CICredentials] = None) -> Optional[
-    Dict[str, str]]:
+def generate_target_script(
+        windfile: WindFile, target: Target, credentials: Optional[CICredentials] = None
+) -> Optional[Dict[str, str | None]]:
     """
     Generates the given windfile for the given target.
     :param credentials: Credentials to use for publishing
@@ -168,9 +169,7 @@ def generate_target_script(windfile: WindFile, target: Target, credentials: Opti
                 metadata=merger.metadata,
             )
         if generator:
-            return {"result": generator.generate(),
-                    "key": generator.key
-                    }
+            return {"result": generator.generate(), "key": generator.key}
         return {"detail": "Unknown target"}
 
 
@@ -204,9 +203,9 @@ def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]
             pass
     if not windfile:
         raise HTTPException(status_code=422, detail="Invalid windfile")
-    generated: Optional[Dict[str, str]] = generate_target_script(windfile=windfile, target=target,
-                                                                 credentials=CICredentials(url=payload.url,
-                                                                                           username=payload.username,
-                                                                                           token=payload.token))
+    generated: Optional[Dict[str, str]] = generate_target_script(
+        windfile=windfile,
+        target=target,
+        credentials=CICredentials(url=payload.url, username=payload.username, token=payload.token))
     # generated = {}
     return generated

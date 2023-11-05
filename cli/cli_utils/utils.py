@@ -1,3 +1,4 @@
+import inspect
 import os
 import tempfile
 import traceback as tb
@@ -5,7 +6,6 @@ import typing
 from io import TextIOWrapper
 from types import ModuleType
 from typing import Optional
-import inspect
 
 import pydantic
 import yaml
@@ -311,4 +311,3 @@ class TemporaryFileWithContent:
 
     def __exit__(self, exc_type: typing.Any, exc_value: typing.Any, traceback: typing.Any) -> None:
         self.file.__exit__(exc_type, exc_value, traceback)
-

@@ -21,7 +21,7 @@ class Generator(PassSettings):
     publish: bool
 
     def __init__(
-            self, input_settings: InputSettings, output_settings: OutputSettings, target: Target, check_syntax: bool
+        self, input_settings: InputSettings, output_settings: OutputSettings, target: Target, check_syntax: bool
     ):
         validator: Validator = Validator(output_settings=output_settings, input_settings=input_settings)
         validated: Optional[WindFile] = validator.validate_wind_file()
@@ -101,10 +101,10 @@ class Generator(PassSettings):
                         self.output_settings.emoji,
                     )
             if (
-                    self.output_settings.run_settings is not None
-                    and self.windfile is not None
-                    and self.windfile.metadata is not None
-                    and (self.windfile.metadata.id is not None or self.target == Target.cli.value)
+                self.output_settings.run_settings is not None
+                and self.windfile is not None
+                and self.windfile.metadata is not None
+                and (self.windfile.metadata.id is not None or self.target == Target.cli.value)
             ):
                 actual_generator.run(job_id=self.windfile.metadata.id)
         return actual_generator.key

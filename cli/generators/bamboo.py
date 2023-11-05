@@ -7,17 +7,17 @@ import time
 from typing import List, Any, Optional
 
 import requests
-from classes.generated.definitions import Target
-from classes.generated.windfile import WindFile
-from classes.input_settings import InputSettings
-from classes.output_settings import OutputSettings
-from classes.pass_metadata import PassMetadata
 from docker.client import DockerClient  # type: ignore
 from docker.errors import DockerException  # type: ignore
 from docker.models.containers import Container  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
 
 import cli_utils
+from classes.generated.definitions import Target
+from classes.generated.windfile import WindFile
+from classes.input_settings import InputSettings
+from classes.output_settings import OutputSettings
+from classes.pass_metadata import PassMetadata
 from cli_utils import logger, utils
 from generators.base import BaseGenerator
 
