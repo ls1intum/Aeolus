@@ -209,4 +209,6 @@ def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]
         target=target,
         credentials=CICredentials(url=payload.url, username=payload.username, token=payload.token),
     )
+    if not generated:
+        return {"detail": "generation failed, check api logs"}
     return generated
