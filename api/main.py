@@ -1,15 +1,18 @@
+import json
+import time
 from typing import Optional, Dict, Any
 
-import time
 import yaml
 from fastapi import FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
+from api_classes.publish_payload import PublishPayload
 
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
+from classes.ci_credentials import CICredentials
 from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
@@ -103,7 +106,7 @@ async def validate(windfile: WindFile) -> WindFile | dict[str, str] | None:
 
 
 @app.post("/generate/{target}/yaml")
-async def generate_from_yaml(request: Request, target: Target) -> Optional[Dict[str, str]]:
+async def generate_from_yaml(request: Request, target: Target) -> Optional[Dict[str, str | None]]:
     """
     Generates the given windfile for the given target directly from yaml. It's advised to use
     the json endpoint, as it is fully supported and does not require manual parsing of the body like
@@ -115,15 +118,17 @@ async def generate_from_yaml(request: Request, target: Target) -> Optional[Dict[
     raw_body = await request.body()
     try:
         data: WindFile = WindFile(**yaml.safe_load(raw_body))
-        return await generate(windfile=data, target=target)
+        return generate_target_script(windfile=data, target=target)
     except yaml.YAMLError as exc:
         raise HTTPException(status_code=422, detail="Invalid YAML") from exc
 
 
-@app.post("/generate/{target}")
-async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str]]:
+def generate_target_script(
+    windfile: WindFile, target: Target, credentials: Optional[CICredentials] = None
+) -> Optional[Dict[str, str | None]]:
     """
     Generates the given windfile for the given target.
+    :param credentials: Credentials to use for publishing
     :param windfile: Windfile to generate
     :param target: Target to generate for
     :return:
@@ -131,6 +136,7 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
     with TemporaryFileWithContent(content=dump_yaml(content=windfile)) as file:
         input_settings: InputSettings = InputSettings(file=file, file_path=file.name, target=target)
         output_settings: OutputSettings = OutputSettings(verbose=True, debug=True, emoji=True)
+        output_settings.ci_credentials = credentials
         metadata: PassMetadata = PassMetadata()
         merger: Merger = Merger(
             windfile=windfile, input_settings=input_settings, output_settings=output_settings, metadata=metadata
@@ -164,5 +170,45 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
                 metadata=merger.metadata,
             )
         if generator:
-            return {"result": generator.generate()}
+            return {"result": generator.generate(), "key": generator.key}
         return {"detail": "Unknown target"}
+
+
+@app.post("/generate/{target}")
+async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str | None]]:
+    """
+    Generates the given windfile for the given target.
+    :param windfile: Windfile to generate
+    :param target: Target to generate for
+    :return:
+    """
+    return generate_target_script(windfile=windfile, target=target)
+
+
+@app.post("/publish/{target}")
+def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]:
+    """
+    Publishes the given windfile for the given target using the provided credentials.
+    :param payload: Payload with credentials and windfile
+    :param target: Target to publish for
+    """
+    windfile: Optional[WindFile] = None
+    try:
+        windfile = WindFile(**yaml.safe_load(payload.windfile))
+    except yaml.YAMLError:
+        pass
+    if not windfile:
+        try:
+            windfile = json.loads(payload.windfile)
+        except ValueError:
+            pass
+    if not windfile:
+        raise HTTPException(status_code=422, detail="Invalid windfile")
+    generated: Optional[Dict[str, str | None]] = generate_target_script(
+        windfile=windfile,
+        target=target,
+        credentials=CICredentials(url=payload.url, username=payload.username, token=payload.token),
+    )
+    if not generated:
+        return {"detail": "generation failed, check api logs"}
+    return generated

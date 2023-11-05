@@ -9,10 +9,10 @@ from classes.merger import Merger
 from classes.output_settings import OutputSettings
 from classes.pass_settings import PassSettings
 from classes.validator import Validator
+from cli_utils import logger
 from generators.bamboo import BambooGenerator
 from generators.cli import CliGenerator
 from generators.jenkins import JenkinsGenerator
-from cli_utils import logger
 
 
 class Generator(PassSettings):
@@ -48,7 +48,7 @@ class Generator(PassSettings):
         self.target = target
         self.check_syntax = check_syntax
 
-    def generate(self) -> None:
+    def generate(self) -> Optional[str]:
         """
         Generates the CI file from the given windfile.
         :return:
@@ -107,6 +107,7 @@ class Generator(PassSettings):
                 and (self.windfile.metadata.id is not None or self.target == Target.cli.value)
             ):
                 actual_generator.run(job_id=self.windfile.metadata.id)
+            return actual_generator.key
         return None
 
     def run(self, job_id: str) -> None:

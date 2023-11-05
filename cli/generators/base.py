@@ -1,4 +1,5 @@
 # pylint: disable=duplicate-code
+# pylint: disable=too-many-instance-attributes
 import typing
 
 from classes.generated.definitions import InternalAction
@@ -22,6 +23,7 @@ class BaseGenerator:
     result: typing.List[str]
     final_result: typing.Optional[str]
     environment: EnvironmentSchema
+    key: typing.Optional[str]
 
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
@@ -39,6 +41,7 @@ class BaseGenerator:
         if env is None:
             raise ValueError(f"No environment found for target {input_settings.target.value}")
         self.environment = env
+        self.key = None
 
     def add_line(self, indentation: int, line: str) -> None:
         """

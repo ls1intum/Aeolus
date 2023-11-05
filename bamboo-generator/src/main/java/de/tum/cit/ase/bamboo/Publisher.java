@@ -35,6 +35,7 @@ public class Publisher {
             bambooServer.publish(plan);
         } catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 

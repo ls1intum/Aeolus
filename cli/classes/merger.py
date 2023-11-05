@@ -32,7 +32,7 @@ from classes.validator import (
     Validator,
     get_internal_actions_with_names,
 )
-from cli_utils import logger
+from cli_utils import logger, utils
 from cli_utils.utils import get_content_of, get_path_to_file, file_exists
 
 
@@ -540,6 +540,7 @@ class Merger(PassSettings):
         if not self.windfile:
             logger.error("❌", "Merging failed. Aborting.", self.output_settings.emoji)
             return None
+        utils.clean_up(windfile=self.windfile, output_settings=self.output_settings)
         if self.output_settings.verbose:
             # work-around as enums do not get cleanly printed with model_dump
             json: str = self.windfile.model_dump_json(exclude_none=True)

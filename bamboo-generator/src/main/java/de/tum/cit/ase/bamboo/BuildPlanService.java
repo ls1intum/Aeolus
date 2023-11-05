@@ -39,7 +39,7 @@ public class BuildPlanService {
             repo.authentication(new SharedCredentialsIdentifier(credentialsName)
                     .scope(SharedCredentialsScope.GLOBAL));
         }
-        return new GitRepository()
+        return repo
                 .name(repository.getName())
                 .branch(repository.getBranch())
                 .url(repository.getUrl())
