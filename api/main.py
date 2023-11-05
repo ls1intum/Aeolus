@@ -106,7 +106,7 @@ async def validate(windfile: WindFile) -> WindFile | dict[str, str] | None:
 
 
 @app.post("/generate/{target}/yaml")
-async def generate_from_yaml(request: Request, target: Target) -> Optional[Dict[str, str]]:
+async def generate_from_yaml(request: Request, target: Target) -> Optional[Dict[str, str | None]]:
     """
     Generates the given windfile for the given target directly from yaml. It's advised to use
     the json endpoint, as it is fully supported and does not require manual parsing of the body like
@@ -175,7 +175,7 @@ def generate_target_script(
 
 
 @app.post("/generate/{target}")
-async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str]]:
+async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str | None]]:
     """
     Generates the given windfile for the given target.
     :param windfile: Windfile to generate
@@ -204,10 +204,9 @@ def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]
             pass
     if not windfile:
         raise HTTPException(status_code=422, detail="Invalid windfile")
-    generated: Optional[Dict[str, str]] = generate_target_script(
+    generated: Optional[Dict[str, str | None]] = generate_target_script(
         windfile=windfile,
         target=target,
         credentials=CICredentials(url=payload.url, username=payload.username, token=payload.token),
     )
-    # generated = {}
     return generated
