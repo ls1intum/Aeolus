@@ -10,8 +10,16 @@ from typing import Optional
 import pydantic
 import yaml
 
-from classes.generated.definitions import Target, Docker, Environment, Dictionary, InternalAction, FileAction, \
-    PlatformAction, ExternalAction
+from classes.generated.definitions import (
+    Target,
+    Docker,
+    Environment,
+    Dictionary,
+    InternalAction,
+    FileAction,
+    PlatformAction,
+    ExternalAction,
+)
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.output_settings import OutputSettings
@@ -97,9 +105,9 @@ def file_exists(path: str, output_settings: OutputSettings) -> bool:
 
 
 def read_file(
-        filetype: T,
-        file: TextIOWrapper,
-        output_settings: OutputSettings,
+    filetype: T,
+    file: TextIOWrapper,
+    output_settings: OutputSettings,
 ) -> Optional[T]:
     """
     Validates the given file. If the file is valid,
@@ -145,7 +153,7 @@ def get_ci_environment(target: Target, output_settings: OutputSettings) -> Optio
 
 
 def replace_environment_variables(
-        environment: EnvironmentSchema, haystack: typing.List[str], reverse: bool = False
+    environment: EnvironmentSchema, haystack: typing.List[str], reverse: bool = False
 ) -> list[str]:
     """
     Replaces the environment variables in the given list.
@@ -186,7 +194,7 @@ def replace_bamboo_environment_variable_with_aeolus(environment: EnvironmentSche
 
 
 def replace_bamboo_environment_variables_with_aeolus(
-        environment: EnvironmentSchema, haystack: Optional[typing.List[str]]
+    environment: EnvironmentSchema, haystack: Optional[typing.List[str]]
 ) -> typing.List[str]:
     """
     Replaces the bamboo environment variables with aeolus environment variables.
@@ -200,7 +208,7 @@ def replace_bamboo_environment_variables_with_aeolus(
 
 
 def replace_env_variables_in_docker_config(
-        environment: EnvironmentSchema, docker: Optional[Docker]
+    environment: EnvironmentSchema, docker: Optional[Docker]
 ) -> Optional[Docker]:
     """
     Replaces the environment variables in the given docker config.

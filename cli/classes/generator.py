@@ -107,7 +107,8 @@ class Generator(PassSettings):
                 and (self.windfile.metadata.id is not None or self.target == Target.cli.value)
             ):
                 actual_generator.run(job_id=self.windfile.metadata.id)
-        return actual_generator.key
+            return actual_generator.key
+        return None
 
     def run(self, job_id: str) -> None:
         """

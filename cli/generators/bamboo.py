@@ -42,8 +42,7 @@ class BambooGenerator(BaseGenerator):
     """
 
     def __init__(
-            self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings,
-            metadata: PassMetadata
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
         input_settings.target = Target.bamboo
         super().__init__(windfile, input_settings, output_settings, metadata)
@@ -64,12 +63,12 @@ class BambooGenerator(BaseGenerator):
         cli_utils.logger.info("🔨", f"Replaced environment variables in {end - start}s", self.output_settings.emoji)
         logger.info("🔨", "Generating Bamboo YAML Spec file...", self.output_settings.emoji)
 
-        json: str = self.windfile.model_dump_json(exclude_none=True)
+        json_windfile: str = self.windfile.model_dump_json(exclude_none=True)
         start = time.time()
-        self.key = self.generate_in_api(payload=json)
+        self.key = self.generate_in_api(payload=json_windfile)
         if not self.key:
             # we use base64 a base64 encoded json string, so we do not have to handle any escaping
-            escaped: str = base64.b64encode(json.encode("utf-8")).decode("utf-8")
+            escaped: str = base64.b64encode(json_windfile.encode("utf-8")).decode("utf-8")
             if docker_available():
                 logger.debug("🐳", "Docker is available, using docker container", self.output_settings.emoji)
                 self.generate_in_docker(base64_str=escaped)
@@ -105,9 +104,8 @@ class BambooGenerator(BaseGenerator):
                 self.result.append(response.text)
                 body: dict[str, str] = response.json()
                 return body["key"]
-            else:
-                logger.error("❌", "Bamboo YAML Spec file generation failed", self.output_settings.emoji)
-                raise ValueError("Bamboo YAML Spec file generation failed")
+            logger.error("❌", "Bamboo YAML Spec file generation failed", self.output_settings.emoji)
+            raise ValueError("Bamboo YAML Spec file generation failed")
         except requests.exceptions.ConnectionError:
             return None
 
