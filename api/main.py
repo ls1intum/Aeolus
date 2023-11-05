@@ -9,6 +9,7 @@ from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
 from api_classes.publish_payload import PublishPayload
+
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
 from classes.ci_credentials import CICredentials
@@ -123,7 +124,7 @@ async def generate_from_yaml(request: Request, target: Target) -> Optional[Dict[
 
 
 def generate_target_script(
-        windfile: WindFile, target: Target, credentials: Optional[CICredentials] = None
+    windfile: WindFile, target: Target, credentials: Optional[CICredentials] = None
 ) -> Optional[Dict[str, str | None]]:
     """
     Generates the given windfile for the given target.
@@ -206,6 +207,7 @@ def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]
     generated: Optional[Dict[str, str]] = generate_target_script(
         windfile=windfile,
         target=target,
-        credentials=CICredentials(url=payload.url, username=payload.username, token=payload.token))
+        credentials=CICredentials(url=payload.url, username=payload.username, token=payload.token),
+    )
     # generated = {}
     return generated
