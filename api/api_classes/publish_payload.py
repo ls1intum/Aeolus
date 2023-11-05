@@ -8,6 +8,3 @@ class PublishPayload(BaseModel):
     url: str
     username: Optional[str]
     token: str
-
-    def __init__(self, **data: Any):
-        super().__init__(**data)
