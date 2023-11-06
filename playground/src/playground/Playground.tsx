@@ -54,16 +54,16 @@ repositories:
     branch: develop
     path: aeolus
 actions:
-  set-java-container:
+  - name: set-java-container
     script: set
-  set-c-container:
+  - name: set-c-container
     docker:
       image: ghcr.io/ls1intum/artemis-c-docker
     script: set
-  internal-action:
+  - name: internal-action
     script: |
       echo "This is an internal action"
-  clean_up:
+  - name: clean_up
     script: |
       rm -rf aeolus/
     run_always: true`;

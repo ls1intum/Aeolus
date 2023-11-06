@@ -8,9 +8,9 @@ VALID_ACTIONFILE_WITH_TWO_ACTIONS: str = """
             name: Action Author
             email: action@author.com
         steps:
-          hello-world:
+          - name: hello-world
             script: echo "Hello from a simple action"
-          second-step:
+          - name: second-step
             script: |
               echo "Hello from the second step"
         """

@@ -21,6 +21,25 @@ class Dictionary(RootModel):
     root: Dict[constr(pattern=r'.+'), Optional[Union[str, float, bool]]]
 
 
+class Target(Enum):
+    """
+    The CI platforms that are able to run this windfile.
+    """
+
+    cli = 'cli'
+    jenkins = 'jenkins'
+    bamboo = 'bamboo'
+
+
+class ContactData(BaseModel):
+    """
+    Contact data of the author.
+    """
+
+    name: str = Field(..., description='The name of the author.', examples=['Andreas Resch'])
+    email: Optional[str] = Field(None, description='The email of the author.', examples=['aeolus@resch.io'])
+
+
 class Docker(BaseModel):
     """
     Docker configuration that is used to execute the actions
@@ -52,25 +71,6 @@ class Parameters(RootModel):
     root: Dictionary = Field(..., description='The parameters of an action.', title='Parameters of an action.')
 
 
-class Target(Enum):
-    """
-    The CI platforms that are able to run this windfile.
-    """
-
-    cli = 'cli'
-    jenkins = 'jenkins'
-    bamboo = 'bamboo'
-
-
-class ContactData(BaseModel):
-    """
-    Contact data of the author.
-    """
-
-    name: str = Field(..., description='The name of the author.', examples=['Andreas Resch'])
-    email: Optional[str] = Field(None, description='The email of the author.', examples=['aeolus@resch.io'])
-
-
 class Repository(BaseModel):
     """
     Repository to be checked out during the execution of the actions
@@ -96,6 +96,37 @@ class Environment(RootModel):
     root: Dictionary = Field(..., description='Environment variables for actions.', title='Environment')
 
 
+class Author(RootModel):
+    root: Union[str, ContactData] = Field(..., description='The author of the windfile.', title='Author')
+
+
+class ExternalAction(BaseModel):
+    """
+    External action that can be executed with or without parameters.
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    name: str = Field(..., description='The name of the action.', examples=['rust-exercise-jobs'])
+    use: str = Field(..., description='The name of the external action.', title='Name of the external action.')
+    parameters: Optional[Parameters] = None
+    excludeDuring: Optional[List[Lifecycle]] = Field(
+        None,
+        description='Exclude this action during the specified parts of the lifetime of an exercise.',
+        title='Exclude during',
+    )
+    environment: Optional[Environment] = Field(None, description='Environment variables for this external action.')
+    platform: Optional[Target] = Field(
+        None,
+        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+    )
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    run_always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
+
+
 class FileAction(BaseModel):
     """
     Action that is defined in a file.
@@ -104,6 +135,7 @@ class FileAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
+    name: str = Field(..., description='The name of the action.', examples=['rust-exercise-jobs'])
     file: str = Field(..., description='The file that contains the action.')
     parameters: Optional[Parameters] = None
     excludeDuring: Optional[List[Lifecycle]] = Field(
@@ -122,32 +154,6 @@ class FileAction(BaseModel):
     )
 
 
-class InternalAction(BaseModel):
-    """
-    Internally defined action that can be executed.
-    """
-
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    script: str = Field(..., description='The script of the internal action. Written in aeolus DSL')
-    excludeDuring: Optional[List[Lifecycle]] = Field(
-        None,
-        description='Exclude this action during the specified parts of the lifetime of an exercise.',
-        title='Exclude during',
-    )
-    parameters: Optional[Parameters] = None
-    environment: Optional[Environment] = Field(None, description='Environment variables for this internal action.')
-    platform: Optional[Target] = Field(
-        None,
-        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
-    )
-    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    run_always: Optional[bool] = Field(
-        False, description='If this is set to true, the action is always executed, even if other actions fail.'
-    )
-
-
 class PlatformAction(BaseModel):
     """
     Action that is defined for a specific platform.
@@ -156,6 +162,7 @@ class PlatformAction(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
     )
+    name: str = Field(..., description='The name of the action.', examples=['rust-exercise-jobs'])
     file: Optional[str] = Field(None, description='The file of the platform action. Written in Python')
     parameters: Optional[Parameters] = None
     function: Optional[constr(pattern=r'^[a-zA-Z0-9._-]+$')] = Field(
@@ -175,8 +182,31 @@ class PlatformAction(BaseModel):
     )
 
 
-class Author(RootModel):
-    root: Union[str, ContactData] = Field(..., description='The author of the windfile.', title='Author')
+class ScriptAction(BaseModel):
+    """
+    Internally defined action that can be executed.
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    name: str = Field(..., description='The name of the action.', examples=['rust-exercise-jobs'])
+    script: str = Field(..., description='The script of the internal action. Written in aeolus DSL')
+    excludeDuring: Optional[List[Lifecycle]] = Field(
+        None,
+        description='Exclude this action during the specified parts of the lifetime of an exercise.',
+        title='Exclude during',
+    )
+    parameters: Optional[Parameters] = None
+    environment: Optional[Environment] = Field(None, description='Environment variables for this internal action.')
+    platform: Optional[Target] = Field(
+        None,
+        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+    )
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    run_always: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
 
 
 class WindfileMetadata(BaseModel):
@@ -203,29 +233,9 @@ class WindfileMetadata(BaseModel):
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the actions')
 
 
-class ExternalAction(BaseModel):
-    """
-    External action that can be executed with or without parameters.
-    """
-
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    use: str = Field(..., description='The name of the external action.', title='Name of the external action.')
-    parameters: Optional[Parameters] = None
-    excludeDuring: Optional[List[Lifecycle]] = Field(
-        None,
-        description='Exclude this action during the specified parts of the lifetime of an exercise.',
-        title='Exclude during',
-    )
-    environment: Optional[Environment] = Field(None, description='Environment variables for this external action.')
-    platform: Optional[Target] = Field(
-        None,
-        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
-    )
-    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    run_always: Optional[bool] = Field(
-        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+class Action(RootModel):
+    root: Union[FileAction, ScriptAction, PlatformAction, ExternalAction] = Field(
+        ..., description='Action that can be executed.', title='Action'
     )
 
 
@@ -242,9 +252,3 @@ class ActionMetadata(BaseModel):
     )
     author: Author = Field(..., description='The author of the actionfile.')
     targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')
-
-
-class Action(RootModel):
-    root: Union[FileAction, InternalAction, PlatformAction, ExternalAction] = Field(
-        ..., description='Action that can be executed.', title='Action'
-    )

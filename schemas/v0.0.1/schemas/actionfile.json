@@ -22,11 +22,9 @@
     "steps": {
       "title": "Steps",
       "description": "The actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the action.",
-      "type": "object",
-      "patternProperties": {
-        "^[a-zA-Z0-9._-]+$": {
-          "$ref": "#/$defs/step"
-        }
+      "type": "array",
+      "items": {
+        "$ref": "definitions.json#/action"
       }
     }
   },
@@ -39,7 +37,7 @@
           "$ref": "definitions.json#/file-action"
         },
         {
-          "$ref": "definitions.json#/internal-action"
+          "$ref": "definitions.json#/script-action"
         },
         {
           "$ref": "definitions.json#/platform-action"

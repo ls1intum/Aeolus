@@ -11,7 +11,7 @@ from test.windfile_definitions import (
     VALID_WINDFILE_WITH_NON_EXISTING_ACTIONFILE,
     VALID_WINDFILE_WITH_FILEACTION,
 )
-from classes.generated.definitions import InternalAction, FileAction, PlatformAction, ExternalAction
+from classes.generated.definitions import FileAction, PlatformAction, ExternalAction, ScriptAction
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
@@ -43,13 +43,16 @@ class MergeTests(unittest.TestCase):
             if windfile is None:
                 self.fail("Windfile is None")
             self.assertEqual(len(windfile.actions), 1)
-            self.assertTrue("internal-action" in windfile.actions)
-            self.assertTrue(isinstance(windfile.actions["internal-action"].root, InternalAction))
-            if isinstance(windfile.actions["internal-action"].root, InternalAction):
-                action: InternalAction = windfile.actions["internal-action"].root
-                self.assertEqual(action.script, 'echo "This is an internal action"')
+            index: list[int] = [i for i, item in enumerate(windfile.actions) if "internal-action" == item.root.name]
+            self.assertEqual(len(index), 1)
+            self.assertTrue(isinstance(windfile.actions[index[0]].root, ScriptAction))
+            if isinstance(windfile.actions[index[0]].root, ScriptAction):
+                action: FileAction | ScriptAction | PlatformAction | ExternalAction = windfile.actions[index[0]].root
+                self.assertTrue(isinstance(action, ScriptAction))
+                if isinstance(action, ScriptAction):
+                    self.assertEqual(action.script, 'echo "This is an internal action"')
             else:
-                self.fail("Action is not an instance of InternalAction, but should be")
+                self.fail("Action is not an instance of ScriptAction, but should be")
 
     def test_merging_invalid_file(self) -> None:
         with TemporaryFileWithContent(content=INVALID_WINDFILE_INTERNAL_ACTION) as file:
@@ -82,8 +85,8 @@ class MergeTests(unittest.TestCase):
               description: This is a windfile with no external actions
               author: Test Author
             actions:
-                external-action:
-                    use: {action_file.name}
+              - name: external-action
+                use: {action_file.name}
             """
             with TemporaryFileWithContent(content=content) as file:
                 merger: Merger = Merger(
@@ -105,13 +108,17 @@ class MergeTests(unittest.TestCase):
                         'echo "Hello from the second step"\n',
                     ),
                 ]:
-                    self.assertTrue(name in windfile.actions)
-                    self.assertTrue(isinstance(windfile.actions[name].root, InternalAction))
-                    action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.actions[name].root
-                    if isinstance(action, InternalAction):
+                    index: list[int] = [i for i, item in enumerate(windfile.actions) if name == item.root.name]
+                    self.assertEqual(len(index), 1)
+                    actual_index: int = index[0]
+                    action: FileAction | ScriptAction | PlatformAction | ExternalAction = windfile.actions[
+                        actual_index
+                    ].root
+                    self.assertTrue(isinstance(action, ScriptAction))
+                    if isinstance(action, ScriptAction):
                         self.assertEqual(action.script, action_content)
                     else:
-                        self.fail("Action is not an instance of InternalAction, but should be")
+                        self.fail("Action is not an instance of ScriptAction, but should be")
 
     def test_merge_with_file_action(self) -> None:
         with NamedTemporaryFile(delete=False) as bash_file:
@@ -140,12 +147,12 @@ class MergeTests(unittest.TestCase):
                     self.fail("Windfile is None")
                 self.assertIsNotNone(windfile)
                 self.assertEqual(len(windfile.actions), 1)
-                self.assertTrue("file-action_0" in windfile.actions)
-                self.assertTrue(isinstance(windfile.actions["file-action_0"].root, InternalAction))
-                action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.actions[
-                    "file-action_0"
-                ].root
-                if isinstance(action, InternalAction):
+                print(windfile.actions)
+                index: list[int] = [i for i, item in enumerate(windfile.actions) if "file-action_0" == item.root.name]
+                self.assertEqual(len(index), 1)
+                self.assertTrue(isinstance(windfile.actions[index[0]].root, ScriptAction))
+                action: FileAction | ScriptAction | PlatformAction | ExternalAction = windfile.actions[index[0]].root
+                if isinstance(action, ScriptAction):
                     self.assertEqual(action.script, content)
                     if action.excludeDuring is None:
                         self.fail("Action excludeDuring is None, but should not be")
@@ -157,7 +164,7 @@ class MergeTests(unittest.TestCase):
                     self.assertIsNotNone(action.parameters.root.root)
                     self.assertTrue("SORTING_ALGORITHM" in action.parameters.root.root)
                 else:
-                    self.fail("Action is not an instance of InternalAction, but should be")
+                    self.fail("Action is not an instance of ScriptAction, but should be")
         os.unlink(bash_file.name)
 
 

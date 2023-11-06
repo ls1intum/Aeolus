@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, Field, constr
 
@@ -19,7 +19,7 @@ class WindFile(BaseModel):
     metadata: definitions.WindfileMetadata
     environment: Optional[definitions.Environment] = None
     repositories: Optional[Dict[constr(pattern=r'^[a-zA-Z0-9._-]+$'), definitions.Repository]] = None
-    actions: Dict[constr(pattern=r'^[a-zA-Z0-9._-]+$'), definitions.Action] = Field(
+    actions: List[definitions.Action] = Field(
         ...,
         description='The actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the windfile.',
         title='Actions',

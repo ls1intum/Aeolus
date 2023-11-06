@@ -2,7 +2,7 @@
 # pylint: disable=too-many-instance-attributes
 import typing
 
-from classes.generated.definitions import InternalAction
+from classes.generated.definitions import ScriptAction
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
@@ -55,12 +55,12 @@ class BaseGenerator:
         """
         Check if there are always actions in the windfile.
         """
-        for _, action in self.windfile.actions.items():
+        for action in self.windfile.actions:
             if action.root.run_always:
                 return True
         return False
 
-    def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
+    def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """
         Translate a step into a CI action.
         :param name: name of the step to handle

@@ -8,7 +8,7 @@ from docker.client import DockerClient  # type: ignore
 from docker.models.containers import Container  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
 
-from classes.generated.definitions import InternalAction, Repository, Target
+from classes.generated.definitions import ScriptAction, Repository, Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -80,7 +80,7 @@ class CliGenerator(BaseGenerator):
             self.add_line(indentation=2, line=f"{step} $_current_lifecycle")
         self.result.append("}")
 
-    def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
+    def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """
         Translate a step into a CI action.
         :param name: Name of the step to handle
@@ -232,15 +232,15 @@ class CliGenerator(BaseGenerator):
             for name in self.windfile.repositories:
                 repository: Repository = self.windfile.repositories[name]
                 self.handle_clone(name, repository)
-        for name, step in self.windfile.actions.items():
-            if isinstance(step.root, InternalAction):
-                self.handle_step(name=name, step=step.root, call=not step.root.run_always)
+        for step in self.windfile.actions:
+            if isinstance(step.root, ScriptAction):
+                self.handle_step(name=step.root.name, step=step.root, call=not step.root.run_always)
 
         if self.has_always_actions():
             always_actions: list[str] = []
-            for name, step in self.windfile.actions.items():
-                if isinstance(step.root, InternalAction) and step.root.run_always:
-                    always_actions.append(name)
+            for step in self.windfile.actions:
+                if isinstance(step.root, ScriptAction) and step.root.run_always:
+                    always_actions.append(step.root.name)
             self.handle_always_steps(steps=always_actions)
         self.add_postfix()
         return super().generate()

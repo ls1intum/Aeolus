@@ -15,7 +15,7 @@ from classes.generated.definitions import (
     Docker,
     Environment,
     Dictionary,
-    InternalAction,
+    ScriptAction,
     FileAction,
     PlatformAction,
     ExternalAction,
@@ -253,8 +253,8 @@ def replace_environment_variables_in_windfile(environment: EnvironmentSchema, wi
         environment=environment, docker=windfile.metadata.docker
     )
     windfile.environment = replace_environment_dictionary(environment=environment, env=windfile.environment)
-    for _, action in windfile.actions.items():
-        if isinstance(action.root, InternalAction):
+    for action in windfile.actions:
+        if isinstance(action.root, ScriptAction):
             action.root.script = replace_environment_variable(environment=environment, haystack=action.root.script)
         action.root.environment = replace_environment_dictionary(environment=environment, env=action.root.environment)
 
@@ -268,8 +268,8 @@ def combine_docker_config(windfile: WindFile, output_settings: OutputSettings) -
     :param windfile: Windfile to check
     """
     docker_configs: dict[str, Optional[Docker]] = {}
-    for action in windfile.actions:
-        docker_configs[action] = windfile.actions[action].root.docker
+    for index, action in enumerate(windfile.actions):
+        docker_configs[action.root.name] = windfile.actions[index].root.docker
     first: Optional[Docker] = list(docker_configs.values())[0]
     are_identical: bool = True
     for _, config in docker_configs.items():
@@ -280,8 +280,8 @@ def combine_docker_config(windfile: WindFile, output_settings: OutputSettings) -
     if are_identical:
         logger.info("🚀", "Docker configurations are identical", output_settings.emoji)
         windfile.metadata.docker = first
-        for action in windfile.actions:
-            windfile.actions[action].root.docker = None
+        for index, _ in enumerate(windfile.actions):
+            windfile.actions[index].root.docker = None
 
 
 def clean_up(windfile: WindFile, output_settings: OutputSettings) -> None:
@@ -291,8 +291,8 @@ def clean_up(windfile: WindFile, output_settings: OutputSettings) -> None:
     :param output_settings: OutputSettings
     """
     combine_docker_config(windfile=windfile, output_settings=output_settings)
-    for action in windfile.actions:
-        root_action: FileAction | InternalAction | PlatformAction | ExternalAction = windfile.actions[action].root
+    for index, _ in enumerate(windfile.actions):
+        root_action: FileAction | ScriptAction | PlatformAction | ExternalAction = windfile.actions[index].root
         if root_action.environment is not None and len(root_action.environment.root.root) == 0:
             root_action.environment = None
         if root_action.parameters is not None and len(root_action.parameters.root.root) == 0:

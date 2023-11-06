@@ -6,7 +6,7 @@ from typing import List, Optional
 import yaml
 from git import Repo
 
-from classes.generated.actionfile import ActionFile, Step
+from classes.generated.actionfile import ActionFile
 from classes.generated.definitions import (
     Parameters,
     Action,
@@ -16,7 +16,7 @@ from classes.generated.definitions import (
     PlatformAction,
     FileAction,
     ExternalAction,
-    InternalAction,
+    ScriptAction,
     Docker,
 )
 from classes.generated.windfile import WindFile
@@ -118,7 +118,8 @@ class Merger(PassSettings):
         logger.info("🏠 ", "Merging internal actions", self.output_settings.emoji)
         actions: List[tuple[str, Action]] = get_internal_actions_with_names(self.windfile)
         for action in actions:
-            merge_docker(self.windfile.metadata.docker, self.windfile.actions[action[0]])
+            index: int = [i for i, item in enumerate(self.windfile.actions) if action[0] == item.root.name][0]
+            merge_docker(self.windfile.metadata.docker, self.windfile.actions[index])
         self.set_original_types(names=[action_tuple[0] for action_tuple in actions], key="internal")
         self.set_original_names(names=[action_tuple[0] for action_tuple in actions])
         return True
@@ -326,6 +327,7 @@ class Merger(PassSettings):
         external_actions: typing.List[Action] = actions[1]
         types: typing.List[str] = actions[0]
 
+        original_index: int = [i for i, item in enumerate(self.windfile.actions) if name == item.root.name][0]
         for index, action in enumerate(external_actions):
             new_name: str = f"{name}_{index}"
 
@@ -337,15 +339,15 @@ class Merger(PassSettings):
             )
 
             merge_environment(
-                self.windfile.actions[name].root.environment,
+                self.windfile.actions[original_index].root.environment,
                 action,
             )
             merge_parameters(
-                self.windfile.actions[name].root.parameters,
+                self.windfile.actions[original_index].root.parameters,
                 action,
             )
             merge_lifecycle(
-                self.windfile.actions[name].root.excludeDuring,
+                self.windfile.actions[original_index].root.excludeDuring,
                 action,
             )
             merge_docker(self.windfile.metadata.docker, action)
@@ -361,8 +363,9 @@ class Merger(PassSettings):
                 value=name,
             )
 
-            self.windfile.actions[new_name] = action
-        self.windfile.actions.pop(name)
+            action.root.name = new_name
+            self.windfile.actions.insert(original_index + index + 1, action)
+        self.windfile.actions.pop(original_index)
         return None
 
     def convert_actionfile_to_internal_actions(
@@ -377,8 +380,7 @@ class Merger(PassSettings):
         original_types: List[str] = []
         actions: List[Action] = []
         if actionfile is not None:
-            for name in actionfile.steps:
-                internals: Step = actionfile.steps[name]
+            for internals in actionfile.steps:
                 internal: Optional[Action] = None
                 content: Optional[str] = None
                 if isinstance(internals.root, ExternalAction):
@@ -388,11 +390,12 @@ class Merger(PassSettings):
                         self.output_settings.emoji,
                     )
                     return None
-                if isinstance(internals.root, InternalAction):
+                if isinstance(internals.root, ScriptAction):
                     content = internals.root.script
                     original_types.append("internal")
                     internal = Action(
-                        root=InternalAction(
+                        root=ScriptAction(
+                            name=internals.root.name,
                             script=internals.root.script,
                             excludeDuring=internals.root.excludeDuring,
                             environment=internals.root.environment,
@@ -430,12 +433,13 @@ class Merger(PassSettings):
                 if not content:
                     logger.error(
                         "❌",
-                        f"could not get content of {name}",
+                        f"could not get content of {internals.root.name}",
                         self.output_settings.emoji,
                     )
                     return None
                 internal = Action(
-                    root=InternalAction(
+                    root=ScriptAction(
+                        name=internals.root.name,
                         script=content,
                         excludeDuring=internals.root.excludeDuring,
                         environment=internals.root.environment,
@@ -475,7 +479,8 @@ class Merger(PassSettings):
             actions: typing.List[Action] = []
             if isinstance(action, FileAction):
                 internal_action: Action = Action(
-                    root=InternalAction(
+                    root=ScriptAction(
+                        name=action.name,
                         script=file.read(),
                         excludeDuring=action.excludeDuring,
                         environment=action.environment,
