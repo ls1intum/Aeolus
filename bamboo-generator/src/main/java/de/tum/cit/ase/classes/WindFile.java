@@ -40,10 +40,10 @@ public class WindFile {
             Map<String, Object> repoMap = (Map<String, Object>) repository.getValue();
             windfile.appendRepository(Repository.fromMap(repository.getKey(), repoMap));
         }
-        Map<String, Object> actions = (Map<String, Object>) data.get("actions");
-        for (Map.Entry<String, Object> action : actions.entrySet()) {
-            Map<String, Object> actionMap = (Map<String, Object>) action.getValue();
-            windfile.appendAction(Action.fromMap(action.getKey(), actionMap));
+        List<Object> actions = (List<Object>) data.get("actions");
+        for (Object action : actions) {
+            Map<String, Object> actionMap = (Map<String, Object>) action;
+            windfile.appendAction(Action.fromMap(actionMap));
         }
         return windfile;
     }

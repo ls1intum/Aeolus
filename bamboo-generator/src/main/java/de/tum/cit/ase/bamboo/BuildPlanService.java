@@ -11,7 +11,7 @@ import com.atlassian.bamboo.specs.builders.repository.git.GitRepository;
 import com.atlassian.bamboo.specs.builders.task.ScriptTask;
 import com.atlassian.bamboo.specs.builders.task.TestParserTask;
 import de.tum.cit.ase.classes.DockerConfig;
-import de.tum.cit.ase.classes.InternalAction;
+import de.tum.cit.ase.classes.ScriptAction;
 import de.tum.cit.ase.classes.PlatformAction;
 import de.tum.cit.ase.classes.Repository;
 
@@ -64,7 +64,7 @@ public class BuildPlanService {
         return tasks;
     }
 
-    public List<Task<?, ?>> handleAction(InternalAction action) {
+    public List<Task<?, ?>> handleAction(ScriptAction action) {
         var tasks = new ArrayList<Task<?, ?>>();
         var envs = Arrays.stream(action.getEnvironment().entrySet().stream()
                 .map(entry -> entry.getKey() + "=" + entry.getValue())
