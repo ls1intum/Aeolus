@@ -68,6 +68,7 @@ actions:
       rm -rf aeolus/
     run_always: true`;
     const [data, setData] = useState<string>(default_windfile);
+    const [key, setKey] = useState<string | undefined>(undefined);
     const [markers, setMarkers] = useState<any[]>([]);
 
     const monacoRef = useRef<any>(null);
@@ -102,7 +103,6 @@ actions:
     const [generationTime, setGenerationTime] = React.useState<number>(0.0);
 
     const host = process.env.NODE_ENV === 'production' ? '/api' : 'http://127.0.0.1:8000';
-
     useEffect(() => {
         if (markers.length > 0) {
             return;
@@ -122,6 +122,7 @@ actions:
             })
             .catch(error => console.error('Error:', error))
             .then(data => {
+                data ? setKey(data.key) : setKey(undefined);
                 data ? setData(data.result) : setData('');
             });
     }, [target, input, markers.length, host]);
@@ -138,6 +139,8 @@ actions:
     function handleValidate(markers: any[]) {
         setMarkers(markers);
     }
+
+    const keyString: string = key ? "and would be identified with " + key : "";
 
     const codeTabs: any[] = [
         {
@@ -199,7 +202,7 @@ actions:
                     >
                     </CodeHighlightTabs>
                 </ScrollArea>
-                <Text size="sm" m="4px" c="dimmed">Generated in {generationTime.toFixed(5)} s</Text>
+                <Text size="sm" m="4px" c="dimmed">Generated in {generationTime.toFixed(5)} s {keyString}</Text>
             </Grid.Col>
         </Grid>
     );

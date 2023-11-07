@@ -101,8 +101,8 @@ class BambooGenerator(BaseGenerator):
             response = requests.post(endpoint, headers=headers, data=json.dumps(data), timeout=30)
             if response.status_code == 200:
                 logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
-                self.result.append(response.text)
                 body: dict[str, str] = response.json()
+                self.result.append(body["result"])
                 return body["key"]
             logger.error("❌", "Bamboo YAML Spec file generation failed", self.output_settings.emoji)
             raise ValueError("Bamboo YAML Spec file generation failed")
