@@ -32,8 +32,23 @@ A windfile looks like this:
 api: v0.0.1
 metadata:
   name: example windfile
+  id: example-windfile
   description: This is a windfile with an internal action
   author: Andreas Resch
+  docker:
+    image: ls1tum/artemis-maven-template
+    tag: java17-20
+    volumes:
+      - ${WORKDIR}:/aeolus
+    parameters:
+      - --cpus
+      - '"2"'
+      - --memory
+      - '"2g"'
+      - --memory-swap
+      - '"2g"'
+      - --pids-limit
+      - '"1000"'
   gitCredentials: artemis_gitlab_admin_credentials
 repositories:
   aeolus:
@@ -41,14 +56,20 @@ repositories:
     branch: develop
     path: aeolus
 actions:
-  internal-action:
+  - name: set-java-container
+    script: set
+  - name: set-c-container
+    docker:
+      image: ghcr.io/ls1intum/artemis-c-docker
+    script: set
+  - name: internal-action
     script: |
       echo "This is an internal action"
-  external-action:
+  - name: external-action
     use: simple-action.yml
     excludeDuring:
       - working_time
-  clean_up:
+  - name: clean_up
     script: |
       rm -rf aeolus/
     run_always: true
@@ -65,7 +86,7 @@ metadata:
     name: Andreas Resch
     email: andreas@resch.io
 steps:
-  hello-world:
+  - name: hello-world
     parameters:
       WHO_TO_GREET: "world"
     excludeDuring:
@@ -77,46 +98,73 @@ steps:
 The generated CLI script for the above example would look like this:
 
 `python main.py -dev generate -t cli -i windfile.yaml`
+<!---
+Generate with python main.py -dev generate -t cli -i examples/example-windfile-readme.yml
+--->
 
 ```bash
 #!/usr/bin/env bash
 set -e
+if ! type git &> /dev/null; then
+  USE_GIT=0
+else
+  USE_GIT=1
+fi
 # step aeolus
 # generated from repository aeolus
 clone_aeolus () {
-  echo '🖨️ cloning aeolus'
-  git clone https://github.com/ls1intum/Aeolus.git --branch develop aeolus
+  if [[ $USE_GIT -eq 0 ]]; then
+    echo '🖨️ copying aeolus'
+    cp -r https://github.com/ls1intum/Aeolus.git aeolus
+  elif [[ $USE_GIT -eq 1 ]]; then
+    echo '🖨️ cloning aeolus'
+    git clone https://github.com/ls1intum/Aeolus.git --branch develop aeolus
+  fi
+}
+# step set-java-container
+# generated from step set-java-container
+# original type was script
+set-java-container () {
+  echo '⚙️ executing set-java-container'
+  set
+}
+# step set-c-container
+# generated from step set-c-container
+# original type was script
+set-c-container () {
+  echo '⚙️ executing set-c-container'
+  set
 }
 # step internal-action
 # generated from step internal-action
-# original type was internal
+# original type was script
 internal-action () {
   echo '⚙️ executing internal-action'
   echo "This is an internal action"
-}
-# step clean_up
-# generated from step clean_up
-# original type was internal
-clean_up () {
-  echo '⚙️ executing clean_up'
-  rm -rf aeolus/
 }
 # step external-action_0
 # generated from step external-action
 # original type was internal
 external-action_0 () {
   local _current_lifecycle="${1}"
-  if [[ "${_current_lifecycle}" == "working_time" ]]; then
-    echo '⚠️  external-action_0 is excluded during working_time'
-    return 0
-  fi
   if [[ "${_current_lifecycle}" == "preparation" ]]; then
     echo '⚠️  external-action_0 is excluded during preparation'
+    return 0
+  fi
+  if [[ "${_current_lifecycle}" == "working_time" ]]; then
+    echo '⚠️  external-action_0 is excluded during working_time'
     return 0
   fi
   echo '⚙️ executing external-action_0'
   WHO_TO_GREET="world"
   echo "Hello ${WHO_TO_GREET}"
+}
+# step clean_up
+# generated from step clean_up
+# original type was script
+clean_up () {
+  echo '⚙️ executing clean_up'
+  rm -rf aeolus/
 }
 
 # always steps
@@ -131,12 +179,13 @@ main () {
   local _current_lifecycle="${1}"
   trap final_aeolus_post_action EXIT
   clone_aeolus $_current_lifecycle
+  set-java-container $_current_lifecycle
+  set-c-container $_current_lifecycle
   internal-action $_current_lifecycle
   external-action_0 $_current_lifecycle
 }
 
 main $@
-
 ```
 
 And the generated Jenkinsfile would look like this:
@@ -145,76 +194,121 @@ And the generated Jenkinsfile would look like this:
 
 ```groovy
 pipeline {
-    agent any
-    parameters {
-        string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current lifecycle')
+  agent {
+    docker {
+      image 'ls1tum/artemis-maven-template:java17-20'
+      args '-v ${PWD}:/aeolus --cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
     }
-    stages {
-        stage('aeolus') {
-            steps {
-                echo '🖨️ cloning aeolus'
-                dir('aeolus') {
-                    checkout([$class                           : 'GitSCM',
-                              branches                         : [[name: 'develop']],
-                              doGenerateSubmoduleConfigurations: false,
-                              extensions                       : [],
-                              submoduleCfg                     : [],
-                              userRemoteConfigs                : [[
-                                                                          credentialsId: 'artemis_gitlab_admin_credentials',
-                                                                          name         : 'aeolus',
-                                                                          url          : 'https://github.com/ls1intum/Aeolus.git'
-                                                                  ]]
-                    ])
-                }
-            }
+  }
+  parameters {
+    string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current stage')
+  }
+  stages {
+    stage('aeolus') {
+      steps {
+        echo '🖨️ cloning aeolus'
+        dir('aeolus') {
+          checkout([$class: 'GitSCM',
+                    branches: [[name: 'develop']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[
+                            credentialsId: 'artemis_gitlab_admin_credentials',
+                            name: 'aeolus',
+                            url: 'https://github.com/ls1intum/Aeolus.git'
+                    ]]
+          ])
         }
-        // step internal-action
-        // generated from step internal-action
-        // original type was internal
-        stage('internal-action') {
-            steps {
-                echo '⚙️ executing internal-action'
-                sh '''
-         echo "This is an internal action"
-        '''
-            }
-        }
-        // step external-action_0
-        // generated from step external-action
-        // original type was internal
-        stage('external-action_0') {
-            when {
-                anyOf {
-                    expression { params.current_lifecycle != 'preparation' }
-                    expression { params.current_lifecycle != 'working_time' }
-                }
-            }
-            environment {
-                WHO_TO_GREET = "world"
-            }
-            steps {
-                echo '⚙️ executing external-action_0'
-                sh '''
-         echo "Hello ${WHO_TO_GREET}"
-        '''
-            }
-        }
+      }
     }
-    post {
-        // step clean_up
-        // generated from step clean_up
-        // original type was internal
-        always {
-            echo '⚙️ executing clean_up'
-            sh '''
-         rm -rf aeolus/
-        '''
+    // step set-java-container
+    // generated from step set-java-container
+    // original type was script
+    stage('set-java-container') {
+      agent {
+        docker {
+          image 'ls1tum/artemis-maven-template:java17-20'
+          args '-v ${PWD}:/aeolus --cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
         }
+      }
+      steps {
+        echo '⚙️ executing set-java-container'
+        sh '''
+        set
+        '''
+      }
     }
+    // step set-c-container
+    // generated from step set-c-container
+    // original type was script
+    stage('set-c-container') {
+      agent {
+        docker {
+          image 'ghcr.io/ls1intum/artemis-c-docker:latest'
+        }
+      }
+      steps {
+        echo '⚙️ executing set-c-container'
+        sh '''
+        set
+        '''
+      }
+    }
+    // step internal-action
+    // generated from step internal-action
+    // original type was script
+    stage('internal-action') {
+      agent {
+        docker {
+          image 'ls1tum/artemis-maven-template:java17-20'
+          args '-v ${PWD}:/aeolus --cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
+        }
+      }
+      steps {
+        echo '⚙️ executing internal-action'
+        sh '''
+        echo "This is an internal action"
+        '''
+      }
+    }
+    // step external-action_0
+    // generated from step external-action
+    // original type was internal
+    stage('external-action_0') {
+      agent {
+        docker {
+          image 'ls1tum/artemis-maven-template:java17-20'
+          args '-v ${PWD}:/aeolus --cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
+        }
+      }
+      when {
+        anyOf {
+          expression { params.current_lifecycle != 'preparation' }
+          expression { params.current_lifecycle != 'working_time' }
+        }
+      }
+      environment {
+        WHO_TO_GREET = "world"
+      }
+      steps {
+        echo '⚙️ executing external-action_0'
+        echo "Hello ${WHO_TO_GREET}"
+      }
+    }
+  }
+  post {
+    // step clean_up
+    // generated from step clean_up
+    // original type was script
+    always {
+      echo '⚙️ executing clean_up'
+      sh '''
+      rm -rf aeolus/
+      '''
+    }
+  }
 }
-
-
-
 ```
 
 And the generated Bamboo YAML specs would look like this:
@@ -228,17 +322,17 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
   enabled: true
   key:
     key: WINDFILE
-  name: example windfile
+  name: example-windfile
   oid: null
-  pluginConfigurations: [ ]
+  pluginConfigurations: []
   dependenciesProperties:
-    childPlans: [ ]
+    childPlans: []
     dependenciesConfigurationProperties:
       blockingStrategy: NONE
       enabledForBranches: true
       requireAllStagesPassing: false
-  labels: [ ]
-  notifications: [ ]
+  labels: []
+  notifications: []
   planBranchConfiguration: null
   planBranchManagementProperties:
     branchIntegrationProperties:
@@ -266,10 +360,10 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
       key: EXAMPLE
     name: EXAMPLE
     oid: null
-    repositories: [ ]
+    repositories: []
     repositoryStoredSpecsData: null
-    sharedCredentials: [ ]
-    variables: [ ]
+    sharedCredentials: []
+    variables: []
   repositories:
     - repositoryDefinition: !!com.atlassian.bamboo.specs.model.repository.git.GitRepositoryProperties
         description: null
@@ -278,7 +372,11 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
         parent: null
         project: null
         repositoryViewerProperties: null
-        authenticationProperties: null
+        authenticationProperties: !!com.atlassian.bamboo.specs.model.repository.git.SharedCredentialsAuthenticationProperties
+          sharedCredentials:
+            name: artemis_gitlab_admin_credentials
+            oid: null
+            scope: GLOBAL
         branch: develop
         commandTimeout: !!java.time.Duration 'PT3H'
         fetchWholeRepository: false
@@ -291,14 +389,14 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
         vcsChangeDetection:
           changesetFilterPatternRegex: null
           commitIsolationEnabled: false
-          configuration: { }
+          configuration: {}
           filterFilePatternOption: NONE
           filterFilePatternRegex: null
           maxRetries: 5
           quietPeriod: !!java.time.Duration 'PT10S'
           quietPeriodEnabled: false
         verboseLogs: false
-  repositoryBranches: [ ]
+  repositoryBranches: []
   repositoryStoredSpecsData: null
   stages:
     - description: ''
@@ -310,23 +408,23 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
             key: CHECKOUT1
           name: Checkout
           oid: null
-          pluginConfigurations: [ ]
-          artifactSubscriptions: [ ]
-          artifacts: [ ]
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments: [ ]
+            dockerRunArguments: []
             enabled: false
             image: null
-            volumes: { }
-          finalTasks: [ ]
-          requirements: [ ]
+            volumes: {}
+          finalTasks: []
+          requirements: []
           tasks:
             - !!com.atlassian.bamboo.specs.model.task.VcsCheckoutTaskProperties
-              conditions: [ ]
+              conditions: []
               description: Checkout Default Repository
               enabled: true
-              requirements: [ ]
+              requirements: []
               checkoutItems:
                 - defaultRepository: false
                   path: aeolus
@@ -342,26 +440,118 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
         - description: ''
           enabled: true
           key:
-            key: INTERNALACTION1
-          name: internal-action
+            key: SETJAVACONTAINER1
+          name: set-java-container
           oid: null
-          pluginConfigurations: [ ]
-          artifactSubscriptions: [ ]
-          artifacts: [ ]
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments: [ ]
-            enabled: false
-            image: null
-            volumes: { }
-          finalTasks: [ ]
-          requirements: [ ]
+            dockerRunArguments:
+              - --cpus
+              - '"2"'
+              - --memory
+              - '"2g"'
+              - --memory-swap
+              - '"2g"'
+              - --pids-limit
+              - '"1000"'
+            enabled: true
+            image: ls1tum/artemis-maven-template:java17-20
+            volumes:
+              ${bamboo.working.directory}: /aeolus
+              ${bamboo.tmp.directory}: ${bamboo.tmp.directory}
+          finalTasks: []
+          requirements: []
           tasks:
             - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
-              conditions: [ ]
+              conditions: []
+              description: set-java-container
+              enabled: true
+              requirements: []
+              argument: null
+              body: set
+              environmentVariables: null
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+      manualStage: false
+      name: setjavacontainer
+    - description: ''
+      finalStage: false
+      jobs:
+        - description: ''
+          enabled: true
+          key:
+            key: SETCCONTAINER2
+          name: set-c-container
+          oid: null
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
+          cleanWorkingDirectory: false
+          dockerConfiguration:
+            dockerRunArguments: []
+            enabled: true
+            image: ghcr.io/ls1intum/artemis-c-docker:latest
+            volumes:
+              ${bamboo.working.directory}: ${bamboo.working.directory}
+              ${bamboo.tmp.directory}: ${bamboo.tmp.directory}
+          finalTasks: []
+          requirements: []
+          tasks:
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions: []
+              description: set-c-container
+              enabled: true
+              requirements: []
+              argument: null
+              body: set
+              environmentVariables: null
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+      manualStage: false
+      name: setccontainer
+    - description: ''
+      finalStage: false
+      jobs:
+        - description: ''
+          enabled: true
+          key:
+            key: INTERNALACTION3
+          name: internal-action
+          oid: null
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
+          cleanWorkingDirectory: false
+          dockerConfiguration:
+            dockerRunArguments:
+              - --cpus
+              - '"2"'
+              - --memory
+              - '"2g"'
+              - --memory-swap
+              - '"2g"'
+              - --pids-limit
+              - '"1000"'
+            enabled: true
+            image: ls1tum/artemis-maven-template:java17-20
+            volumes:
+              ${bamboo.working.directory}: /aeolus
+              ${bamboo.tmp.directory}: ${bamboo.tmp.directory}
+          finalTasks: []
+          requirements: []
+          tasks:
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions: []
               description: internal-action
               enabled: true
-              requirements: [ ]
+              requirements: []
               argument: null
               body: |
                 echo "This is an internal action"
@@ -378,62 +568,36 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
         - description: ''
           enabled: true
           key:
-            key: CLEANUP2
-          name: clean_up
-          oid: null
-          pluginConfigurations: [ ]
-          artifactSubscriptions: [ ]
-          artifacts: [ ]
-          cleanWorkingDirectory: false
-          dockerConfiguration:
-            dockerRunArguments: [ ]
-            enabled: false
-            image: null
-            volumes: { }
-          finalTasks: [ ]
-          requirements: [ ]
-          tasks:
-            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
-              conditions: [ ]
-              description: clean_up
-              enabled: true
-              requirements: [ ]
-              argument: null
-              body: |
-                rm -rf aeolus/
-              environmentVariables: null
-              interpreter: SHELL
-              location: INLINE
-              path: null
-              workingSubdirectory: null
-      manualStage: false
-      name: cleanup
-    - description: ''
-      finalStage: false
-      jobs:
-        - description: ''
-          enabled: true
-          key:
-            key: EXTERNALACTION03
+            key: EXTERNALACTION04
           name: external-action_0
           oid: null
-          pluginConfigurations: [ ]
-          artifactSubscriptions: [ ]
-          artifacts: [ ]
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments: [ ]
-            enabled: false
-            image: null
-            volumes: { }
-          finalTasks: [ ]
-          requirements: [ ]
+            dockerRunArguments:
+              - --cpus
+              - '"2"'
+              - --memory
+              - '"2g"'
+              - --memory-swap
+              - '"2g"'
+              - --pids-limit
+              - '"1000"'
+            enabled: true
+            image: ls1tum/artemis-maven-template:java17-20
+            volumes:
+              ${bamboo.working.directory}: /aeolus
+              ${bamboo.tmp.directory}: ${bamboo.tmp.directory}
+          finalTasks: []
+          requirements: []
           tasks:
             - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
-              conditions: [ ]
+              conditions: []
               description: dummy task to prevent wrong result of build plan run
               enabled: true
-              requirements: [ ]
+              requirements: []
               argument: null
               body: echo "⚙️ Executing external-action_0 if stage is correct"
               environmentVariables: null
@@ -452,7 +616,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
                     value: ^.*[^(working_time)][^(preparation)].*
               description: external-action_0
               enabled: true
-              requirements: [ ]
+              requirements: []
               argument: null
               body: echo "Hello ${WHO_TO_GREET}"
               environmentVariables: WHO_TO_GREET=world
@@ -462,13 +626,58 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
               workingSubdirectory: null
       manualStage: false
       name: externalaction0
-  triggers: [ ]
+    - description: ''
+      finalStage: false
+      jobs:
+        - description: ''
+          enabled: true
+          key:
+            key: CLEANUP5
+          name: clean_up
+          oid: null
+          pluginConfigurations: []
+          artifactSubscriptions: []
+          artifacts: []
+          cleanWorkingDirectory: false
+          dockerConfiguration:
+            dockerRunArguments:
+              - --cpus
+              - '"2"'
+              - --memory
+              - '"2g"'
+              - --memory-swap
+              - '"2g"'
+              - --pids-limit
+              - '"1000"'
+            enabled: true
+            image: ls1tum/artemis-maven-template:java17-20
+            volumes:
+              ${bamboo.working.directory}: /aeolus
+              ${bamboo.tmp.directory}: ${bamboo.tmp.directory}
+          finalTasks:
+            - !!com.atlassian.bamboo.specs.model.task.ScriptTaskProperties
+              conditions: []
+              description: clean_up
+              enabled: true
+              requirements: []
+              argument: null
+              body: |
+                rm -rf aeolus/
+              environmentVariables: null
+              interpreter: SHELL
+              location: INLINE
+              path: null
+              workingSubdirectory: null
+          requirements: []
+          tasks: []
+      manualStage: false
+      name: cleanup
+  triggers: []
   variables:
     - createOnly: false
       name: lifecycle_stage
       value: working_time
 specModelVersion: 9.3.3
-
 ...
 ```
 
@@ -485,7 +694,7 @@ In a windfile, you can define jobs of different types. Currently, there are four
 - `internal`: A job that is defined in the windfile itself
 
 ```yaml
-  internal-action:
+  - name: internal-action
     script: |
       echo "This is an internal action"
 ```
@@ -493,14 +702,14 @@ In a windfile, you can define jobs of different types. Currently, there are four
 - `external`: A job that is defined in an actionfile
 
 ```yaml
-  external-action:
+  - name: external-action
     use: simple-action.yml
 ```
 
 - `file`: A job that includes a file e.g. a bash script
 
 ```yaml
-  file-action:
+  - name: file-action
     file: file-action.sh
 ```
 
@@ -510,7 +719,7 @@ In a windfile, you can define jobs of different types. Currently, there are four
   parses the test results of the other actions, this is only needed in Bamboo.
 
 ```yaml
-  platform-action:
+  - name: platform-action
     parameters:
       ignore_time: false
       test_results: '**/test-results/test/*.xml'

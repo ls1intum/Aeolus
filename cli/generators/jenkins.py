@@ -122,7 +122,7 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append(" " * indentation + f"{wrapper} " + "{")
         indentation += 2
         self.result.append(" " * indentation + f"echo '⚙️ executing {name}'")
-        was_internal_or_file: bool = original_type in ("file", "internal")
+        was_internal_or_file: bool = original_type in ("file", "script")
         if was_internal_or_file:
             self.result.append(" " * indentation + "sh '''")
         for line in script.split("\n"):
@@ -219,7 +219,7 @@ class JenkinsGenerator(BaseGenerator):
             self.add_line(
                 indentation=indentation, line="credentialsId: '" + self.windfile.metadata.gitCredentials + "',"
             )
-        self.add_line(indentation=indentation, line=f"name: '{name}'")
+        self.add_line(indentation=indentation, line=f"name: '{name}',")
         self.add_line(indentation=indentation, line=f"url: '{repository.url}'")
         indentation -= 2
         self.add_line(indentation=indentation, line="]]")

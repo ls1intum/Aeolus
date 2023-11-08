@@ -120,7 +120,7 @@ class Merger(PassSettings):
         for action in actions:
             index: int = [i for i, item in enumerate(self.windfile.actions) if action[0] == item.root.name][0]
             merge_docker(self.windfile.metadata.docker, self.windfile.actions[index])
-        self.set_original_types(names=[action_tuple[0] for action_tuple in actions], key="internal")
+        self.set_original_types(names=[action_tuple[0] for action_tuple in actions], key="script")
         self.set_original_names(names=[action_tuple[0] for action_tuple in actions])
         return True
 

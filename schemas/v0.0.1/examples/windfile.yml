@@ -12,9 +12,9 @@ repositories:
     branch: develop
     path: .
 actions:
-  what-are-these-files:
+  - name: what-are-these-files
     script: |
       ls -la
-  run:
+  - name: run
     script: |
       echo "Hello World"

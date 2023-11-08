@@ -4,13 +4,13 @@ metadata:
   description: This is a windfile with an external action
   author: Andreas Resch
 actions:
-  first-job:
+  - name: first-job
     file: ../actions/file-action.py
     parameters:
       FILE: "file1.txt"
     excludeDuring:
       - evaluation
-  external-action:
+  - name: external-action
     use: ../actions/simple-action.yml
     excludeDuring:
       - working_time

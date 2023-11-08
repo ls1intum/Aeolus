@@ -6,5 +6,5 @@ metadata:
     name: Andreas Resch
     email: andreas@resch.io
 steps:
-  hello-world:
+  - name: hello-world
     file: ./file-action.py
