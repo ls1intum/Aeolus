@@ -3,7 +3,7 @@ from typing import Optional, List
 from xml.dom.minidom import Document, parseString, Element
 
 import jenkins  # type: ignore
-from classes.generated.definitions import InternalAction, Action, Target, Repository, Docker
+from classes.generated.definitions import ScriptAction, Target, Repository, Docker
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -90,7 +90,7 @@ class JenkinsGenerator(BaseGenerator):
         """
         self.result.append("}")
 
-    def handle_always_step(self, name: str, step: InternalAction, indentation: int = 4) -> None:
+    def handle_always_step(self, name: str, step: ScriptAction, indentation: int = 4) -> None:
         """
         Translate a step into a CI post action.
         :param name: Name of the step to handle
@@ -122,7 +122,7 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append(" " * indentation + f"{wrapper} " + "{")
         indentation += 2
         self.result.append(" " * indentation + f"echo '⚙️ executing {name}'")
-        was_internal_or_file: bool = original_type in ("file", "internal")
+        was_internal_or_file: bool = original_type in ("file", "script")
         if was_internal_or_file:
             self.result.append(" " * indentation + "sh '''")
         for line in script.split("\n"):
@@ -133,7 +133,7 @@ class JenkinsGenerator(BaseGenerator):
         indentation -= 2
         self.result.append(" " * indentation + "}")
 
-    def handle_step(self, name: str, step: InternalAction, call: bool) -> None:
+    def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """
         Translate a step into a CI action.
         :param name: Name of the step to handle
@@ -176,7 +176,7 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append("    }")
         return None
 
-    def add_environment_variables(self, step: InternalAction) -> None:
+    def add_environment_variables(self, step: ScriptAction) -> None:
         """
         Add environment variables and parameters to the step.
         :param step: Step to add environment variables to
@@ -219,7 +219,7 @@ class JenkinsGenerator(BaseGenerator):
             self.add_line(
                 indentation=indentation, line="credentialsId: '" + self.windfile.metadata.gitCredentials + "',"
             )
-        self.add_line(indentation=indentation, line=f"name: '{name}'")
+        self.add_line(indentation=indentation, line=f"name: '{name}',")
         self.add_line(indentation=indentation, line=f"url: '{repository.url}'")
         indentation -= 2
         self.add_line(indentation=indentation, line="]]")
@@ -307,17 +307,15 @@ class JenkinsGenerator(BaseGenerator):
             for name in self.windfile.repositories:
                 repository: Repository = self.windfile.repositories[name]
                 self.handle_clone(name=name, repository=repository, indentation=4)
-        for name in self.windfile.actions:
-            step: Action = self.windfile.actions[name]
-            if isinstance(step.root, InternalAction) and not step.root.run_always:
-                self.handle_step(name=name, step=step.root, call=True)
+        for step in self.windfile.actions:
+            if isinstance(step.root, ScriptAction) and not step.root.run_always:
+                self.handle_step(name=step.root.name, step=step.root, call=True)
         self.add_line(indentation=2, line="}")
         if self.has_always_actions():
             self.add_line(indentation=2, line="post {")
-            for name in self.windfile.actions:
-                post_step: Action = self.windfile.actions[name]
-                if isinstance(post_step.root, InternalAction) and post_step.root.run_always:
-                    self.handle_always_step(name=name, step=post_step.root)
+            for post_step in self.windfile.actions:
+                if isinstance(post_step.root, ScriptAction) and post_step.root.run_always:
+                    self.handle_always_step(name=post_step.root.name, step=post_step.root)
         self.add_postfix()
         if self.output_settings.ci_credentials is not None:
             self.publish()

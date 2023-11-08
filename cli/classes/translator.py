@@ -20,7 +20,7 @@ from classes.ci_credentials import CICredentials
 from classes.generated.definitions import (
     Target,
     WindfileMetadata,
-    InternalAction,
+    ScriptAction,
     Repository,
     Docker,
     Api,
@@ -108,6 +108,19 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
     return Parameters(root=Dictionary(root=param_dictionary))
 
 
+def extract_action_name(task: BambooTask) -> str:
+    """
+    Extracts the name of the given task of the given Job.
+    :param task: Task to convert
+    :return: name of the task
+    """
+    if isinstance(task, BambooSpecialTask):
+        return task.task_type
+    if isinstance(task, BambooTask):
+        return task.description.replace(" ", "_").lower()
+    return task.description.replace(" ", "_").lower()
+
+
 def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSchema) -> Optional[Action]:
     """
     Converts the given task of the given Job into an Action.
@@ -133,6 +146,7 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
         if isinstance(task, BambooSpecialTask):
             action = Action(
                 root=PlatformAction(
+                    name=extract_action_name(task=task),
                     parameters=params,
                     kind=task.task_type,
                     excludeDuring=exclude,
@@ -147,7 +161,8 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
     else:
         script: str = "".join(task.scripts)
         action = Action(
-            root=InternalAction(
+            root=ScriptAction(
+                name=task.description.replace(" ", "_").lower(),
                 script="".join(
                     utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=script)
                 ),
@@ -162,25 +177,23 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
     return action
 
 
-def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSchema) -> dict[Any, Action]:
+def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSchema) -> list[Action]:
     """
     Converts all jobs and tasks from the given stages (from the REST API)
-    into a dictionary of InternalActions.
+    into a dictionary of ScriptActions.
     :param stages: dict of stages from the REST API
     :param environment: Environment variables from the REST API
-    :return: dict of InternalActions
+    :return: dict of ScriptActions
     """
-    actions: dict[Any, Action] = {}
+    actions: list[Action] = []
     for _, stage in stages.items():
         for job_name in stage.jobs:
             job: BambooJob = stage.jobs[job_name]
-            counter: int = 0
             for task in job.tasks:
                 if isinstance(task, BambooTask):
-                    counter += 1
                     action: Optional[Action] = extract_action(job=job, task=task, environment=environment)
                     if action is not None:
-                        actions[job.key.lower() + str(counter)] = action
+                        actions.append(action)
     return actions
 
 
@@ -237,8 +250,8 @@ class BambooTranslator(PassSettings):
             windfile.metadata.docker.parameters = utils.replace_bamboo_environment_variables_with_aeolus(
                 environment=self.environment, haystack=windfile.metadata.docker.parameters
             )
-        for _, action in windfile.actions.items():
-            if isinstance(action.root, InternalAction):
+        for action in windfile.actions:
+            if isinstance(action.root, ScriptAction):
                 action.root.script = utils.replace_bamboo_environment_variable_with_aeolus(
                     environment=self.environment, haystack=action.root.script
                 )
@@ -254,7 +267,7 @@ class BambooTranslator(PassSettings):
         specs: BambooSpecs = optional[0]
         # raw: dict[str, str] = optional[1]
         plan: BambooPlan = specs.plan
-        actions: dict[Any, Action] = extract_actions(stages=specs.stages, environment=self.environment)
+        actions: list[Action] = extract_actions(stages=specs.stages, environment=self.environment)
         repositories: dict[str, Repository] = extract_repositories(stages=specs.stages, repositories=specs.repositories)
         metadata: WindfileMetadata = WindfileMetadata(
             name=plan.name,

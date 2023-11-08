@@ -9,9 +9,9 @@ public class ExternalAction extends Action {
 
     private String use;
 
-    public static ExternalAction fromMap(String name, Map<String, Object> map) {
+    public static ExternalAction fromMap(Map<String, Object> map) {
         ExternalAction action = new ExternalAction();
-        action.setName(name);
+        action.setName((String) map.get("name"));
         action.setUse((String) map.get("use"));
         action.setParameters((Map<String, Object>) map.getOrDefault("parameters", new HashMap<>()));
         action.setEnvironment((Map<String, String>) map.getOrDefault("environment", new HashMap<>()));

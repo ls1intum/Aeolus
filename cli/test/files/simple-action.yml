@@ -6,7 +6,7 @@ metadata:
     name: Andreas Resch
     email: andreas@resch.io
 steps:
-  hello-world:
+  - name: hello-world
     parameters:
       WHO: "hello world"
       DEFAULT: "default"
@@ -14,6 +14,6 @@ steps:
       - preparation
     script: |
       echo "Hello from a simple action"
-  second-step:
+  - name: second-step
     script: |
       echo "Hello from the second step"

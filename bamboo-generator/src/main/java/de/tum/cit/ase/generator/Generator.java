@@ -107,28 +107,28 @@ public class Generator {
             if (action instanceof ExternalAction) {
                 continue;
             }
-            if (action instanceof InternalAction internalAction) {
-                var keyInput = internalAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
+            if (action instanceof ScriptAction scriptAction) {
+                var keyInput = scriptAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
                 var key = new BambooKey(keyInput);
-                var tasks = buildPlanService.handleAction(internalAction);
+                var tasks = buildPlanService.handleAction(scriptAction);
                 if (oneStageIsEnough) {
-                    if (internalAction.isRunAlways()) {
+                    if (scriptAction.isRunAlways()) {
                         defaultFinalTasks.addAll(tasks);
                     } else {
                         defaultTasks.addAll(tasks);
                     }
                 } else {
-                    var job = new Job(internalAction.getName(), key);
-                    if (internalAction.isRunAlways()) {
+                    var job = new Job(scriptAction.getName(), key);
+                    if (scriptAction.isRunAlways()) {
                         job = job.finalTasks(tasks.toArray(new Task[]{}));
                     } else {
                         job = job.tasks(tasks.toArray(new Task[]{}));
                     }
-                    var docker = BuildPlanService.convertDockerConfig(internalAction.getDocker());
+                    var docker = BuildPlanService.convertDockerConfig(scriptAction.getDocker());
                     if (docker != null) {
                         job = job.dockerConfiguration(docker);
                     }
-                    Stage stage = new Stage(internalAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(
+                    Stage stage = new Stage(scriptAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(
                             job
                     );
                     stageList.add(stage);

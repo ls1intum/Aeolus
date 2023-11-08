@@ -9,6 +9,6 @@ metadata:
   environment:
     - RUST_BACKTRACE: 1
 steps:
-  build:
+  - name: build
     script: |
       cargo build

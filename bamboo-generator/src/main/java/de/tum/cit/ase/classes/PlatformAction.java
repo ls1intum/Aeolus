@@ -9,9 +9,9 @@ public class PlatformAction extends Action {
 
     private String kind;
 
-    public static PlatformAction fromMap(String name, Map<String, Object> map) {
+    public static PlatformAction fromMap(Map<String, Object> map) {
         PlatformAction action = new PlatformAction();
-        action.setName(name);
+        action.setName((String) map.get("name"));
         action.setKind((String) map.get("kind"));
         action.setParameters((Map<String, Object>) map.getOrDefault("parameters", new HashMap<>()));
         action.setEnvironment((Map<String, String>) map.getOrDefault("environment", new HashMap<>()));

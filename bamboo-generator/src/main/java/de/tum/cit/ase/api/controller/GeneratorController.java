@@ -32,7 +32,7 @@ public class GeneratorController implements GeneratorApi {
         var timestamp = System.currentTimeMillis();
         Generator generator = new Generator(false, null, null);
         generator.generateBuildPlan(windFile);
-        System.out.println("Generation took " + (System.currentTimeMillis() - timestamp) + "ms");
+        System.out.println("Generation took for " + generator.getKey() + " " + (System.currentTimeMillis() - timestamp) + "ms");
         Map<String, String> result = new HashMap<>();
         result.put("result", generator.getResult());
         result.put("key", generator.getKey());

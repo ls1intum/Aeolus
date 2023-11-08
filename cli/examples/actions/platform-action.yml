@@ -6,6 +6,6 @@ metadata:
     name: Andreas Resch
     email: andreas@resch.io
 steps:
-  hello-world:
+ - name: hello-world
     for: cli
     file: hello-world.py

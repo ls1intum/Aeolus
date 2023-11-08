@@ -4,7 +4,7 @@ metadata:
   description: This is a windfile with a github repository as action
   author: Andreas Resch
 actions:
-  hello-world:
+  - name: hello-world
     parameters:
       WHO_TO_GREET: "from GitHub"
     use: https://github.com/reschandreas/example-action.git

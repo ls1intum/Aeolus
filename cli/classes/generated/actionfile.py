@@ -3,17 +3,11 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Union
+from typing import List, Optional
 
-from pydantic import BaseModel, Field, RootModel, constr
+from pydantic import BaseModel, Field
 
 from . import definitions
-
-
-class Step(RootModel):
-    root: Union[definitions.FileAction, definitions.InternalAction, definitions.PlatformAction] = Field(
-        ..., description='Action that can be executed.', title='Step'
-    )
 
 
 class ActionFile(BaseModel):
@@ -24,7 +18,7 @@ class ActionFile(BaseModel):
     api: definitions.Api
     metadata: definitions.ActionMetadata
     environment: Optional[definitions.Environment] = None
-    steps: Dict[constr(pattern=r'^[a-zA-Z0-9._-]+$'), Step] = Field(
+    steps: List[definitions.Action] = Field(
         ...,
         description='The actions that are executed during a CI job in a target system. When a job is executed, the actions are executed in the order they are defined in the action.',
         title='Steps',

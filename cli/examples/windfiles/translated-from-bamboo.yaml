@@ -26,20 +26,20 @@ repositories:
     branch: develop
     path: .
 actions:
-  INTERNALACTION11:
+  - name: INTERNALACTION11
     script: "echo \"\u2699\uFE0F Executing internal-action\""
     run_always: false
-  INTERNALACTION12:
+  - name: INTERNALACTION12
     script: 'echo "This is an internal action"
 
       echo ${BRANCH_NAME}
 
       echo ${JOB_ID}'
     run_always: false
-  EXTERNALACTION21:
+  - name: EXTERNALACTION21
     script: "echo \"\u2699\uFE0F Executing external-action if stage is correct\""
     run_always: false
-  EXTERNALACTION22:
+  - name: EXTERNALACTION22
     script: echo "Hello ${WHO_TO_GREET}"
     excludeDuring:
     - preparation

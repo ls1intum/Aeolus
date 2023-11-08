@@ -14,13 +14,13 @@ repositories:
     branch: main
     path: assignment
 actions:
-  internal-action:
+  - name: internal-action
     script: |
       echo "This is an internal action"
-  second-action:
+  - name: second-action
     script: |
         wget -qO- https://www.google.com
-  external-action:
+  - name: external-action
     use: ../actions/simple-action.yml
     excludeDuring:
       - working_time

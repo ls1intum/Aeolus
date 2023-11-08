@@ -4,7 +4,7 @@ metadata:
   description: This is a windfile with an internal action
   author: Andreas Resch
 actions:
-  internal-action:
+  - name: internal-action
     script: |
       echo "Hello from an internal action"
     parameters:

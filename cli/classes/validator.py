@@ -9,7 +9,7 @@ from classes.generated.definitions import (
     Action,
     ExternalAction,
     FileAction,
-    InternalAction,
+    ScriptAction,
     PlatformAction,
 )
 from classes.generated.windfile import WindFile
@@ -26,8 +26,7 @@ def has_external_actions(windfile: WindFile) -> bool:
     :param windfile: input windfile
     :return: True if the windfile contains external actions, False otherwise
     """
-    for name in windfile.actions:
-        action: Action = windfile.actions[name]
+    for action in windfile.actions:
         if isinstance(action.root, ExternalAction):
             return True
     return False
@@ -68,13 +67,12 @@ def get_actions_of_type(
     if not windfile:
         return []
     actions: typing.List[typing.Tuple[str, Action]] = []
-    for name in windfile.actions:
-        action: typing.Any = windfile.actions[name]
+    for action in windfile.actions:
         if "root" in action.__dict__:
             # this allows handling of manually created actions during merging
-            action = action.root
+            action = action.root  # type: ignore
         if isinstance(action, action_type):  # type: ignore
-            actions.append((name, action))
+            actions.append((action.name, action))  # type: ignore
     return actions
 
 
@@ -97,21 +95,20 @@ def get_internal_actions_with_names(
     :param windfile: Windfile to analyze
     :return: List of actions in the given windfile
     """
-    return get_actions_of_type(action_type=InternalAction, windfile=windfile)
+    return get_actions_of_type(action_type=ScriptAction, windfile=windfile)
 
 
 def get_actions(
     windfile: WindFile,
-) -> typing.List[InternalAction | ExternalAction | FileAction | PlatformAction]:
+) -> typing.List[ScriptAction | ExternalAction | FileAction | PlatformAction]:
     """
     Returns a list of all actions in the given windfile.
     :param windfile: Windfile to analyze
     :return: List of actions
     """
-    actions: typing.List[InternalAction | ExternalAction | FileAction | PlatformAction] = []
-    for name in windfile.actions:
-        action: Action = windfile.actions[name]
-        if isinstance(action.root, InternalAction):
+    actions: typing.List[ScriptAction | ExternalAction | FileAction | PlatformAction] = []
+    for action in windfile.actions:
+        if isinstance(action.root, ScriptAction):
             actions.append(action.root)
         elif isinstance(action.root, ExternalAction):
             actions.append(action.root)
@@ -122,16 +119,15 @@ def get_actions(
     return actions
 
 
-def get_internal_actions(windfile: WindFile) -> typing.List[InternalAction]:
+def get_internal_actions(windfile: WindFile) -> typing.List[ScriptAction]:
     """
     Returns a list of all internal actions in the given windfile.
     :param windfile:
     :return:
     """
-    actions: typing.List[InternalAction] = []
-    for name in windfile.actions:
-        action: Action = windfile.actions[name]
-        if isinstance(action.root, InternalAction):
+    actions: typing.List[ScriptAction] = []
+    for action in windfile.actions:
+        if isinstance(action.root, ScriptAction):
             actions.append(action.root)
     return actions
 

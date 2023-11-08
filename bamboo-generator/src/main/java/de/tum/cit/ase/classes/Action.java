@@ -12,13 +12,13 @@ public abstract class Action {
     private DockerConfig docker;
     private boolean runAlways;
 
-    public static Action fromMap(String name, Map<String, Object> map) {
+    public static Action fromMap(Map<String, Object> map) {
         if (map.containsKey("kind")) {
-            return PlatformAction.fromMap(name, map);
+            return PlatformAction.fromMap(map);
         } else if (map.containsKey("script")) {
-            return InternalAction.fromMap(name, map);
+            return ScriptAction.fromMap(map);
         } else {
-            return ExternalAction.fromMap(name, map);
+            return ExternalAction.fromMap(map);
         }
     }
 

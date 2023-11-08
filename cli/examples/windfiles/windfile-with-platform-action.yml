@@ -4,5 +4,5 @@ metadata:
   description: This is a windfile with a simple platform action
   author: Andreas Resch
 actions:
-  hello-world:
+  - name: hello-world
     use: ../actions/platform-action.yml
