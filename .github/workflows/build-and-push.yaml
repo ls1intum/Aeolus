@@ -1,4 +1,4 @@
-name: create docker image
+name: create and push docker images
 
 on:
   workflow_dispatch:
@@ -7,7 +7,6 @@ on:
       - develop
     paths-ignore:
       - "README.md"
-      - ".github/workflows/build-pr.yaml"
       - ".github/workflows/python-**.yaml"
 
 env:
