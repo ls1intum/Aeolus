@@ -18,7 +18,7 @@ class Api(RootModel):
 
 
 class Dictionary(RootModel):
-    root: Dict[constr(pattern=r'.+'), Optional[Union[str, float, bool]]]
+    root: Dict[constr(pattern=r'.+'), Optional[Union[Any, str, float, bool]]]
 
 
 class Target(Enum):
@@ -231,6 +231,11 @@ class WindfileMetadata(BaseModel):
         None, description='The git credentials that are used to clone the repositories'
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the actions')
+    resultHook: Optional[str] = Field(
+        None,
+        description='The result hook that is called after the execution of the actions',
+        examples=['https://example.com/hey-i-got-news-for-you'],
+    )
 
 
 class Action(RootModel):

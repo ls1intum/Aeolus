@@ -105,6 +105,10 @@ export interface WindfileMetadata {
    */
   gitCredentials?: string | GitCredentials;
   docker?: Docker;
+  /**
+   * The result hook that is called after the execution of the actions
+   */
+  resultHook?: string;
   [k: string]: unknown;
 }
 /**
@@ -180,7 +184,14 @@ export interface Environment {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * Repository to be checked out during the execution of the actions
@@ -248,7 +259,14 @@ export interface ParametersOfAnAction {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * Environment variables for actions.
@@ -273,7 +291,14 @@ export interface Environment1 {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * The docker configuration that is used to execute the action
@@ -342,7 +367,14 @@ export interface Environment2 {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * The docker configuration that is used to execute the action
@@ -419,7 +451,14 @@ export interface Environment3 {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * The docker configuration that is used to execute the action
@@ -485,7 +524,14 @@ export interface Environment4 {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * The docker configuration that is used to execute the action

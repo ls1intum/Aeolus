@@ -25,7 +25,7 @@ public class PublisherController implements PublisherApi {
         }
 
         var timestamp = System.currentTimeMillis();
-        Generator generator = new Generator(true, payload.getUrl(), payload.getToken());
+        Generator generator = new Generator(true, "http://localhost:8085", payload.getToken());
         generator.generateBuildPlan(windFile);
         System.out.println("Generating took " + (System.currentTimeMillis() - timestamp) + "ms");
         timestamp = System.currentTimeMillis();

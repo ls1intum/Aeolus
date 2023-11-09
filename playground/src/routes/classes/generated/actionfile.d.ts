@@ -132,7 +132,14 @@ export interface Environment {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * Action that is defined in a file.
@@ -179,7 +186,14 @@ export interface ParametersOfAnAction {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * Environment variables for actions.
@@ -204,7 +218,14 @@ export interface Environment1 {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * The docker configuration that is used to execute the action
@@ -273,7 +294,14 @@ export interface Environment2 {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * The docker configuration that is used to execute the action
@@ -350,7 +378,14 @@ export interface Environment3 {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * The docker configuration that is used to execute the action
@@ -416,7 +451,14 @@ export interface Environment4 {
    * This interface was referenced by `Environment4`'s JSON-Schema definition
    * via the `patternProperty` ".+".
    */
-  [k: string]: string | number | boolean | null;
+  [k: string]:
+    | {
+        [k: string]: unknown;
+      }
+    | string
+    | number
+    | boolean
+    | null;
 }
 /**
  * The docker configuration that is used to execute the action

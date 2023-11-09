@@ -106,10 +106,14 @@ class BambooSpecialTask(BambooTask):
 
     def __init__(
         self,
-        interpreter: str,
+        executable: Optional[str],
+        jdk: Optional[str],
+        goal: Optional[str],
+        tests: Optional[str],
+        interpreter: Optional[str],
         scripts: list[str],
-        parameters: dict[Any, int | str | float | bool | None],
-        environment: dict[Any, int | str | float | bool | None],
+        parameters: dict[Any, int | str | float | bool | list | None],
+        environment: dict[Any, int | str | float | bool | list | None],
         description: str,
         condition: Optional[BambooCondition],
         always_execute: bool,
@@ -125,7 +129,15 @@ class BambooSpecialTask(BambooTask):
         )
         self.task_type = task_type
         self.parameters = parameters
+        self.executable = executable
+        self.jdk = jdk
+        self.goal = goal
+        self.tests = tests
 
+    executable: Optional[str]
+    jdk: Optional[str]
+    goal: Optional[str]
+    tests: Optional[str]
     parameters: dict[Any, str | float | bool | None]
     task_type: str
 

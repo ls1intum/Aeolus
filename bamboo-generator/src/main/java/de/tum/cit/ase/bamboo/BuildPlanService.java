@@ -54,9 +54,15 @@ public class BuildPlanService {
         String type = action.getKind();
         switch (type) {
             case "junit": {
+                Object parameters = action.getParameters().get("test_results");
+                String param = String.valueOf(parameters);
+                if (parameters instanceof List) {
+                    List<String> results = (List<String>) parameters;
+                    param = String.join(",", results);
+                }
                 TestParserTask task = TestParserTask.createJUnitParserTask()
                         .description(action.getName())
-                        .resultDirectories(String.valueOf(action.getParameters().get("test_results")));
+                        .resultDirectories(param);
                 tasks.add(task);
                 break;
             }
@@ -70,13 +76,30 @@ public class BuildPlanService {
                 .map(entry -> entry.getKey() + "=" + entry.getValue())
                 .toArray(String[]::new)).reduce((a, b) -> a + ";" + b).orElse("");
 
-        var params = Arrays.stream(action.getParameters().entrySet().stream()
-                .map(entry -> entry.getKey() + "=" + entry.getValue())
-                .toArray(String[]::new)).reduce((a, b) -> a + ";" + b).orElse("");
-
         ScriptTask task = new ScriptTask()
                 .description(action.getName())
                 .inlineBody(action.getScript());
+
+        var parameters = action.getParameters();
+        String params = "";
+
+        if (parameters != null && !parameters.isEmpty()) {
+            if (action.getParameters().containsKey("working_dir")) {
+                task = task.workingSubdirectory((String) parameters.get("working_dir"));
+                // remove the working dir from the parameters
+                parameters.remove("working_dir");
+            }
+            params = Arrays.stream(parameters.entrySet().stream()
+                    .map(entry -> entry.getKey() + "=" + entry.getValue())
+                    .toArray(String[]::new)).reduce((a, b) -> a + ";" + b).orElse("");
+        }
+
+
+        if (action.getParameters() != null && !action.getParameters().isEmpty()) {
+            if (action.getParameters().containsKey("working_dir")) {
+                task = task.workingSubdirectory((String) action.getParameters().get("working_dir"));
+            }
+        }
 
         if (!action.getExcludeDuring().isEmpty()) {
             String postfix = action.getExcludeDuring().isEmpty() ? "" : " if stage is correct";

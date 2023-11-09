@@ -64,6 +64,13 @@
       "docker": {
         "description": "The docker configuration that is used to execute the actions",
         "$ref": "#/docker"
+      },
+      "resultHook": {
+        "description": "The result hook that is called after the execution of the actions, always. This can be used to send the results to a server.",
+        "type": "string",
+        "examples": [
+          "https://example.com/hey-i-got-news-for-you"
+        ]
       }
     },
     "required": [
@@ -407,6 +414,7 @@
     "patternProperties": {
       ".+": {
         "type": [
+          "list",
           "string",
           "number",
           "boolean",

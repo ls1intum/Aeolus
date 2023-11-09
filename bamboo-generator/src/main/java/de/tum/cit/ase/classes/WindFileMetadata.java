@@ -12,6 +12,7 @@ public class WindFileMetadata {
     private Author author;
     private DockerConfig docker;
     private String gitCredentials;
+    private String resultHook;
 
     public static WindFileMetadata fromMap(Map<String, Object> map) {
         WindFileMetadata metadata = new WindFileMetadata();
@@ -22,6 +23,7 @@ public class WindFileMetadata {
         metadata.setGitCredentials((String) map.getOrDefault("gitCredentials", null));
         metadata.setId((String) map.get("id"));
         metadata.setDocker(DockerConfig.fromMap((Map<String, Object>) map.getOrDefault("docker", null)));
+        metadata.setResultHook((String) map.getOrDefault("resultHook", null));
         return metadata;
     }
 
@@ -73,11 +75,19 @@ public class WindFileMetadata {
         this.id = id;
     }
 
+    public String getResultHook() {
+        return resultHook;
+    }
+
+    public void setResultHook(String resultHook) {
+        this.resultHook = resultHook;
+    }
+
     public String getProjectKey() {
         if (getId() == null) {
             return "NOPROJECTKEYSET";
         }
-        String id = getId().toUpperCase();
+        String id = getId();
         if (id.contains("/")) {
             id = id.replaceAll("/", "-");
         }
@@ -89,7 +99,7 @@ public class WindFileMetadata {
         if (getId() == null) {
             return "NOPROJECTKEYSET";
         }
-        String id = getId().toUpperCase();
+        String id = getId();
         if (id.contains("/")) {
             id = id.replaceAll("/", "-");
         }

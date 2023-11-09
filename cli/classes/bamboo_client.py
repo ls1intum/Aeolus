@@ -129,14 +129,18 @@ def handle_tasks(job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooChec
         task_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]]] = fix_keys(
             dictionary=task[task_type]
         )
-        if task_type == "junit":
-            parameters: dict[Any, int | bool | str | float | None] = {}
+        if task_type == "junit" or task_type == "maven":
+            parameters: dict[Any, int | bool | str | float | list | None] = {}
             for key, value in task_dict.items():
                 if key not in ["type", "description", "always_execute"]:
-                    if isinstance(value, (str, int, bool, float)):
+                    if isinstance(value, (str, int, bool, float, list)):
                         parameters[key] = value
             tasks.append(
                 BambooSpecialTask(
+                    executable=task_dict["executable"] if "executable" in task_dict else None,
+                    jdk=task_dict["jdk"] if "jdk" in task_dict else None,
+                    goal=task_dict["goal"] if "goal" in task_dict else None,
+                    tests=task_dict["tests"] if "tests" in task_dict else None,
                     interpreter=task_type,
                     scripts=[],
                     parameters=parameters,
@@ -259,7 +263,7 @@ class BambooClient:
         :return: YAML representation of the plan
         """
         response = requests.get(
-            f"{self.credentials.url}/rest/api/latest/plan/{plan_key}/specs?all",
+            f"{self.credentials.url}/rest/api/latest/plan/{plan_key}/specs",
             params={"format": "yaml"},
             headers={"Authorization": f"Bearer {self.credentials.token}"},
             timeout=30,
