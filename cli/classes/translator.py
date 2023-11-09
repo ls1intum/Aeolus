@@ -68,8 +68,9 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
     return None
 
 
-def parse_env_variables(environment: EnvironmentSchema,
-                        variables: dict[Any, int | str | float | bool | list[Any] | None]) -> Environment:
+def parse_env_variables(
+        environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+) -> Environment:
     """
     Converts the given environment variables into a Environment object.
     :param environment: Environment variables to replace
@@ -217,7 +218,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
 
 
 def extract_repositories(
-        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.

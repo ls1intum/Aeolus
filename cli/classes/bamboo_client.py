@@ -91,7 +91,7 @@ def handle_script_task(task_dict: dict[str, Any]) -> BambooTask:
     )
     if isinstance(conditions, list) and len(conditions) > 0 and isinstance(conditions[0], dict):
         condition = parse_condition(conditions=conditions)
-    environment: dict[Any, str | float | None] = {}
+    environment: dict[Any, int | str | float | bool | list | None] = {}
     if "environment" in task_dict:
         for entry in str(task_dict["environment"]).split(";"):
             key, value = entry.split("=")
