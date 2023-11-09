@@ -68,7 +68,8 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
     return None
 
 
-def parse_env_variables(environment: EnvironmentSchema, variables: dict[Any, str | float | None]) -> Environment:
+def parse_env_variables(environment: EnvironmentSchema,
+                        variables: dict[Any, int | str | float | bool | list[Any] | None]) -> Environment:
     """
     Converts the given environment variables into a Environment object.
     :param environment: Environment variables to replace
@@ -100,6 +101,10 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
     if isinstance(task, BambooSpecialTask):
         for key in task.parameters:
             updated: Optional[str | float | bool | list] = task.parameters[key]
+            if task.task_type == "maven":
+                # clean up unnecessary parameters
+                if key in ["executable", "jdk", "goal", "tests"]:
+                    continue
             if isinstance(updated, str):
                 updated = utils.replace_bamboo_environment_variable_with_aeolus(
                     environment=environment, haystack=updated
@@ -145,13 +150,6 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
     if isinstance(task, BambooSpecialTask):
         if isinstance(task, BambooSpecialTask):
             if task.task_type == "maven":
-                # clean up a bit
-                del params.root.root["goal"]
-                if "tests" in params.root.root:
-                    # this says if the task produces test results, if it's not there no results are produced
-                    del params.root.root["tests"]
-                del params.root.root["executable"]
-                del params.root.root["jdk"]
                 action = Action(
                     ScriptAction(
                         name=extract_action_name(task=task),
@@ -219,7 +217,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
 
 
 def extract_repositories(
-    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.
