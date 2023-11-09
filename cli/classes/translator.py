@@ -69,7 +69,7 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
 
 
 def parse_env_variables(
-        environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+    environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
 ) -> Environment:
     """
     Converts the given environment variables into a Environment object.
@@ -151,7 +151,7 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
     if isinstance(task, BambooSpecialTask):
         if isinstance(task, BambooSpecialTask):
             if task.task_type == "maven":
-                action = Action(
+                action = Action(  # type: ignore
                     ScriptAction(
                         name=extract_action_name(task=task),
                         script=f"mvn {task.goal}",
@@ -218,7 +218,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
 
 
 def extract_repositories(
-    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.

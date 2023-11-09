@@ -233,7 +233,7 @@ class WindfileMetadata(BaseModel):
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the actions')
     resultHook: Optional[str] = Field(
         None,
-        description='The result hook that is called after the execution of the actions',
+        description='The result hook that is called after the execution of the actions, always. This can be used to send the results to a server.',
         examples=['https://example.com/hey-i-got-news-for-you'],
     )
 

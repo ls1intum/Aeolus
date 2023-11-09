@@ -106,7 +106,7 @@ export interface WindfileMetadata {
   gitCredentials?: string | GitCredentials;
   docker?: Docker;
   /**
-   * The result hook that is called after the execution of the actions
+   * The result hook that is called after the execution of the actions, always. This can be used to send the results to a server.
    */
   resultHook?: string;
   [k: string]: unknown;
