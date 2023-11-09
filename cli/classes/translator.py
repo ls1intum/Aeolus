@@ -162,7 +162,8 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                         environment=envs,
                         platform=None,
                         run_always=task.always_execute,
-                    ))
+                    )
+                )
             else:
                 action = Action(
                     root=PlatformAction(
@@ -297,6 +298,7 @@ class BambooTranslator(PassSettings):
             docker=None,
             targets=None,
             gitCredentials=specs.repositories[list(specs.repositories.keys())[0]].shared_credentials,
+            resultHook=None,
         )
         windfile: WindFile = WindFile(
             api=Api(root="v0.0.1"), metadata=metadata, actions=actions, repositories=repositories

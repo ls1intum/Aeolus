@@ -72,9 +72,9 @@ class BambooTask:
 
     def __init__(
         self,
-        interpreter: str,
+        interpreter: Optional[str],
         scripts: List[str],
-        environment: dict[Any, str | float | None],
+        environment: dict[Any, int | str | float | bool | list | None],
         description: str,
         condition: Optional[BambooCondition],
         arguments: Optional[list[str]] = None,
@@ -90,9 +90,9 @@ class BambooTask:
         self.arguments = arguments
         self.always_execute = always_execute
 
-    interpreter: str
+    interpreter: Optional[str]
     scripts: list[str]
-    environment: dict[Any, str | float | None]
+    environment: dict[Any, int | str | float | bool | list | None]
     description: str
     condition: Optional[BambooCondition]
     arguments: list[str]
@@ -138,7 +138,7 @@ class BambooSpecialTask(BambooTask):
     jdk: Optional[str]
     goal: Optional[str]
     tests: Optional[str]
-    parameters: dict[Any, str | float | bool | None]
+    parameters: dict[Any, int | str | float | bool | list | None]
     task_type: str
 
 

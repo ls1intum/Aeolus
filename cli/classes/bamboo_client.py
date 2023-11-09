@@ -137,10 +137,10 @@ def handle_tasks(job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooChec
                         parameters[key] = value
             tasks.append(
                 BambooSpecialTask(
-                    executable=task_dict["executable"] if "executable" in task_dict else None,
-                    jdk=task_dict["jdk"] if "jdk" in task_dict else None,
-                    goal=task_dict["goal"] if "goal" in task_dict else None,
-                    tests=task_dict["tests"] if "tests" in task_dict else None,
+                    executable=str(task_dict["executable"]) if "executable" in task_dict else None,
+                    jdk=str(task_dict["jdk"]) if "jdk" in task_dict else None,
+                    goal=str(task_dict["goal"]) if "goal" in task_dict else None,
+                    tests=str(task_dict["tests"]) if "tests" in task_dict else None,
                     interpreter=task_type,
                     scripts=[],
                     parameters=parameters,
