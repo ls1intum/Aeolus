@@ -84,21 +84,13 @@ public class BuildPlanService {
         String params = "";
 
         if (parameters != null && !parameters.isEmpty()) {
-            if (action.getParameters().containsKey("working_dir")) {
-                task = task.workingSubdirectory((String) parameters.get("working_dir"));
-                // remove the working dir from the parameters
-                parameters.remove("working_dir");
-            }
             params = Arrays.stream(parameters.entrySet().stream()
                     .map(entry -> entry.getKey() + "=" + entry.getValue())
                     .toArray(String[]::new)).reduce((a, b) -> a + ";" + b).orElse("");
         }
 
-
-        if (action.getParameters() != null && !action.getParameters().isEmpty()) {
-            if (action.getParameters().containsKey("working_dir")) {
-                task = task.workingSubdirectory((String) action.getParameters().get("working_dir"));
-            }
+        if (action.getWorkdir() != null) {
+            task = task.workingSubdirectory(action.getWorkdir());
         }
 
         if (!action.getExcludeDuring().isEmpty()) {

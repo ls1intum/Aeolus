@@ -397,12 +397,13 @@ class Merger(PassSettings):
                         root=ScriptAction(
                             name=internals.root.name,
                             script=internals.root.script,
+                            workdir=internals.root.workdir,
                             excludeDuring=internals.root.excludeDuring,
                             environment=internals.root.environment,
                             parameters=internals.root.parameters,
                             platform=internals.root.platform,
                             docker=internals.root.docker,
-                            run_always=internals.root.run_always,
+                            runAlways=internals.root.runAlways,
                         )
                     )
 
@@ -441,12 +442,13 @@ class Merger(PassSettings):
                     root=ScriptAction(
                         name=internals.root.name,
                         script=content,
+                        workdir=internals.root.workdir,
                         excludeDuring=internals.root.excludeDuring,
                         environment=internals.root.environment,
                         parameters=internals.root.parameters,
                         platform=internals.root.platform,
                         docker=internals.root.docker,
-                        run_always=internals.root.run_always,
+                        runAlways=internals.root.runAlways,
                     )
                 )
                 if internal:
@@ -482,12 +484,13 @@ class Merger(PassSettings):
                     root=ScriptAction(
                         name=action.name,
                         script=file.read(),
+                        workdir=action.workdir,
                         excludeDuring=action.excludeDuring,
                         environment=action.environment,
                         parameters=action.parameters,
                         platform=action.platform,
                         docker=action.docker,
-                        run_always=action.run_always,
+                        runAlways=action.runAlways,
                     )
                 )
                 original_types.append("file")

@@ -28,17 +28,17 @@ repositories:
 actions:
   - name: INTERNALACTION11
     script: "echo \"\u2699\uFE0F Executing internal-action\""
-    run_always: false
+    runAlways: false
   - name: INTERNALACTION12
     script: 'echo "This is an internal action"
 
       echo ${BRANCH_NAME}
 
       echo ${JOB_ID}'
-    run_always: false
+    runAlways: false
   - name: EXTERNALACTION21
     script: "echo \"\u2699\uFE0F Executing external-action if stage is correct\""
-    run_always: false
+    runAlways: false
   - name: EXTERNALACTION22
     script: echo "Hello ${WHO_TO_GREET}"
     excludeDuring:
@@ -46,4 +46,4 @@ actions:
     - post_deadline
     environment:
       WHO_TO_GREET: world
-    run_always: false
+    runAlways: false

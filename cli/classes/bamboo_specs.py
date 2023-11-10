@@ -74,6 +74,7 @@ class BambooTask:
         self,
         interpreter: Optional[str],
         scripts: List[str],
+        workdir: Optional[str],
         environment: dict[Any, int | str | float | bool | list | None],
         description: str,
         condition: Optional[BambooCondition],
@@ -84,6 +85,7 @@ class BambooTask:
             arguments = []
         self.interpreter = interpreter
         self.scripts = scripts
+        self.workdir = workdir
         self.environment = environment
         self.description = description
         self.condition = condition
@@ -92,6 +94,7 @@ class BambooTask:
 
     interpreter: Optional[str]
     scripts: list[str]
+    workdir: Optional[str]
     environment: dict[Any, int | str | float | bool | list | None]
     description: str
     condition: Optional[BambooCondition]
@@ -111,6 +114,7 @@ class BambooSpecialTask(BambooTask):
         goal: Optional[str],
         tests: Optional[str],
         interpreter: Optional[str],
+        workdir: Optional[str],
         scripts: list[str],
         parameters: dict[Any, int | str | float | bool | list | None],
         environment: dict[Any, int | str | float | bool | list | None],
@@ -122,6 +126,7 @@ class BambooSpecialTask(BambooTask):
         super().__init__(
             interpreter=interpreter,
             scripts=scripts,
+            workdir=workdir,
             environment=environment,
             description=description,
             condition=condition,

@@ -182,7 +182,7 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "name" : {
+      "name": {
         "description": "The name of the action.",
         "type": "string",
         "examples": [
@@ -232,10 +232,17 @@
         "description": "The docker configuration that is used to execute the action",
         "$ref": "#/docker"
       },
-      "run_always": {
+      "runAlways": {
         "description": "If this is set to true, the action is always executed, even if other actions fail.",
         "type": "boolean",
         "default": false
+      },
+      "workdir": {
+        "description": "The working directory of the platform action.",
+        "type": "string",
+        "examples": [
+          "tests"
+        ]
       }
     },
     "required": [
@@ -256,7 +263,7 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "name" : {
+      "name": {
         "description": "The name of the action.",
         "type": "string",
         "examples": [
@@ -290,10 +297,17 @@
         "description": "The docker configuration that is used to execute the action",
         "$ref": "#/docker"
       },
-      "run_always": {
+      "runAlways": {
         "description": "If this is set to true, the action is always executed, even if other actions fail.",
         "type": "boolean",
         "default": false
+      },
+      "workdir": {
+        "description": "The working directory of the file action.",
+        "type": "string",
+        "examples": [
+          "tests"
+        ]
       }
     },
     "required": [
@@ -307,7 +321,7 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "name" : {
+      "name": {
         "description": "The name of the action.",
         "type": "string",
         "examples": [
@@ -341,10 +355,17 @@
         "description": "The docker configuration that is used to execute the action",
         "$ref": "#/docker"
       },
-      "run_always": {
+      "runAlways": {
         "description": "If this is set to true, the action is always executed, even if other actions fail.",
         "type": "boolean",
         "default": false
+      },
+      "workdir": {
+        "description": "The working directory of the platform action.",
+        "type": "string",
+        "examples": [
+          "tests"
+        ]
       }
     },
     "required": [
@@ -358,7 +379,7 @@
     "type": "object",
     "additionalProperties": false,
     "properties": {
-      "name" : {
+      "name": {
         "description": "The name of the action.",
         "type": "string",
         "examples": [
@@ -393,10 +414,17 @@
         "description": "The docker configuration that is used to execute the action",
         "$ref": "#/docker"
       },
-      "run_always": {
+      "runAlways": {
         "description": "If this is set to true, the action is always executed, even if other actions fail.",
         "type": "boolean",
         "default": false
+      },
+      "workdir": {
+        "description": "The working directory of the external action.",
+        "type": "string",
+        "examples": [
+          "tests"
+        ]
       }
     },
     "required": [

@@ -16,7 +16,8 @@ public class ScriptAction extends Action {
         action.setParameters((Map<String, Object>) map.getOrDefault("parameters", new HashMap<>()));
         action.setEnvironment((Map<String, String>) map.getOrDefault("environment", new HashMap<>()));
         action.setExcludeDuring((List<String>) map.getOrDefault("excludeDuring", new ArrayList<>()));
-        action.setRunAlways((boolean) map.getOrDefault("run_always", false));
+        action.setRunAlways((boolean) map.getOrDefault("runAlways", false));
+        action.setWorkdir((String) map.getOrDefault("workdir", null));
         action.setDocker(DockerConfig.fromMap((Map<String, Object>) map.getOrDefault("docker", new HashMap<>())));
         return action;
     }

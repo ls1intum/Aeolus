@@ -62,7 +62,7 @@ Content-Type: application/json
           "\"1000\""
         ]
       },
-      "run_always": false
+      "runAlways": false
     },
     "set-c-container": {
       "script": "set",
@@ -70,7 +70,7 @@ Content-Type: application/json
         "image": "ghcr.io/ls1intum/artemis-c-docker",
         "tag": "latest"
       },
-      "run_always": false
+      "runAlways": false
     },
     "internal-action": {
       "script": "echo \"This is an internal action\"\n",
@@ -91,7 +91,7 @@ Content-Type: application/json
           "\"1000\""
         ]
       },
-      "run_always": false
+      "runAlways": false
     },
     "clean_up": {
       "script": "rm -rf aeolus/\n",
@@ -112,7 +112,7 @@ Content-Type: application/json
           "\"1000\""
         ]
       },
-      "run_always": true
+      "runAlways": true
     },
     "external-action_0": {
       "script": "echo \"Hello ${WHO_TO_GREET}\"",
@@ -140,7 +140,7 @@ Content-Type: application/json
           "\"1000\""
         ]
       },
-      "run_always": false
+      "runAlways": false
     }
   }
 }
@@ -204,7 +204,7 @@ Content-Type: application/json
           "\"1000\""
         ]
       },
-      "run_always": false
+      "runAlways": false
     },
     "set-c-container": {
       "script": "set",
@@ -212,7 +212,7 @@ Content-Type: application/json
         "image": "ghcr.io/ls1intum/artemis-c-docker",
         "tag": "latest"
       },
-      "run_always": false
+      "runAlways": false
     },
     "internal-action": {
       "script": "echo \"This is an internal action\"\n",
@@ -233,7 +233,7 @@ Content-Type: application/json
           "\"1000\""
         ]
       },
-      "run_always": false
+      "runAlways": false
     },
     "clean_up": {
       "script": "rm -rf aeolus/\n",
@@ -254,7 +254,7 @@ Content-Type: application/json
           "\"1000\""
         ]
       },
-      "run_always": true
+      "runAlways": true
     },
     "external-action_0": {
       "script": "echo \"Hello ${WHO_TO_GREET}\"",
@@ -282,7 +282,7 @@ Content-Type: application/json
           "\"1000\""
         ]
       },
-      "run_always": false
+      "runAlways": false
     }
   }
 }
@@ -331,6 +331,6 @@ actions:
   clean_up:
     script: |
       rm -rf aeolus/
-    run_always: true
+    runAlways: true
 
 ###

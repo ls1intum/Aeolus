@@ -122,8 +122,11 @@ class ExternalAction(BaseModel):
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    run_always: Optional[bool] = Field(
+    runAlways: Optional[bool] = Field(
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
+    workdir: Optional[str] = Field(
+        None, description='The working directory of the external action.', examples=['tests']
     )
 
 
@@ -149,9 +152,10 @@ class FileAction(BaseModel):
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    run_always: Optional[bool] = Field(
+    runAlways: Optional[bool] = Field(
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
     )
+    workdir: Optional[str] = Field(None, description='The working directory of the file action.', examples=['tests'])
 
 
 class PlatformAction(BaseModel):
@@ -177,8 +181,11 @@ class PlatformAction(BaseModel):
     platform: Optional[Target] = Field(None, description='Ignored for this action.')
     kind: Optional[str] = Field(None, description='The kind of the platform action.', examples=['junit'])
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    run_always: Optional[bool] = Field(
+    runAlways: Optional[bool] = Field(
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
+    workdir: Optional[str] = Field(
+        None, description='The working directory of the platform action.', examples=['tests']
     )
 
 
@@ -204,8 +211,11 @@ class ScriptAction(BaseModel):
         description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
     )
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    run_always: Optional[bool] = Field(
+    runAlways: Optional[bool] = Field(
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
+    workdir: Optional[str] = Field(
+        None, description='The working directory of the platform action.', examples=['tests']
     )
 
 

@@ -234,12 +234,12 @@ class CliGenerator(BaseGenerator):
                 self.handle_clone(name, repository)
         for step in self.windfile.actions:
             if isinstance(step.root, ScriptAction):
-                self.handle_step(name=step.root.name, step=step.root, call=not step.root.run_always)
+                self.handle_step(name=step.root.name, step=step.root, call=not step.root.runAlways)
 
         if self.has_always_actions():
             always_actions: list[str] = []
             for step in self.windfile.actions:
-                if isinstance(step.root, ScriptAction) and step.root.run_always:
+                if isinstance(step.root, ScriptAction) and step.root.runAlways:
                     always_actions.append(step.root.name)
             self.handle_always_steps(steps=always_actions)
         self.add_postfix()

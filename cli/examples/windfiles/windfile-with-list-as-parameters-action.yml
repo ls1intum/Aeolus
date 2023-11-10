@@ -32,10 +32,10 @@ repositories:
 actions:
 - name: structural_tests
   script: ./gradlew clean structuralTests
-  run_always: false
+  runAlways: false
 - name: behavior_tests
   script: ./gradlew behaviorTests
-  run_always: false
+  runAlways: false
 - name: junit
   parameters:
     ignore_time: false
@@ -44,7 +44,7 @@ actions:
     - '**/test-results/behaviorTests/*.xml'
   platform: bamboo
   kind: junit
-  run_always: true
+  runAlways: true
 - name: setup_working_directory_for_cleanup
   script: chmod -R 777 ${WORKDIR}
-  run_always: true
+  runAlways: true

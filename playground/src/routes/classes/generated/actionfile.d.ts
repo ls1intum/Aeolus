@@ -161,7 +161,11 @@ export interface FileAction {
   /**
    * If this is set to true, the action is always executed, even if other actions fail.
    */
-  run_always?: boolean;
+  runAlways?: boolean;
+  /**
+   * The working directory of the file action.
+   */
+  workdir?: string;
 }
 /**
  * The parameters of an action.
@@ -269,7 +273,11 @@ export interface ScriptAction {
   /**
    * If this is set to true, the action is always executed, even if other actions fail.
    */
-  run_always?: boolean;
+  runAlways?: boolean;
+  /**
+   * The working directory of the platform action.
+   */
+  workdir?: string;
 }
 /**
  * Environment variables for actions.
@@ -353,7 +361,11 @@ export interface PlatformAction {
   /**
    * If this is set to true, the action is always executed, even if other actions fail.
    */
-  run_always?: boolean;
+  runAlways?: boolean;
+  /**
+   * The working directory of the platform action.
+   */
+  workdir?: string;
 }
 /**
  * Environment variables for actions.
@@ -426,7 +438,11 @@ export interface ExternalAction {
   /**
    * If this is set to true, the action is always executed, even if other actions fail.
    */
-  run_always?: boolean;
+  runAlways?: boolean;
+  /**
+   * The working directory of the external action.
+   */
+  workdir?: string;
 }
 /**
  * Environment variables for actions.

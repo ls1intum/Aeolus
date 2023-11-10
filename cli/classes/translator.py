@@ -101,6 +101,8 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
         )
     if isinstance(task, BambooSpecialTask):
         for key in task.parameters:
+            if key in ["working_dir"]:
+                continue
             updated: Optional[str | float | bool | list] = task.parameters[key]
             if task.task_type == "maven":
                 # clean up unnecessary parameters
@@ -156,11 +158,12 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                         name=extract_action_name(task=task),
                         script=f"mvn {task.goal}",
                         excludeDuring=exclude,
+                        workdir=str(task.parameters["working_dir"]) if "working_dir" in task.parameters else None,
                         docker=docker,
                         parameters=params,
                         environment=envs,
                         platform=None,
-                        run_always=task.always_execute,
+                        runAlways=task.always_execute,
                     )
                 )
             else:
@@ -170,12 +173,13 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                         parameters=params,
                         kind=task.task_type,
                         excludeDuring=exclude,
+                        workdir=str(task.parameters["working_dir"]) if "working_dir" in task.parameters else None,
                         file=None,
                         function=None,
                         docker=docker,
                         environment=envs,
                         platform=Target.bamboo,
-                        run_always=task.always_execute,
+                        runAlways=task.always_execute,
                     )
                 )
     else:
@@ -187,11 +191,12 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                     utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=script)
                 ),
                 excludeDuring=exclude,
+                workdir=task.workdir if task.workdir else None,
                 docker=docker,
                 parameters=params,
                 environment=envs,
                 platform=None,
-                run_always=task.always_execute,
+                runAlways=task.always_execute,
             )
         )
     return action
