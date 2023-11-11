@@ -87,7 +87,7 @@ class BambooGenerator(BaseGenerator):
         :return key of the generated bamboo plan
         """
         try:
-            host: str = os.getenv("BAMBOO_GENERATOR_API_HOST", "http://localhost:8080")
+            host: str = os.getenv("BAMBOO_GENERATOR_API_HOST", "http://localhost:8122")
             endpoint: str = f"{host}/generate"
             data: dict[str, Optional[str]] = {"windfile": payload}
 

@@ -66,7 +66,7 @@ actions:
   - name: clean_up
     script: |
       rm -rf aeolus/
-    run_always: true`;
+    runAlways: true`;
     const [data, setData] = useState<string>(default_windfile);
     const [key, setKey] = useState<string | undefined>(undefined);
     const [markers, setMarkers] = useState<any[]>([]);

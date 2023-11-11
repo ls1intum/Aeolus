@@ -72,7 +72,7 @@ actions:
   - name: clean_up
     script: |
       rm -rf aeolus/
-    run_always: true
+    runAlways: true
 ```
 
 An actionfile looks like this:
@@ -725,7 +725,7 @@ In a windfile, you can define jobs of different types. Currently, there are four
       test_results: '**/test-results/test/*.xml'
     platform: bamboo
     kind: junit
-    run_always: true
+    runAlways: true
 ```
 
 Every type of job can have the following properties:

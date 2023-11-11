@@ -72,9 +72,10 @@ class BambooTask:
 
     def __init__(
         self,
-        interpreter: str,
+        interpreter: Optional[str],
         scripts: List[str],
-        environment: dict[Any, str | float | None],
+        workdir: Optional[str],
+        environment: dict[Any, int | str | float | bool | list | None],
         description: str,
         condition: Optional[BambooCondition],
         arguments: Optional[list[str]] = None,
@@ -84,15 +85,17 @@ class BambooTask:
             arguments = []
         self.interpreter = interpreter
         self.scripts = scripts
+        self.workdir = workdir
         self.environment = environment
         self.description = description
         self.condition = condition
         self.arguments = arguments
         self.always_execute = always_execute
 
-    interpreter: str
+    interpreter: Optional[str]
     scripts: list[str]
-    environment: dict[Any, str | float | None]
+    workdir: Optional[str]
+    environment: dict[Any, int | str | float | bool | list | None]
     description: str
     condition: Optional[BambooCondition]
     arguments: list[str]
@@ -106,10 +109,15 @@ class BambooSpecialTask(BambooTask):
 
     def __init__(
         self,
-        interpreter: str,
+        executable: Optional[str],
+        jdk: Optional[str],
+        goal: Optional[str],
+        tests: Optional[str],
+        interpreter: Optional[str],
+        workdir: Optional[str],
         scripts: list[str],
-        parameters: dict[Any, int | str | float | bool | None],
-        environment: dict[Any, int | str | float | bool | None],
+        parameters: dict[Any, int | str | float | bool | list | None],
+        environment: dict[Any, int | str | float | bool | list | None],
         description: str,
         condition: Optional[BambooCondition],
         always_execute: bool,
@@ -118,6 +126,7 @@ class BambooSpecialTask(BambooTask):
         super().__init__(
             interpreter=interpreter,
             scripts=scripts,
+            workdir=workdir,
             environment=environment,
             description=description,
             condition=condition,
@@ -125,8 +134,16 @@ class BambooSpecialTask(BambooTask):
         )
         self.task_type = task_type
         self.parameters = parameters
+        self.executable = executable
+        self.jdk = jdk
+        self.goal = goal
+        self.tests = tests
 
-    parameters: dict[Any, str | float | bool | None]
+    executable: Optional[str]
+    jdk: Optional[str]
+    goal: Optional[str]
+    tests: Optional[str]
+    parameters: dict[Any, int | str | float | bool | list | None]
     task_type: str
 
 

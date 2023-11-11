@@ -68,7 +68,9 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
     return None
 
 
-def parse_env_variables(environment: EnvironmentSchema, variables: dict[Any, str | float | None]) -> Environment:
+def parse_env_variables(
+    environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+) -> Environment:
     """
     Converts the given environment variables into a Environment object.
     :param environment: Environment variables to replace
@@ -92,14 +94,20 @@ def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Paramet
     :param task: Task containing the arguments
     :return: Parameters object
     """
-    param_dictionary: dict[Any, str | float | bool | None] = {}
+    param_dictionary: dict[Any, str | float | bool | list | None] = {}
     for value in task.arguments:
         param_dictionary[value] = utils.replace_bamboo_environment_variable_with_aeolus(
             environment=environment, haystack=value
         )
     if isinstance(task, BambooSpecialTask):
         for key in task.parameters:
-            updated: Optional[str | float | bool] = task.parameters[key]
+            if key in ["working_dir"]:
+                continue
+            updated: Optional[str | float | bool | list] = task.parameters[key]
+            if task.task_type == "maven":
+                # clean up unnecessary parameters
+                if key in ["executable", "jdk", "goal", "tests"]:
+                    continue
             if isinstance(updated, str):
                 updated = utils.replace_bamboo_environment_variable_with_aeolus(
                     environment=environment, haystack=updated
@@ -144,20 +152,36 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
     action: Optional[Action] = None
     if isinstance(task, BambooSpecialTask):
         if isinstance(task, BambooSpecialTask):
-            action = Action(
-                root=PlatformAction(
-                    name=extract_action_name(task=task),
-                    parameters=params,
-                    kind=task.task_type,
-                    excludeDuring=exclude,
-                    file=None,
-                    function=None,
-                    docker=docker,
-                    environment=envs,
-                    platform=Target.bamboo,
-                    run_always=task.always_execute,
+            if task.task_type == "maven":
+                action = Action(  # type: ignore
+                    ScriptAction(
+                        name=extract_action_name(task=task),
+                        script=f"mvn {task.goal}",
+                        excludeDuring=exclude,
+                        workdir=str(task.parameters["working_dir"]) if "working_dir" in task.parameters else None,
+                        docker=docker,
+                        parameters=params,
+                        environment=envs,
+                        platform=None,
+                        runAlways=task.always_execute,
+                    )
                 )
-            )
+            else:
+                action = Action(
+                    root=PlatformAction(
+                        name=extract_action_name(task=task),
+                        parameters=params,
+                        kind=task.task_type,
+                        excludeDuring=exclude,
+                        workdir=str(task.parameters["working_dir"]) if "working_dir" in task.parameters else None,
+                        file=None,
+                        function=None,
+                        docker=docker,
+                        environment=envs,
+                        platform=Target.bamboo,
+                        runAlways=task.always_execute,
+                    )
+                )
     else:
         script: str = "".join(task.scripts)
         action = Action(
@@ -167,11 +191,12 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                     utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=script)
                 ),
                 excludeDuring=exclude,
+                workdir=task.workdir if task.workdir else None,
                 docker=docker,
                 parameters=params,
                 environment=envs,
                 platform=None,
-                run_always=task.always_execute,
+                runAlways=task.always_execute,
             )
         )
     return action
@@ -277,6 +302,7 @@ class BambooTranslator(PassSettings):
             docker=None,
             targets=None,
             gitCredentials=specs.repositories[list(specs.repositories.keys())[0]].shared_credentials,
+            resultHook=None,
         )
         windfile: WindFile = WindFile(
             api=Api(root="v0.0.1"), metadata=metadata, actions=actions, repositories=repositories

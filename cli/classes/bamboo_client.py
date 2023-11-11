@@ -91,7 +91,7 @@ def handle_script_task(task_dict: dict[str, Any]) -> BambooTask:
     )
     if isinstance(conditions, list) and len(conditions) > 0 and isinstance(conditions[0], dict):
         condition = parse_condition(conditions=conditions)
-    environment: dict[Any, str | float | None] = {}
+    environment: dict[Any, int | str | float | bool | list | None] = {}
     if "environment" in task_dict:
         for entry in str(task_dict["environment"]).split(";"):
             key, value = entry.split("=")
@@ -108,6 +108,7 @@ def handle_script_task(task_dict: dict[str, Any]) -> BambooTask:
         interpreter=str(task_dict["interpreter"]),
         scripts=scripts,
         environment=environment,
+        workdir=str(task_dict["working_dir"]) if "working_dir" in task_dict else "",
         description=str(task_dict["description"]) if "description" in task_dict else "",
         condition=condition,
         arguments=arguments,
@@ -129,15 +130,20 @@ def handle_tasks(job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooChec
         task_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]]] = fix_keys(
             dictionary=task[task_type]
         )
-        if task_type == "junit":
-            parameters: dict[Any, int | bool | str | float | None] = {}
+        if task_type in ("junit", "maven"):
+            parameters: dict[Any, int | bool | str | float | list | None] = {}
             for key, value in task_dict.items():
                 if key not in ["type", "description", "always_execute"]:
-                    if isinstance(value, (str, int, bool, float)):
+                    if isinstance(value, (str, int, bool, float, list)):
                         parameters[key] = value
             tasks.append(
                 BambooSpecialTask(
+                    executable=str(task_dict["executable"]) if "executable" in task_dict else None,
+                    jdk=str(task_dict["jdk"]) if "jdk" in task_dict else None,
+                    goal=str(task_dict["goal"]) if "goal" in task_dict else None,
+                    tests=str(task_dict["tests"]) if "tests" in task_dict else None,
                     interpreter=task_type,
+                    workdir=str(task_dict["workdir"]) if "workdir" in task_dict else None,
                     scripts=[],
                     parameters=parameters,
                     environment={},
@@ -259,7 +265,7 @@ class BambooClient:
         :return: YAML representation of the plan
         """
         response = requests.get(
-            f"{self.credentials.url}/rest/api/latest/plan/{plan_key}/specs?all",
+            f"{self.credentials.url}/rest/api/latest/plan/{plan_key}/specs",
             params={"format": "yaml"},
             headers={"Authorization": f"Bearer {self.credentials.token}"},
             timeout=30,

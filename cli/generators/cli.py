@@ -164,19 +164,7 @@ class CliGenerator(BaseGenerator):
         :param repository: Repository
         """
         directory: str = repository.path
-        clone_method: str = f"clone_{name}"
-        self.result.append(f"# step {name}")
-        self.result.append(f"# generated from repository {name}")
-        self.result.append(f"{clone_method} () " + "{")
-        self.add_line(indentation=2, line="if [[ $USE_GIT -eq 0 ]]; then")
-        self.add_line(indentation=4, line=f"echo '🖨️ copying {name}'")
-        self.add_line(indentation=4, line=f"cp -r {repository.url} {directory}")
-        self.add_line(indentation=2, line="elif [[ $USE_GIT -eq 1 ]]; then")
-        self.add_line(indentation=4, line=f"echo '🖨️ cloning {name}'")
-        self.add_line(indentation=4, line=f"git clone {repository.url} --branch {repository.branch} {directory}")
-        self.add_line(indentation=2, line="fi")
-        self.result.append("}")
-        self.functions.append(clone_method)
+        self.result.append(f"# the repository {name} is expected to be mounted into the container at /{directory}")
 
     def run(self, job_id: str) -> None:
         """
@@ -192,16 +180,22 @@ class CliGenerator(BaseGenerator):
             temp.write(self.generate().encode())
             temp.flush()
             client: DockerClient = DockerClient.from_env()
-            container_name: str = "aeolus-worker"
+            container_name: str = "aeolus-worker" if job_id is None else f"aeolus-worker-{job_id}"
             container_image: str = os.getenv("AEOLUS_WORKER_IMAGE", "ghcr.io/ls1intum/aeolus/worker:nightly")
             if self.windfile.metadata.docker is not None:
                 container_image = self.windfile.metadata.docker.image + (
                     (":" + self.windfile.metadata.docker.tag) if self.windfile.metadata.docker.tag else ""
                 )
+            volumes: dict[str, dict[str, str]] = {temp.name: {"bind": "/entrypoint.sh", "mode": "ro"}}
+            if self.windfile.repositories:
+                for name in self.windfile.repositories:
+                    repository: Repository = self.windfile.repositories[name]
+                    if repository.path:
+                        volumes[repository.path] = {"bind": f"/{repository.path}", "mode": "rw"}
             client.containers.run(
                 image=container_image,
                 command=f"bash /entrypoint.sh {self.output_settings.run_settings.stage}",
-                volumes={temp.name: {"bind": "/entrypoint.sh", "mode": "ro"}},
+                volumes=volumes,
                 auto_remove=False,
                 name=container_name,
                 detach=True,
@@ -223,7 +217,8 @@ class CliGenerator(BaseGenerator):
 
     def generate(self) -> str:
         """
-        Generate the bash script to be used as a local CI system.
+        Generate the bash script to be used as a local CI system. We don't clone the repository here, because
+        we don't want to handle the credentials in the CI system.
         :return: bash script
         """
         utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
@@ -234,12 +229,12 @@ class CliGenerator(BaseGenerator):
                 self.handle_clone(name, repository)
         for step in self.windfile.actions:
             if isinstance(step.root, ScriptAction):
-                self.handle_step(name=step.root.name, step=step.root, call=not step.root.run_always)
+                self.handle_step(name=step.root.name, step=step.root, call=not step.root.runAlways)
 
         if self.has_always_actions():
             always_actions: list[str] = []
             for step in self.windfile.actions:
-                if isinstance(step.root, ScriptAction) and step.root.run_always:
+                if isinstance(step.root, ScriptAction) and step.root.runAlways:
                     always_actions.append(step.root.name)
             self.handle_always_steps(steps=always_actions)
         self.add_postfix()

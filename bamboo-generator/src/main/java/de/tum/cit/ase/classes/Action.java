@@ -11,6 +11,7 @@ public abstract class Action {
     private List<String> excludeDuring;
     private DockerConfig docker;
     private boolean runAlways;
+    private String workdir;
 
     public static Action fromMap(Map<String, Object> map) {
         if (map.containsKey("kind")) {
@@ -68,5 +69,13 @@ public abstract class Action {
 
     protected void setDocker(DockerConfig docker) {
         this.docker = docker;
+    }
+
+    public String getWorkdir() {
+        return workdir;
+    }
+
+    public void setWorkdir(String workdir) {
+        this.workdir = workdir;
     }
 }

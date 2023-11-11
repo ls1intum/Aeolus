@@ -1,13 +1,20 @@
 package de.tum.cit.ase.generator;
 
+import com.atlassian.bamboo.specs.api.builders.AtlassianModule;
 import com.atlassian.bamboo.specs.api.builders.BambooKey;
 import com.atlassian.bamboo.specs.api.builders.Variable;
+import com.atlassian.bamboo.specs.api.builders.notification.AnyNotificationRecipient;
+import com.atlassian.bamboo.specs.api.builders.notification.Notification;
 import com.atlassian.bamboo.specs.api.builders.plan.Job;
 import com.atlassian.bamboo.specs.api.builders.plan.Plan;
 import com.atlassian.bamboo.specs.api.builders.plan.Stage;
+import com.atlassian.bamboo.specs.api.builders.plan.branches.BranchCleanup;
+import com.atlassian.bamboo.specs.api.builders.plan.branches.PlanBranchManagement;
+import com.atlassian.bamboo.specs.api.builders.plan.configuration.ConcurrentBuilds;
 import com.atlassian.bamboo.specs.api.builders.project.Project;
 import com.atlassian.bamboo.specs.api.builders.repository.VcsRepository;
 import com.atlassian.bamboo.specs.api.builders.task.Task;
+import com.atlassian.bamboo.specs.builders.notification.PlanCompletedNotification;
 import com.atlassian.bamboo.specs.builders.repository.git.GitRepository;
 import com.atlassian.bamboo.specs.builders.task.CheckoutItem;
 import com.atlassian.bamboo.specs.builders.task.VcsCheckoutTask;
@@ -15,6 +22,7 @@ import com.atlassian.bamboo.specs.util.BambooSpecSerializer;
 import de.tum.cit.ase.bamboo.BuildPlanService;
 import de.tum.cit.ase.bamboo.Publisher;
 import de.tum.cit.ase.classes.*;
+import de.tum.cit.ase.utils.Utils;
 import org.springframework.lang.NonNull;
 
 import java.util.ArrayList;
@@ -53,7 +61,7 @@ public class Generator {
      */
     private static Project getEmptyProject(WindFileMetadata metadata) {
         String id = metadata.getProjectKey();
-        return new Project().key(id).name(id).description(metadata.getDescription() + "\n---created using aeolus");
+        return new Project().key(id.toUpperCase()).name(metadata.getName()).description(metadata.getDescription() + "\n---created using aeolus");
     }
 
     /**
@@ -67,7 +75,19 @@ public class Generator {
 
         BuildPlanService buildPlanService = new BuildPlanService();
         project = getEmptyProject(windFile.getMetadata());
-        plan = new Plan(project, windFile.getMetadata().getId(), windFile.getMetadata().getPlanName()).description("Plan created from " + windFile.getFilePath()).variables(new Variable("lifecycle_stage", "working_time"));
+        String planKey = Utils.getBambooKeyOf(windFile.getMetadata().getPlanName());
+        String name = windFile.getMetadata().getPlanName();
+        System.out.println("Generating plan " + planKey);
+        System.out.println("Generating project " + name);
+        plan = new Plan(project, name, planKey).description("Plan created from " + windFile.getFilePath())
+                .variables(new Variable("lifecycle_stage", "working_time"))
+                .pluginConfigurations(new ConcurrentBuilds().useSystemWideDefault(true))
+                .planBranchManagement(new PlanBranchManagement().delete(new BranchCleanup()).notificationForCommitters());
+        if (windFile.getMetadata().getResultHook() != null) {
+            plan = plan.notifications(new Notification().type(new PlanCompletedNotification())
+                    .recipients(new AnyNotificationRecipient(new AtlassianModule("de.tum.in.www1.bamboo-server:recipient.server"))
+                            .recipientString(windFile.getMetadata().getResultHook())));
+        }
         boolean oneStageIsEnough = canBePutInOneStage(windFile);
 
         Stage defaultStage = new Stage("Default Stage");
