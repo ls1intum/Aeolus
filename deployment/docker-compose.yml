@@ -2,50 +2,19 @@ services:
   playground:
     container_name: aeolus-playground
     hostname: aeolus-playground
-    image: ghcr.io/ls1intum/aeolus/playground:nightly
+    image: ghcr.io/ls1intum/aeolus/playground:${AEOLUS_DOCKER_TAG:-latest}
     pull_policy: if_not_present
     restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.aeolus-playground.rule=(Host(`<your-host>`) && !PathPrefix(`/api`))"
-      - "traefik.http.routers.aeolus-playground.entrypoints=https"
-      - "traefik.http.routers.aeolus-playground.tls=true"
-      - "traefik.http.routers.aeolus-playground.tls.certResolver=leresolver"
-      - 'traefik.services.aeolus-playground.loadbalancer.passHostHeader=true'
-    networks:
-      - traefik
   api:
     container_name: aeolus-api
     hostname: aeolus-api
-    image: ghcr.io/ls1intum/aeolus/api:nightly
+    image: ghcr.io/ls1intum/aeolus/api:${AEOLUS_DOCKER_TAG:-latest}
     pull_policy: if_not_present
     restart: unless-stopped
-    environment:
-      BAMBOO_GENERATOR_API_HOST: "http://aeolus-bamboo-api:8091"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.aeolus-api.rule=(Host(`<your-host>`) && PathPrefix(`/api`))"
-      - "traefik.http.routers.aeolus-api.entrypoints=https"
-      - "traefik.http.routers.aeolus-api.tls=true"
-      - "traefik.http.routers.aeolus-api.tls.certResolver=leresolver"
-      - 'traefik.services.aeolus-api.loadbalancer.passHostHeader=true'
-      - "traefik.http.middlewares.aeolus-api.stripprefix.prefixes=/api"
-      - 'traefik.http.routers.aeolus-api.middlewares=aeolus-api'
-    networks:
-      - traefik
   bamboo-api:
     container_name: aeolus-bamboo-api
     hostname: aeolus-bamboo-api
-    image: ghcr.io/ls1intum/aeolus/bamboo-generator:nightly
+    image: ghcr.io/ls1intum/aeolus/bamboo-generator:${AEOLUS_DOCKER_TAG:-latest}
     command: "--api"
     pull_policy: if_not_present
     restart: unless-stopped
-    labels:
-      - "traefik.enable=false"
-    networks:
-      - traefik
-
-
-networks:
-  traefik:
-    external: true
