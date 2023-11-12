@@ -1,3 +1,9 @@
+"""
+Validate command.
+Validates the given file, validation includes:
+- Syntax check
+- all files exists
+"""
 import typing
 
 import argparse

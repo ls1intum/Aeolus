@@ -1,3 +1,6 @@
+"""
+This module contains the Validator class. This class is responsible for validating the given windfile.
+"""
 import typing
 from typing import Optional
 

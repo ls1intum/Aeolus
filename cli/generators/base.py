@@ -1,5 +1,8 @@
 # pylint: disable=duplicate-code
 # pylint: disable=too-many-instance-attributes
+"""
+Base class for generators. Specifies the interface for generators.
+"""
 import typing
 
 from classes.generated.definitions import ScriptAction

@@ -105,22 +105,7 @@ Generate with python main.py -dev generate -t cli -i examples/example-windfile-r
 ```bash
 #!/usr/bin/env bash
 set -e
-if ! type git &> /dev/null; then
-  USE_GIT=0
-else
-  USE_GIT=1
-fi
-# step aeolus
-# generated from repository aeolus
-clone_aeolus () {
-  if [[ $USE_GIT -eq 0 ]]; then
-    echo '🖨️ copying aeolus'
-    cp -r https://github.com/ls1intum/Aeolus.git aeolus
-  elif [[ $USE_GIT -eq 1 ]]; then
-    echo '🖨️ cloning aeolus'
-    git clone https://github.com/ls1intum/Aeolus.git --branch develop aeolus
-  fi
-}
+# the repository aeolus is expected to be mounted into the container at /aeolus
 # step set-java-container
 # generated from step set-java-container
 # original type was script
@@ -178,7 +163,6 @@ final_aeolus_post_action () {
 main () {
   local _current_lifecycle="${1}"
   trap final_aeolus_post_action EXIT
-  clone_aeolus $_current_lifecycle
   set-java-container $_current_lifecycle
   set-c-container $_current_lifecycle
   internal-action $_current_lifecycle
@@ -284,8 +268,8 @@ pipeline {
       }
       when {
         anyOf {
-          expression { params.current_lifecycle != 'preparation' }
           expression { params.current_lifecycle != 'working_time' }
+          expression { params.current_lifecycle != 'preparation' }
         }
       }
       environment {
@@ -322,9 +306,12 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
   enabled: true
   key:
     key: WINDFILE
-  name: example-windfile
+  name: windfile
   oid: null
-  pluginConfigurations: []
+  pluginConfigurations:
+    - !!com.atlassian.bamboo.specs.api.model.plan.configuration.ConcurrentBuildsProperties
+      maximumNumberOfConcurrentBuilds: 1
+      useSystemWideDefault: true
   dependenciesProperties:
     childPlans: []
     dependenciesConfigurationProperties:
@@ -346,11 +333,11 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
     defaultTrigger: null
     deletePlanBranch:
       removeDeletedFromRepository: false
-      removeDeletedFromRepositoryPeriod: !!java.time.Duration 'PT0S'
+      removeDeletedFromRepositoryPeriod: !!java.time.Duration 'PT168H'
       removeInactiveInRepository: false
-      removeInactiveInRepositoryPeriod: !!java.time.Duration 'PT0S'
+      removeInactiveInRepositoryPeriod: !!java.time.Duration 'PT720H'
     issueLinkingEnabled: true
-    notificationStrategy: NONE
+    notificationStrategy: NOTIFY_COMMITTERS
     triggeringOption: INHERITED
   project:
     description: |-
@@ -358,7 +345,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
       ---created using aeolus
     key:
       key: EXAMPLE
-    name: EXAMPLE
+    name: example windfile
     oid: null
     repositories: []
     repositoryStoredSpecsData: null
@@ -613,7 +600,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
                   configuration:
                     variable: lifecycle_stage
                     operation: matches
-                    value: ^.*[^(working_time)][^(preparation)].*
+                    value: ^.*[^(preparation)][^(working_time)].*
               description: external-action_0
               enabled: true
               requirements: []
@@ -678,7 +665,6 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
       name: lifecycle_stage
       value: working_time
 specModelVersion: 9.3.3
-...
 ```
 
 # Features

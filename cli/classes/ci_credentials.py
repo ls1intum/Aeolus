@@ -1,3 +1,6 @@
+"""
+Class to store CI credentials
+"""
 from typing import Optional
 
 

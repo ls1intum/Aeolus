@@ -1,3 +1,6 @@
+"""
+Output settings for the CLI.
+"""
 # pylint: disable=too-many-arguments
 from typing import Optional
 

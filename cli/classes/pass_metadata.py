@@ -1,3 +1,6 @@
+"""
+PassMetadata class.
+"""
 import typing
 
 from cli_utils import logger

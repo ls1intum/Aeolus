@@ -39,14 +39,6 @@ class CliGenerator(BaseGenerator):
         self.result.append("#!/usr/bin/env bash")
         self.result.append("set -e")
 
-        # sometimes, git is not available, for thos e cases, we need to clone the repository by copying
-        # the files from the source (we abuse the field url for that)
-        self.result.append("if ! type git &> /dev/null; then")
-        self.add_line(indentation=2, line="USE_GIT=0")
-        self.result.append("else")
-        self.add_line(indentation=2, line="USE_GIT=1")
-        self.result.append("fi")
-
         if self.windfile.environment:
             for env_var in self.windfile.environment.root.root:
                 self.result.append(f'export {env_var}="' f'{self.windfile.environment.root.root[env_var]}"')

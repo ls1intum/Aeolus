@@ -1,4 +1,8 @@
 # pylint: disable=duplicate-code
+"""
+Jenkins generator. Generates a jenkins pipeline to be used in the Jenkins CI system.
+The generated pipeline is a scripted pipeline.
+"""
 from typing import Optional, List
 from xml.dom.minidom import Document, parseString, Element
 

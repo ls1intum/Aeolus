@@ -1,3 +1,6 @@
+"""
+Settings for the input.
+"""
 from io import TextIOWrapper
 from typing import Optional
 

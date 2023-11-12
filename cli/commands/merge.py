@@ -1,3 +1,8 @@
+"""
+Merge subcommand.
+Merges the given windfile by inlining the external actions.
+So that the windfile can be used without dependencies and all files are in the same format and file.
+"""
 import typing
 from typing import Optional
 

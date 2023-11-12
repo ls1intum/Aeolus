@@ -1,3 +1,8 @@
+"""
+Client for the Bamboo REST API. As bamboo does not provide a complete CRUD API, we create this workaround
+of using the specs API to get the YAML representation of a plan. We take the YAML representation and convert
+it into a defined structure that we can work with to translate it into Aeolus.
+"""
 from typing import Optional, Tuple, Any, List
 from xml.dom.minidom import parseString, Document, Text, Node
 

@@ -1,3 +1,6 @@
+"""
+This file contains a simplified view of the Bamboo Specs, as returned by the Bamboo REST API.
+"""
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-instance-attributes
 from typing import Optional, Any, List

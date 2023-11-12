@@ -1,3 +1,6 @@
+"""
+Generator class. This class is responsible for generating the CI file from the given windfile.
+"""
 from typing import Optional
 
 from classes.generated.definitions import (

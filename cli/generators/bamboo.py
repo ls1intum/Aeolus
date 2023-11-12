@@ -1,4 +1,13 @@
 # pylint: disable=duplicate-code
+"""
+Bamboo generator. Because bamboo works differently to other CI systems, we can not directly generate the YAML Spec
+file. Instead, support multiple ways of generating the YAML Spec file:
+- we are in a docker container and can not use the provided bamboo-generator container, so we need to call the java jar
+directly (most convenient)
+- we are not in a docker container and can use the provided bamboo-generator container, so we call docker (fastest)
+- we are not in a docker container and can not use the provided bamboo-generator container, so we call the java
+jar directly (slowest)
+"""
 import base64
 import json
 import os
@@ -87,7 +96,7 @@ class BambooGenerator(BaseGenerator):
         :return key of the generated bamboo plan
         """
         try:
-            host: str = os.getenv("BAMBOO_GENERATOR_API_HOST", "http://localhost:8122")
+            host: str = os.getenv("BAMBOO_GENERATOR_API_HOST", "http://localhost:8080")
             endpoint: str = f"{host}/generate"
             data: dict[str, Optional[str]] = {"windfile": payload}
 
