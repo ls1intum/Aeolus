@@ -1,3 +1,6 @@
+"""
+Run settings for the CI job.
+"""
 from classes.generated.definitions import Lifecycle
 
 

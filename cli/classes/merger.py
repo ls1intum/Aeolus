@@ -1,3 +1,6 @@
+"""
+Merger class. Merges external actions into the windfile to simplify the generation process.
+"""
 import os
 import tempfile
 import traceback

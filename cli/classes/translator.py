@@ -1,3 +1,6 @@
+"""
+This file contains the translator for Bamboo. It converts the reponse of the Bamboo REST API into a Windfile.
+"""
 import re
 import typing
 from typing import Optional, Tuple, Any

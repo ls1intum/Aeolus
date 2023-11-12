@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+"""
+Main file of the tool. This file contains the main function and the argparser.
+"""
 import logging
 import sys
 import typing

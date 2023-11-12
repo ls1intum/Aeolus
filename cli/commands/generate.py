@@ -1,3 +1,6 @@
+"""
+Generate subcommand. Generates a platform specific CI
+"""
 import typing
 
 import argparse

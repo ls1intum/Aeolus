@@ -1,3 +1,7 @@
+"""
+Translate subcommand. Retrieves the CI job from the CI system and translates it into a windfile.
+Currently only Bamboo is supported.
+"""
 import typing
 
 import argparse

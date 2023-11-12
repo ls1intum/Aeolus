@@ -1,3 +1,6 @@
+"""
+Settings for a pass, like input and output settings and the windfile.
+"""
 from typing import Optional
 
 from classes.generated.actionfile import ActionFile
