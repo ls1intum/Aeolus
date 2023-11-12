@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+
+# Adapted from https://github.com/ls1intum/Pyris
+# this script is used to start the Aeolus docker containers, and must be available on the deployment server
+
+PROJECT_DIR="/opt/aeolus/deployment"
+COMPOSE_FILE="traefik/docker-compose.yml"
+ENV_FILE="/opt/aeolus/docker.env"
+
+# Function: Print general usage information
+function general_help {
+    cat << HELP
+Usage:
+  ./$(basename "$0") <command> [options]
+
+Commands:
+  start <pr_tag> <pr_branch>      Start Aeolus
+  stop                            Stop the Aeolus api.
+  restart <pr_tag> <pr_branch>    Restart Aeolus.
+  run <docker compose cmd>        Run any docker compose subcommand of your choice
+HELP
+}
+
+function start {
+  local pr_tag=$1
+  local pr_branch=$2
+
+  echo "Starting aeolus with PR tag: $pr_tag and branch: $pr_branch"
+  rm -rf Pyris
+  git clone https://github.com/ls1intum/Aeolus.git -b "$pr_branch" Aeolus
+  sed -i "s/AEOLUS_DOCKER_TAG=.*/AEOLUS_DOCKER_TAG='$pr_tag'/g" $ENV_FILE
+  docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --pull always --no-build
+}
+
+function stop {
+  # TODO: In the future extract pr_tag and pr_branch from env
+
+  echo "Stopping aeolus"
+  docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" stop pyris-app
+}
+
+function restart {
+    stop "$@"
+    start "$@"
+}
+
+function aeolus_logs {
+   docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" logs -f aeolus-api
+}
+
+function all_logs {
+   docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" logs -f
+}
+
+function run_docker_compose_cmd {
+   docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
+}
+
+# read subcommand `aeolus-docker subcommand server` in variable and remove base command from argument list
+subcommand=$1; shift
+
+# Handle empty subcommand
+if [ -z "$subcommand" ]; then
+    general_help
+    exit 1
+fi
+
+case "$subcommand" in
+    start)
+        start "$@"
+        ;;
+    stop)
+        stop "$@"
+        ;;
+    restart)
+        restart "$@"
+        ;;
+    logs-aeolus)
+        aeolus_logs "$@"
+        ;;
+    logs)
+        all_logs "$@"
+        ;;
+    run)
+        run_docker_compose_cmd "$@"
+        ;;
+    *)
+        printf 'Invalid Command: %s\n\n' "$subcommand" 1>&2
+        general_help
+        exit 1
+        ;;
+esac
