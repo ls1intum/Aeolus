@@ -172,6 +172,20 @@ def replace_environment_variables(
     return result
 
 
+def get_target_environment_variable(target: Target, target_independent_name: str, environment: Optional[EnvironmentSchema]) -> str:
+    """
+    Returns the environment variable name for the given target.
+    :param target:
+    :param target_independent_name:
+    :param environment:
+    :return:
+    """
+    if environment is None:
+        environment = get_ci_environment(target=target, output_settings=OutputSettings())
+    if environment is None:
+        raise ValueError(f"No environment found for target {target.value}")
+    return environment.__dict__[target_independent_name]
+
 def replace_environment_variable(environment: EnvironmentSchema, haystack: str, reverse: bool = False) -> str:
     """
     Replaces the environment variables in the given list.
@@ -229,7 +243,7 @@ def replace_environment_dictionary(environment: EnvironmentSchema, env: Optional
     """
     Replaces the environment variables in the given environment dictionary.
     :param environment: Environment variables to replace
-    :param env: Environment dictionary
+    :param env: Environment dictionary, containing the variables to replace
     :return: Environment dictionary with replaced variables
     """
     if env is None:

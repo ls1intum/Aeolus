@@ -72,7 +72,7 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
 
 
 def parse_env_variables(
-    environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+        environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
 ) -> Environment:
     """
     Converts the given environment variables into a Environment object.
@@ -88,6 +88,18 @@ def parse_env_variables(
             else value
         )
     return Environment(root=dictionary)
+
+
+# Using custom dumper for more control
+class CustomDumper(yaml.Dumper):
+    def represent_scalar(self, tag, value, style=None):
+        if '\n' in value:
+            if type(value) == str:
+                if value.startswith('"') and value.endswith('"'):
+                    value = value[1:-1]
+                    value = value.replace('\"', '"')
+            return super().represent_scalar(tag, value, style='|')
+        return super().represent_scalar(tag, value, style)
 
 
 def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Parameters:
@@ -187,12 +199,12 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                 )
     else:
         script: str = "".join(task.scripts)
+        code: str = utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=script)
+        code = code.lstrip('"').rstrip('"')
         action = Action(
             root=ScriptAction(
                 name=task.description.replace(" ", "_").lower(),
-                script="".join(
-                    utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=script)
-                ),
+                script=code,
                 excludeDuring=exclude,
                 workdir=task.workdir if task.workdir else None,
                 docker=docker,
@@ -226,7 +238,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
 
 
 def extract_repositories(
-    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.
@@ -314,5 +326,5 @@ class BambooTranslator(PassSettings):
         # work-around as enums do not get cleanly printed with model_dump
         json: str = windfile.model_dump_json(exclude_none=True)
         logger.info("🪄", "Translated windfile", self.output_settings.emoji)
-        print(yaml.dump(yaml.safe_load(json), sort_keys=False))
+        print(yaml.dump(yaml.safe_load(json), sort_keys=False, Dumper=CustomDumper, default_flow_style=False))
         return None

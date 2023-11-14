@@ -3,17 +3,18 @@
 Jenkins generator. Generates a jenkins pipeline to be used in the Jenkins CI system.
 The generated pipeline is a scripted pipeline.
 """
-from typing import Optional, List
+from typing import Optional, List, Any
 from xml.dom.minidom import Document, parseString, Element
 
 import jenkins  # type: ignore
-from classes.generated.definitions import ScriptAction, Target, Repository, Docker
+
+from classes.generated.definitions import ScriptAction, Target, Repository, Docker, Environment
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
-from generators.base import BaseGenerator
 from cli_utils import logger, utils
+from generators.base import BaseGenerator
 
 
 class JenkinsGenerator(BaseGenerator):
@@ -23,7 +24,8 @@ class JenkinsGenerator(BaseGenerator):
     """
 
     def __init__(
-        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
+            self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings,
+            metadata: PassMetadata
     ):
         input_settings.target = Target.jenkins
         super().__init__(windfile, input_settings, output_settings, metadata)
@@ -76,6 +78,9 @@ class JenkinsGenerator(BaseGenerator):
         )
         indentation -= 2
         self.add_line(indentation=indentation, line="}")
+        # to work with jenkins and bamboo, we need a way to access the repository url, as this is not possible
+        # in a scripted jenkins pipeline, we set it as an environment variable
+        self.add_repository_urls_to_environment()
         if self.windfile.environment:
             self.add_line(indentation=indentation, line="environment {")
             indentation += 2
@@ -224,7 +229,13 @@ class JenkinsGenerator(BaseGenerator):
                 indentation=indentation, line="credentialsId: '" + self.windfile.metadata.gitCredentials + "',"
             )
         self.add_line(indentation=indentation, line=f"name: '{name}',")
-        self.add_line(indentation=indentation, line=f"url: '{repository.url}'")
+        url: str = repository.url
+        if self.metadata.get(scope="repositories", key=name, subkey="url") is not None:
+            repository_metadata: dict[str, Any] = self.metadata.get(scope="repositories")
+            if repository_metadata is not None and name in repository_metadata and "url" in repository_metadata[name]:
+                cached_value: str = repository_metadata[name]["url"]
+                url = "${" + cached_value + "}"
+        self.add_line(indentation=indentation, line=f"url: '{url}'")
         indentation -= 2
         self.add_line(indentation=indentation, line="]]")
         indentation -= 2

@@ -7,3 +7,4 @@ RUNNER_NAME: bamboo.agentId
 BRANCH_NAME: bamboo.planRepository.branchName
 WORKDIR: bamboo.working.directory
 TMPDIR: bamboo.tmp.directory
+REPOSITORY_URL: bamboo.planRepository.repositoryUrl

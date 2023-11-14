@@ -38,15 +38,23 @@ class PassMetadata:
         """
         return self.metadata.get("actions", {}).get(action, {})
 
-    def get(self, key: str) -> dict[str, typing.Any]:
+    def get(self, scope: str, key: typing.Optional[str] = None, subkey: typing.Optional[str] = None) -> dict[str, typing.Any]:
         """
-        Get the metadata for a key.
-        :param key:
-        :return:
+        Get the metadata for a scope with a key and subkey.
+        :param scope: metadata scope
+        :param key: optional metadata key
+        :param subkey: optional metadata subkey
+        :return: metadata value
         """
-        if key not in self.metadata:
-            self.metadata[key] = {}
-        return self.metadata.get(key, None)
+        if scope not in self.metadata:
+            self.metadata[scope] = {}
+        scope_value: typing.Any = self.metadata.get(scope, None)
+        if scope_value and type(scope_value) is dict:
+            if subkey:
+                return scope_value.get(key, {}).get(subkey, None)
+            if key:
+                return scope_value.get(key, None)
+        return scope_value
 
     def set(self, scope: str, value: typing.Any) -> None:
         """
