@@ -93,7 +93,7 @@ def parse_env_variables(
 # Using custom dumper for more control
 # pylint: disable=too-many-ancestors
 class CustomDumper(yaml.Dumper):
-    def represent_scalar(self, tag: typing.Any, value: typing.Any, style: typing.Any=None) -> typing.Any:
+    def represent_scalar(self, tag: typing.Any, value: typing.Any, style: typing.Any = None) -> typing.Any:
         """
         Represents a scalar.
         :param tag:
