@@ -51,7 +51,7 @@ class PassMetadata:
         if scope not in self.metadata:
             self.metadata[scope] = {}
         scope_value: typing.Any = self.metadata.get(scope, None)
-        if scope_value and type(scope_value) is dict:
+        if scope_value and isinstance(scope_value, dict):
             if subkey:
                 return scope_value.get(key, {}).get(subkey, None)
             if key:
