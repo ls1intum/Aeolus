@@ -24,8 +24,7 @@ class JenkinsGenerator(BaseGenerator):
     """
 
     def __init__(
-            self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings,
-            metadata: PassMetadata
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
         input_settings.target = Target.jenkins
         super().__init__(windfile, input_settings, output_settings, metadata)

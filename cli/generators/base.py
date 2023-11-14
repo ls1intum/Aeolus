@@ -9,8 +9,8 @@ from classes.generated.definitions import ScriptAction, Repository, Environment
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
-from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
+from classes.pass_metadata import PassMetadata
 from cli_utils import utils
 
 
@@ -29,8 +29,7 @@ class BaseGenerator:
     key: typing.Optional[str]
 
     def __init__(
-            self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings,
-            metadata: PassMetadata
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
         self.windfile = windfile
         self.input_settings = input_settings
@@ -65,9 +64,11 @@ class BaseGenerator:
             for name in self.windfile.repositories:
                 self.metadata.set(scope="repositories", value={})
                 repository: Repository = self.windfile.repositories[name]
-                variable_name: str = utils.get_target_environment_variable(target=self.input_settings.target,
-                                                                           target_independent_name="REPOSITORY_URL",
-                                                                           environment=self.environment)
+                variable_name: str = utils.get_target_environment_variable(
+                    target=self.input_settings.target,
+                    target_independent_name="REPOSITORY_URL",
+                    environment=self.environment
+                )
                 if self.windfile.environment is None:
                     self.windfile.environment = Environment(root={})
                 repository_size: int = len(self.metadata.get(scope="repositories", key=None, subkey=None))

@@ -172,7 +172,9 @@ def replace_environment_variables(
     return result
 
 
-def get_target_environment_variable(target: Target, target_independent_name: str, environment: Optional[EnvironmentSchema]) -> str:
+def get_target_environment_variable(
+    target: Target, target_independent_name: str, environment: Optional[EnvironmentSchema]
+) -> str:
     """
     Returns the environment variable name for the given target.
     :param target:
@@ -185,6 +187,7 @@ def get_target_environment_variable(target: Target, target_independent_name: str
     if environment is None:
         raise ValueError(f"No environment found for target {target.value}")
     return environment.__dict__[target_independent_name]
+
 
 def replace_environment_variable(environment: EnvironmentSchema, haystack: str, reverse: bool = False) -> str:
     """

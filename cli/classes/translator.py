@@ -93,12 +93,18 @@ def parse_env_variables(
 # Using custom dumper for more control
 class CustomDumper(yaml.Dumper):
     def represent_scalar(self, tag, value, style=None):
-        if '\n' in value:
+        """
+        Represents a scalar.
+        :param tag:
+        :param value:
+        :param style:
+        :return:
+        """
+        if "\n" in value:
             if type(value) == str:
                 if value.startswith('"') and value.endswith('"'):
                     value = value[1:-1]
-                    value = value.replace('\"', '"')
-            return super().represent_scalar(tag, value, style='|')
+            return super().represent_scalar(tag, value, style="|")
         return super().represent_scalar(tag, value, style)
 
 
@@ -238,7 +244,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
 
 
 def extract_repositories(
-        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.
