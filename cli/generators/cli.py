@@ -39,6 +39,10 @@ class CliGenerator(BaseGenerator):
         self.result.append("#!/usr/bin/env bash")
         self.result.append("set -e")
 
+        # to work with jenkins and bamboo, we need a way to access the repository url, as this is not possible
+        # in a scripted jenkins pipeline, we set it as an environment variable
+        self.add_repository_urls_to_environment()
+
         if self.windfile.environment:
             for env_var in self.windfile.environment.root.root:
                 self.result.append(f'export {env_var}="' f'{self.windfile.environment.root.root[env_var]}"')
@@ -67,6 +71,7 @@ class CliGenerator(BaseGenerator):
         """
         self.result.append("\n# always steps")
         self.result.append("final_aeolus_post_action () " + "{")
+        self.add_line(indentation=2, line="set +e # from now on, we don't exit on errors")
         self.add_line(indentation=2, line="echo '⚙️ executing final_aeolus_post_action'")
         for step in steps:
             self.add_line(indentation=2, line=f"{step} $_current_lifecycle")

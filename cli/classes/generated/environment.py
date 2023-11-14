@@ -47,3 +47,8 @@ class EnvironmentSchema(BaseModel):
         description='The directory where temporary files are stored.',
         examples=['TMPDIR', 'bamboo.build.working.directory'],
     )
+    REPOSITORY_URL: str = Field(
+        ...,
+        description='The url of the first repository that is used, if multiple repositories are needed, the second one will be referenced under REPOSITORY_URL_1 and so on.',
+        examples=['REPOSITORY_URL', 'bamboo.planRepository.repositoryUrl'],
+    )

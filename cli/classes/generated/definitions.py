@@ -235,7 +235,7 @@ class WindfileMetadata(BaseModel):
         description='Description of what this list of actions is supposed to achieve',
         examples=['This windfile contains the jobs that are executed during the CI of the rust-exercise.'],
     )
-    author: Author = Field(..., description='The author of the windfile.')
+    author: Optional[Author] = Field(None, description='The author of the windfile.')
     targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')
     gitCredentials: Optional[Union[str, GitCredentials]] = Field(
         None, description='The git credentials that are used to clone the repositories'
@@ -265,5 +265,5 @@ class ActionMetadata(BaseModel):
         description='Description of what this list of actions is supposed to achieve',
         examples=['This windfile contains the jobs that are executed during the CI of the rust-exercise.'],
     )
-    author: Author = Field(..., description='The author of the actionfile.')
+    author: Optional[Author] = Field(None, description='The author of the actionfile.')
     targets: Optional[List[Target]] = Field(None, description='The targets of the windfile.')

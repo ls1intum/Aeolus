@@ -90,6 +90,24 @@ def parse_env_variables(
     return Environment(root=dictionary)
 
 
+# Using custom dumper for more control
+# pylint: disable=too-many-ancestors
+class CustomDumper(yaml.Dumper):
+    def represent_scalar(self, tag: typing.Any, value: typing.Any, style: typing.Any = None) -> typing.Any:
+        """
+        Represents a scalar.
+        :param tag:
+        :param value:
+        :param style:
+        :return:
+        """
+        if isinstance(value, str) and "\n" in value:
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1]
+            return super().represent_scalar(tag, value, style="|")
+        return super().represent_scalar(tag, value, style)
+
+
 def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Parameters:
     """
     Converts the given arguments into a Parameters object.
@@ -187,12 +205,12 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                 )
     else:
         script: str = "".join(task.scripts)
+        code: str = utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=script)
+        code = code.lstrip('"').rstrip('"')
         action = Action(
             root=ScriptAction(
                 name=task.description.replace(" ", "_").lower(),
-                script="".join(
-                    utils.replace_bamboo_environment_variable_with_aeolus(environment=environment, haystack=script)
-                ),
+                script=code,
                 excludeDuring=exclude,
                 workdir=task.workdir if task.workdir else None,
                 docker=docker,
@@ -314,5 +332,5 @@ class BambooTranslator(PassSettings):
         # work-around as enums do not get cleanly printed with model_dump
         json: str = windfile.model_dump_json(exclude_none=True)
         logger.info("🪄", "Translated windfile", self.output_settings.emoji)
-        print(yaml.dump(yaml.safe_load(json), sort_keys=False))
+        print(yaml.dump(yaml.safe_load(json), sort_keys=False, Dumper=CustomDumper, default_flow_style=False))
         return None

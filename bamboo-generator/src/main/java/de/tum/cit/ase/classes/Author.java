@@ -12,7 +12,9 @@ public abstract class Author {
     }
 
     public static Author fromObject(Object object) {
-        if (object instanceof String) {
+        if (object == null) {
+            return null;
+        } else if (object instanceof String) {
             return new AuthorName((String) object);
         } else if (object instanceof Map) {
             Map<String, String> map = (Map<String, String>) object;

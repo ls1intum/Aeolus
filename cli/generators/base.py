@@ -5,12 +5,12 @@ Base class for generators. Specifies the interface for generators.
 """
 import typing
 
-from classes.generated.definitions import ScriptAction
+from classes.generated.definitions import ScriptAction, Repository, Environment, Dictionary
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
-from classes.pass_metadata import PassMetadata
 from classes.output_settings import OutputSettings
+from classes.pass_metadata import PassMetadata
 from cli_utils import utils
 
 
@@ -53,6 +53,30 @@ class BaseGenerator:
         :param line: line to add
         """
         self.result.append(" " * indentation + line)
+
+    def add_repository_urls_to_environment(self) -> None:
+        """
+        Some systems don't offer a way to access repository urls in the CI file.
+        This is a workaround to make them available.
+        :return: None
+        """
+        if self.windfile.repositories and self.input_settings.target:
+            for name in self.windfile.repositories:
+                self.metadata.set(scope="repositories", value={})
+                repository: Repository = self.windfile.repositories[name]
+                variable_name: str = utils.get_target_environment_variable(
+                    target=self.input_settings.target,
+                    target_independent_name="REPOSITORY_URL",
+                    environment=self.environment,
+                )
+                if self.windfile.environment is None:
+                    self.windfile.environment = Environment(root=Dictionary(root={}))
+                repository_size: int = len(self.metadata.get(scope="repositories", key=None, subkey=None))
+                if repository_size > 0:
+                    variable_name += f"_{repository_size}"
+
+                self.metadata.append(scope="repositories", key=name, subkey="url", value=variable_name)
+                self.windfile.environment.root.root[variable_name] = repository.url
 
     def has_always_actions(self) -> bool:
         """

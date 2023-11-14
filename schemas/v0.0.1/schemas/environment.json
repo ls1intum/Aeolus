@@ -12,7 +12,8 @@
     "RUNNER_NAME",
     "BRANCH_NAME",
     "WORKDIR",
-    "TMPDIR"
+    "TMPDIR",
+    "REPOSITORY_URL"
   ],
   "properties": {
     "JOB_NAME": {
@@ -78,6 +79,14 @@
         "TMPDIR",
         "bamboo.build.working.directory"
       ]
+    },
+    "REPOSITORY_URL": {
+        "description": "The url of the first repository that is used, if multiple repositories are needed, the second one will be referenced under REPOSITORY_URL_1 and so on.",
+        "type": "string",
+        "examples": [
+            "REPOSITORY_URL",
+            "bamboo.planRepository.repositoryUrl"
+        ]
     }
   }
 }

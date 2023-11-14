@@ -11,11 +11,3 @@ cd ${_pwd}/${directory} || exit
 echo "Generating datamodels for schema version ${latest_schema_version}"
 
 datamodel-codegen ${codegen_params} --input "${_pwd}/${directory}/${latest_schema_version}/schemas" --output "${_pwd}/cli/classes/generated/"
-if ! command -v json2ts &> /dev/null
-then
-    echo "We need to install json2ts, if you don't want that, abort now. Otherwise, we'll wait 10 seconds..."
-    sleep 10
-    npm install -g json-schema-to-typescript
-fi
-cd "${_pwd}/${directory}/${latest_schema_version}/schemas" || exit
-json2ts -i "${_pwd}/${directory}/${latest_schema_version}/schemas" -o "${_pwd}/playground/src/routes/classes/generated"
