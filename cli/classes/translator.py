@@ -72,7 +72,7 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
 
 
 def parse_env_variables(
-        environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+    environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
 ) -> Environment:
     """
     Converts the given environment variables into a Environment object.
@@ -101,7 +101,7 @@ class CustomDumper(yaml.Dumper):
         :return:
         """
         if "\n" in value:
-            if type(value) == str:
+            if type(value) is str:
                 if value.startswith('"') and value.endswith('"'):
                     value = value[1:-1]
             return super().represent_scalar(tag, value, style="|")

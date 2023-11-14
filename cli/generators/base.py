@@ -5,7 +5,7 @@ Base class for generators. Specifies the interface for generators.
 """
 import typing
 
-from classes.generated.definitions import ScriptAction, Repository, Environment
+from classes.generated.definitions import ScriptAction, Repository, Environment, Dictionary
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
@@ -60,17 +60,17 @@ class BaseGenerator:
         This is a workaround to make them available.
         :return: None
         """
-        if self.windfile.repositories:
+        if self.windfile.repositories and self.input_settings.target:
             for name in self.windfile.repositories:
                 self.metadata.set(scope="repositories", value={})
                 repository: Repository = self.windfile.repositories[name]
                 variable_name: str = utils.get_target_environment_variable(
                     target=self.input_settings.target,
                     target_independent_name="REPOSITORY_URL",
-                    environment=self.environment
+                    environment=self.environment,
                 )
                 if self.windfile.environment is None:
-                    self.windfile.environment = Environment(root={})
+                    self.windfile.environment = Environment(root=Dictionary(root={}))
                 repository_size: int = len(self.metadata.get(scope="repositories", key=None, subkey=None))
                 if repository_size > 0:
                     variable_name += f"_{repository_size}"

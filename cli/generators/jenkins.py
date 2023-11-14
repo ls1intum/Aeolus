@@ -8,7 +8,7 @@ from xml.dom.minidom import Document, parseString, Element
 
 import jenkins  # type: ignore
 
-from classes.generated.definitions import ScriptAction, Target, Repository, Docker, Environment
+from classes.generated.definitions import ScriptAction, Target, Repository, Docker
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings

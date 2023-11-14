@@ -39,7 +39,7 @@ class PassMetadata:
         return self.metadata.get("actions", {}).get(action, {})
 
     def get(
-            self, scope: str, key: typing.Optional[str] = None, subkey: typing.Optional[str] = None
+        self, scope: str, key: typing.Optional[str] = None, subkey: typing.Optional[str] = None
     ) -> dict[str, typing.Any]:
         """
         Get the metadata for a scope with a key and subkey.
