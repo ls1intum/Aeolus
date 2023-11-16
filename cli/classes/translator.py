@@ -40,6 +40,7 @@ from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
 from classes.pass_settings import PassSettings
+from classes.yaml_dumper import YamlDumper
 from cli_utils import logger, utils
 
 
@@ -88,24 +89,6 @@ def parse_env_variables(
             else value
         )
     return Environment(root=dictionary)
-
-
-# Using custom dumper for more control
-# pylint: disable=too-many-ancestors
-class CustomDumper(yaml.Dumper):
-    def represent_scalar(self, tag: typing.Any, value: typing.Any, style: typing.Any = None) -> typing.Any:
-        """
-        Represents a scalar.
-        :param tag:
-        :param value:
-        :param style:
-        :return:
-        """
-        if isinstance(value, str) and "\n" in value:
-            if value.startswith('"') and value.endswith('"'):
-                value = value[1:-1]
-            return super().represent_scalar(tag, value, style="|")
-        return super().represent_scalar(tag, value, style)
 
 
 def parse_arguments(environment: EnvironmentSchema, task: BambooTask) -> Parameters:
@@ -332,5 +315,5 @@ class BambooTranslator(PassSettings):
         # work-around as enums do not get cleanly printed with model_dump
         json: str = windfile.model_dump_json(exclude_none=True)
         logger.info("🪄", "Translated windfile", self.output_settings.emoji)
-        print(yaml.dump(yaml.safe_load(json), sort_keys=False, Dumper=CustomDumper, default_flow_style=False))
-        return None
+        print(yaml.dump(yaml.safe_load(json), sort_keys=False, Dumper=YamlDumper, default_flow_style=False))
+        return windfile

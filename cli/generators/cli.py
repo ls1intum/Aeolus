@@ -24,6 +24,8 @@ class CliGenerator(BaseGenerator):
 
     functions: List[str] = []
 
+    inital_directory_variable: str = "AEOLUS_INITIAL_DIRECTORY"
+
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
@@ -38,6 +40,9 @@ class CliGenerator(BaseGenerator):
         """
         self.result.append("#!/usr/bin/env bash")
         self.result.append("set -e")
+
+        # actions could run in a different directory, so we need to store to the initial directory
+        self.result.append(f"export {self.inital_directory_variable}=$(pwd)")
 
         # to work with jenkins and bamboo, we need a way to access the repository url, as this is not possible
         # in a scripted jenkins pipeline, we set it as an environment variable
@@ -60,6 +65,7 @@ class CliGenerator(BaseGenerator):
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
             self.add_line(indentation=2, line=f"{function} $_current_lifecycle")
+            self.add_line(indentation=2, line=f"cd ${self.inital_directory_variable}")
         self.result.append("}\n")
         self.result.append("main $@")
 
@@ -73,8 +79,10 @@ class CliGenerator(BaseGenerator):
         self.result.append("final_aeolus_post_action () " + "{")
         self.add_line(indentation=2, line="set +e # from now on, we don't exit on errors")
         self.add_line(indentation=2, line="echo '⚙️ executing final_aeolus_post_action'")
+        self.add_line(indentation=2, line=f"cd ${self.inital_directory_variable}")
         for step in steps:
             self.add_line(indentation=2, line=f"{step} $_current_lifecycle")
+            self.add_line(indentation=2, line=f"cd ${self.inital_directory_variable}")
         self.result.append("}")
 
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
@@ -111,6 +119,8 @@ class CliGenerator(BaseGenerator):
                 self.add_line(indentation=2, line="fi")
 
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
+        if step.workdir:
+            self.add_line(indentation=2, line=f"cd {step.workdir}")
         if step.environment:
             for env_var in step.environment.root.root:
                 self.result.append(f'export {env_var}="' f'{step.environment.root.root[env_var]}"')

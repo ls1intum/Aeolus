@@ -61,8 +61,8 @@ class BaseGenerator:
         :return: None
         """
         if self.windfile.repositories and self.input_settings.target:
+            self.metadata.set(scope="repositories", value={})
             for name in self.windfile.repositories:
-                self.metadata.set(scope="repositories", value={})
                 repository: Repository = self.windfile.repositories[name]
                 variable_name: str = utils.get_target_environment_variable(
                     target=self.input_settings.target,

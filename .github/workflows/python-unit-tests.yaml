@@ -3,7 +3,7 @@ name: CLI Unit tests
 on:
   push:
     paths:
-      - '*.py'
+      - '**.py'
       - '.github/workflows/python-unit-tests.yaml'
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: 3.11
       - name: Install Python dependencies
-        run: pip install -r cli/requirements.txt
+        run: pip install -qr cli/requirements.txt
       - name: Run tests
         run: |
           cd cli

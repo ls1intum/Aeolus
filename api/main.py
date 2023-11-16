@@ -1,5 +1,6 @@
 import json
 import time
+import warnings
 from typing import Optional, Dict, Any
 
 import yaml
@@ -8,7 +9,10 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
+from api_classes.result_format import ResultFormat
 from api_classes.publish_payload import PublishPayload
+from api_classes.translate_payload import TranslatePayload
+from api_utils import utils
 
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
@@ -19,7 +23,9 @@ from classes.input_settings import InputSettings
 from classes.merger import Merger
 from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
+from classes.translator import BambooTranslator
 from classes.validator import Validator
+from classes.yaml_dumper import YamlDumper
 from cli_utils import logger
 from cli_utils.utils import TemporaryFileWithContent
 from generators.bamboo import BambooGenerator
@@ -212,3 +218,38 @@ def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]
     if not generated:
         return {"detail": "generation failed, check api logs"}
     return generated
+
+
+@app.put("/translate/{source}/{build_plan_id}?format={resulting_format}")
+def translate(
+    payload: TranslatePayload, source: Target, build_plan_id: str, resulting_format: ResultFormat
+) -> Optional[WindFile | str]:
+    """
+    Translates the build plan id to a target.
+    :param payload: Payload with credentials
+    :param source: Source target, currently only bamboo is supported
+    :param build_plan_id: Build plan id to translate
+    :param resulting_format: Format to return the windfile in
+    :return: Windfile with the translated target
+    """
+    if source != Target.bamboo:
+        raise HTTPException(status_code=422, detail="Invalid source target")
+    output_settings: OutputSettings = OutputSettings(verbose=True, debug=True, emoji=True)
+    ci_credentials: CICredentials = CICredentials(url=payload.url, username=payload.username, token=payload.token)
+    input_settings: InputSettings = InputSettings(file_path="none", target=Target.bamboo, file=None)
+    translator: BambooTranslator = BambooTranslator(
+        input_settings=input_settings, output_settings=output_settings, credentials=ci_credentials
+    )
+    windfile: Optional[WindFile] = translator.translate(plan_key=build_plan_id)
+    if resulting_format == ResultFormat.JSON:
+        if windfile:
+            warnings.filterwarnings("ignore", category=UserWarning)
+            utils.remove_none_values(windfile)
+            utils.remove_none_values(windfile.metadata)
+            for action in windfile.actions:  # pylint: disable=not-an-iterable
+                utils.remove_none_values(action.root)
+            return windfile
+    elif windfile:
+        json_repr: str = windfile.model_dump_json(exclude_none=True)
+        return yaml.dump(yaml.safe_load(json_repr), sort_keys=False, Dumper=YamlDumper, default_flow_style=False)
+    return None
