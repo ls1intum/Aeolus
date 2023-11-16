@@ -124,7 +124,7 @@ class JenkinsGenerator(BaseGenerator):
 
     # pylint: disable=too-many-arguments
     def add_script(
-        self, wrapper: str, name: str, original_type: Optional[str], script: str, indentation: int, workdir: str
+        self, wrapper: str, name: str, original_type: Optional[str], script: str, indentation: int, workdir: Optional[str]
     ) -> None:
         """
         Add a script to the pipeline.

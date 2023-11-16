@@ -5,7 +5,7 @@ from typing import Optional
 from test.windfile_definitions import (
     VALID_WINDFILE_INTERNAL_ACTION,
     WINDFILE_WITH_ALWAYS_ACTION,
-    WINDFILE_WITH_WORKDIR_ACTION
+    WINDFILE_WITH_WORKDIR_ACTION,
 )
 from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile
@@ -104,7 +104,6 @@ class GenerateTests(unittest.TestCase):
             self.assertIn("set +e", result)  # allow failures in always actions
             self.assertIn("trap final_aeolus_post_action EXIT", result)
             self.assertTrue(cli.check(content=result))
-
 
     def test_generate_cli_script_with_workdir(self) -> None:
         with TemporaryFileWithContent(WINDFILE_WITH_WORKDIR_ACTION) as file:

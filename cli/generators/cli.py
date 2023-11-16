@@ -44,7 +44,6 @@ class CliGenerator(BaseGenerator):
         # actions could run in a different directory, so we need to store to the initial directory
         self.result.append(f"export {self.inital_directory_variable}=$(pwd)")
 
-
         # to work with jenkins and bamboo, we need a way to access the repository url, as this is not possible
         # in a scripted jenkins pipeline, we set it as an environment variable
         self.add_repository_urls_to_environment()
