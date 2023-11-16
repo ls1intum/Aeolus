@@ -106,3 +106,44 @@ VALID_WINDFILE_WITH_MULTIPLE_DOCKER: str = """
               image: ls1tum/artemis-c-template:nightly
             script: echo "This is the second action and in another docker"
         """
+
+VALID_WINDFILE_WITH_MULTIPLE_REPOSITORIES: str = """
+        api: v0.0.1
+        metadata:
+          name: test windfile
+          description: This is a windfile with no external actions
+          author: Test Author
+          docker:
+            image: ls1tum/artemis-maven-template
+            tag: java17-20
+            volumes:
+              - ${WORKDIR}:/aeolus
+            parameters:
+              - --cpus
+              - '"2"'
+              - --memory
+              - '"2g"'
+              - --memory-swap
+              - '"2g"'
+              - --pids-limit
+              - '"1000"'
+        repositories:
+          aeolus:
+            url: https://github.com/ls1intum/Aeolus.git
+            branch: develop
+            path: aeolus
+          aeolus1:
+            url: https://github.com/ls1intum/Aeolus1.git
+            branch: develop
+            path: aeolus1
+        actions:
+          - name: internal-action
+            docker:
+              image: ls1tum/artemis-maven-template
+              tag: java19-20
+            script: echo "This is an internal action and in docker"
+          - name: second-action
+            docker:
+              image: ls1tum/artemis-c-template:nightly
+            script: echo "This is the second action and in another docker"
+        """
