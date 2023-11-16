@@ -1,0 +1,15 @@
+api: v0.0.1
+metadata:
+  name: windfile-with-internal-action
+  description: This is a windfile with an internal action
+  author: Andreas Resch
+actions:
+  - name: internal-action
+    workdir: /tmp
+    script: |
+      echo "Hello from an $(pwd)"
+    parameters:
+      WHO: "me"
+  - name: maven
+    script: |
+      echo "Hello from an $(pwd)"

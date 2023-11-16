@@ -161,3 +161,18 @@ WINDFILE_WITH_ALWAYS_ACTION: str = """
             script: echo "This is an internal action"
             runAlways: true
         """
+
+WINDFILE_WITH_WORKDIR_ACTION: str = """
+        api: v0.0.1
+        metadata:
+          name: test windfile
+          description: This is a windfile with no external actions
+          author: Test Author
+        actions:
+          - name: internal-action
+            workdir: /aeolus
+            script: echo "This is an internal action in a special directory"
+          - name: always-action
+            script: echo "This is an internal action"
+            runAlways: true
+        """

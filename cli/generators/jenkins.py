@@ -113,12 +113,19 @@ class JenkinsGenerator(BaseGenerator):
         self.add_line(indentation=indentation, line=f"// generated from step {original_name}")
         self.add_line(indentation=indentation, line=f"// original type was {original_type}")
         self.add_script(
-            wrapper="always", name=name, original_type=original_type, script=step.script, indentation=indentation
+            wrapper="always",
+            name=name,
+            original_type=original_type,
+            script=step.script,
+            indentation=indentation,
+            workdir=step.workdir,
         )
         self.add_line(indentation=indentation - 2, line="}")
 
     # pylint: disable=too-many-arguments
-    def add_script(self, wrapper: str, name: str, original_type: Optional[str], script: str, indentation: int) -> None:
+    def add_script(
+        self, wrapper: str, name: str, original_type: Optional[str], script: str, indentation: int, workdir: str
+    ) -> None:
         """
         Add a script to the pipeline.
         :param wrapper: wrapper to use, e.g. steps, post, always etc.
@@ -126,18 +133,25 @@ class JenkinsGenerator(BaseGenerator):
         :param original_type: original type of the action
         :param script: Script to add
         :param indentation: indentation level
+        :param workdir: workdir to use
         """
         self.result.append(" " * indentation + f"{wrapper} " + "{")
         indentation += 2
         self.result.append(" " * indentation + f"echo '⚙️ executing {name}'")
-        was_internal_or_file: bool = original_type in ("file", "script")
-        if was_internal_or_file:
+        if workdir:
+            self.result.append(" " * indentation + f"dir('{workdir}') " + "{")
+            indentation += 2
+        was_script_or_file: bool = original_type in ("file", "script")
+        if was_script_or_file:
             self.result.append(" " * indentation + "sh '''")
         for line in script.split("\n"):
             if line:
                 self.result.append(" " * indentation + f"{line}")
-        if was_internal_or_file:
+        if was_script_or_file:
             self.result.append(" " * indentation + "'''")
+        if workdir:
+            indentation -= 2
+            self.result.append(" " * indentation + "}")
         indentation -= 2
         self.result.append(" " * indentation + "}")
 
@@ -180,7 +194,14 @@ class JenkinsGenerator(BaseGenerator):
             self.result.append("        }")
             self.result.append("      }")
         self.add_environment_variables(step=step)
-        self.add_script(wrapper="steps", name=name, original_type=original_type, script=step.script, indentation=6)
+        self.add_script(
+            wrapper="steps",
+            name=name,
+            original_type=original_type,
+            script=step.script,
+            indentation=6,
+            workdir=step.workdir,
+        )
         self.result.append("    }")
         return None
 
