@@ -3,7 +3,8 @@ import unittest
 from typing import Optional
 
 from test.windfile_definitions import (
-    VALID_WINDFILE_INTERNAL_ACTION, WINDFILE_WITH_ALWAYS_ACTION,
+    VALID_WINDFILE_INTERNAL_ACTION,
+    WINDFILE_WITH_ALWAYS_ACTION,
 )
 from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile

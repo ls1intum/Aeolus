@@ -18,13 +18,6 @@ jobs:
           python-version: 3.11
       - name: Install Python dependencies
         run: pip install -qr cli/requirements.txt
-      - name: Add java jar for bamboo api
-        run: |
-          sudo apt-get install -y default-jre git
-          cd bamboo-generator
-          ./gradlew shadowJar --no-daemon -x :generateJsonSchema2Pojo
-          cd ..
-          cp ./bamboo-generator/libs/bamboo-generator*-all.jar ./cli/bamboo-generator.jar
       - name: Run tests
         run: |
           cd cli
