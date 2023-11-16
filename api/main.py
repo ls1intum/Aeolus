@@ -9,7 +9,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
-from api_classes.ResultFormat import ResultFormat
+from api_classes.result_format import ResultFormat
 from api_classes.publish_payload import PublishPayload
 from api_classes.translate_payload import TranslatePayload
 from api_utils import utils
@@ -222,8 +222,9 @@ def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]
 
 @app.put("/translate/{source}/{"
          "build_plan_id}?format={resulting_format}")
-def translate(payload: TranslatePayload, source: Target, build_plan_id: str, resulting_format: ResultFormat) -> Optional[
-    WindFile | str]:
+def translate(
+    payload: TranslatePayload, source: Target, build_plan_id: str, resulting_format: ResultFormat
+) -> Optional[WindFile | str]:
     """
     Translates the build plan id to a target.
     :param payload: Payload with credentials

@@ -5,5 +5,5 @@ class ResultFormat(Enum):
     """
     Enum for the format parameter.
     """
-    JSON = 'json'
-    YAML = 'yaml'
+    JSON = "json"
+    YAML = "yaml"
