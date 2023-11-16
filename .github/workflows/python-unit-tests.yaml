@@ -3,7 +3,7 @@ name: CLI Unit tests
 on:
   push:
     paths:
-      - '*.py'
+      - '**.py'
       - '.github/workflows/python-unit-tests.yaml'
 
 jobs:
