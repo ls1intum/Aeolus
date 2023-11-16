@@ -244,10 +244,10 @@ def translate(
     if resulting_format == ResultFormat.JSON:
         if windfile:
             warnings.filterwarnings("ignore", category=UserWarning)
-            for action in windfile.actions:
-                utils.remove_none_values(action.root)
             utils.remove_none_values(windfile)
             utils.remove_none_values(windfile.metadata)
+            for action in windfile.actions:  # pylint: disable=not-an-iterable
+                utils.remove_none_values(action.root)
             return windfile
     elif windfile:
         json_repr: str = windfile.model_dump_json(exclude_none=True)
