@@ -1,7 +1,6 @@
 import json
 import time
 import warnings
-from enum import Enum
 from typing import Optional, Dict, Any
 
 import yaml
@@ -10,13 +9,15 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 
 import _paths  # pylint: disable=unused-import # noqa: F401
+from api_classes.ResultFormat import ResultFormat
 from api_classes.publish_payload import PublishPayload
 from api_classes.translate_payload import TranslatePayload
 from api_utils import utils
+
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
 from classes.ci_credentials import CICredentials
-from classes.generated.definitions import Target, Action
+from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
@@ -129,7 +130,7 @@ async def generate_from_yaml(request: Request, target: Target) -> Optional[Dict[
 
 
 def generate_target_script(
-        windfile: WindFile, target: Target, credentials: Optional[CICredentials] = None
+    windfile: WindFile, target: Target, credentials: Optional[CICredentials] = None
 ) -> Optional[Dict[str, str | None]]:
     """
     Generates the given windfile for the given target.
@@ -219,24 +220,16 @@ def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]
     return generated
 
 
-class Format(Enum):
-    """
-    Enum for the format parameter.
-    """
-    json = 'json'
-    yaml = 'yaml'
-
-
 @app.put("/translate/{source}/{"
-         "build_plan_id}/{return_format}")
-def translate(payload: TranslatePayload, source: Target, build_plan_id: str, return_format: Format) -> Optional[
+         "build_plan_id}?format={resulting_format}")
+def translate(payload: TranslatePayload, source: Target, build_plan_id: str, resulting_format: ResultFormat) -> Optional[
     WindFile | str]:
     """
     Translates the build plan id to a target.
     :param payload: Payload with credentials
     :param source: Source target, currently only bamboo is supported
     :param build_plan_id: Build plan id to translate
-    :param return_format: Format to return the windfile in
+    :param resulting_format: Format to return the windfile in
     :return: Windfile with the translated target
     """
     if source != Target.bamboo:
@@ -248,15 +241,15 @@ def translate(payload: TranslatePayload, source: Target, build_plan_id: str, ret
         input_settings=input_settings, output_settings=output_settings, credentials=ci_credentials
     )
     windfile: Optional[WindFile] = translator.translate(plan_key=build_plan_id)
-    if return_format == Format.json:
+    if resulting_format == ResultFormat.JSON:
         if windfile:
-            warnings.filterwarnings('ignore', category=UserWarning)
+            warnings.filterwarnings("ignore", category=UserWarning)
             utils.remove_none_values(windfile)
             utils.remove_none_values(windfile.metadata)
             for action in windfile.actions:
                 utils.remove_none_values(action.root)
             return windfile
-    else:
+    elif windfile:
         json_repr: str = windfile.model_dump_json(exclude_none=True)
         return yaml.dump(yaml.safe_load(json_repr), sort_keys=False, Dumper=YamlDumper, default_flow_style=False)
     return None
