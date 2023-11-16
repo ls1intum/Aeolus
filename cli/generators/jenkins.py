@@ -127,7 +127,7 @@ class JenkinsGenerator(BaseGenerator):
         self,
         wrapper: str,
         name: str,
-        original_type:Optional[str],
+        original_type: Optional[str],
         script: str,
         indentation: int,
         workdir: Optional[str]
