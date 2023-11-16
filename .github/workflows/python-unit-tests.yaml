@@ -21,8 +21,10 @@ jobs:
       - name: Add java jar for bamboo api
         run: |
           sudo apt-get install -y default-jre git
-          ./bamboo-generator/gradlew shadowJar --no-daemon -x :generateJsonSchema2Pojo
-          cp ./bamboo-generator/libs/bamboo-generator*-all.jar cli/bamboo-generator.jar
+          cd bamboo-generator
+          ./gradlew shadowJar --no-daemon -x :generateJsonSchema2Pojo
+          cd ..
+          cp ./bamboo-generator/libs/bamboo-generator*-all.jar ./cli/bamboo-generator.jar
       - name: Run tests
         run: |
           cd cli

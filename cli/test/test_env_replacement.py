@@ -134,7 +134,3 @@ class EnvironmentReplacementTests(unittest.TestCase):
         forbidden: List[str] = [e for e in forbidden_with_none if e is not None]
         self.assertFalse(all(e not in result for e in forbidden))
         self.assertTrue(any(e in result for e in allowed))
-
-
-if __name__ == "__main__":
-    unittest.main()

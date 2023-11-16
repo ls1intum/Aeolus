@@ -147,3 +147,17 @@ VALID_WINDFILE_WITH_MULTIPLE_REPOSITORIES: str = """
               image: ls1tum/artemis-c-template:nightly
             script: echo "This is the second action and in another docker"
         """
+
+WINDFILE_WITH_ALWAYS_ACTION: str = """
+        api: v0.0.1
+        metadata:
+          name: test windfile
+          description: This is a windfile with no external actions
+          author: Test Author
+        actions:
+          - name: internal-action
+            script: echo "This is an internal action"
+          - name: always-action
+            script: echo "This is an internal action"
+            runAlways: true
+        """
