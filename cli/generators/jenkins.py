@@ -130,7 +130,7 @@ class JenkinsGenerator(BaseGenerator):
         original_type: Optional[str],
         script: str,
         indentation: int,
-        workdir: Optional[str]
+        workdir: Optional[str],
     ) -> None:
         """
         Add a script to the pipeline.
