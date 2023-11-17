@@ -1,0 +1,27 @@
+api: v0.0.1
+metadata:
+  name: log-actions
+  description: action that provides the logs of a programming exercise
+  author:
+    name: Andreas Resch
+    email: andreas@resch.io
+steps:
+  - name: bamboo-logs
+    parameters:
+      ignore_time: false
+      test_results: '**/test-results/test/*.xml'
+    platform: bamboo
+    kind: junit
+    runAlways: true
+  - name: cli-logs
+    parameters:
+      test_results: '**/test-results/test/*.xml'
+    script: |
+      chmod 777 $test_results
+    platform: cli
+  - name: jenkins-logs
+    parameters:
+      test_results: '**/test-results/test/*.xml'
+    platform: jenkins
+    kind: juni
+    runAlways: true

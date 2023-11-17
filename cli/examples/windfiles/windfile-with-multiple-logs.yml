@@ -1,0 +1,16 @@
+api: v0.0.1
+metadata:
+  name: windfile-with-multiple-platform-action
+  description: This is a windfile with an action that is provided for multiple platforms
+  author: Andreas Resch
+actions:
+  - name: internal-action
+    workdir: /tmp
+    script: |
+      echo "Hello from an $(pwd)"
+    parameters:
+      WHO: "me"
+  - name: external-action
+    use: ../actions/log-actions.yml
+    parameters:
+      test_results: '**/test-results/test/*.xml'

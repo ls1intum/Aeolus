@@ -110,9 +110,9 @@ class Merger(PassSettings):
             metadata=metadata,
         )
 
-    def merge_internal_actions(self) -> bool:
+    def merge_script_actions(self) -> bool:
         """
-        Merges the internal actions into the windfile.
+        Merges the script actions into the windfile.
         Mainly sets metadata needed for the generation process.
         :return: True if the internal actions could be merged, False otherwise
         """
@@ -203,7 +203,7 @@ class Merger(PassSettings):
             if not actionfile:
                 logger.error("❌ ", f"{slug} does not contain an action.yaml", self.output_settings.emoji)
                 return None
-            return self.convert_actionfile_to_internal_actions(actionfile=actionfile, absolute_path=tmp)
+            return self.convert_actionfile_to_script_actions(actionfile=actionfile, absolute_path=tmp)
 
     def set_original_names(self, names: List[str]) -> None:
         """
@@ -371,11 +371,12 @@ class Merger(PassSettings):
         self.windfile.actions.pop(original_index)
         return None
 
-    def convert_actionfile_to_internal_actions(
+    def convert_actionfile_to_script_actions(
         self, actionfile: ActionFile, absolute_path: str
     ) -> Optional[typing.Tuple[typing.List[str], typing.List[Action]]]:
         """
-        Converts the given actionfile to internal actions. By inlining the defined actions into the windfile.
+        Converts the given actionfile to script actions. By inlining the defined actions into the windfile.
+        Platform actions need to stay platform actions.
         :param actionfile: Actionfile to convert
         :param absolute_path: Absolute path to the actionfile
         :return: Tuple of the original types and the converted actions
@@ -434,14 +435,17 @@ class Merger(PassSettings):
                         self.output_settings.emoji,
                     )
                     content = None
-                if not content:
+                if not content and not isinstance(internals.root, PlatformAction):
                     logger.error(
                         "❌",
                         f"could not get content of {internals.root.name}",
                         self.output_settings.emoji,
                     )
                     return None
-                internal = Action(
+                if isinstance(internals.root, PlatformAction):
+                    internal = Action(root=internals.root)
+                else:
+                    internal = Action(
                     root=ScriptAction(
                         name=internals.root.name,
                         script=content,
@@ -511,7 +515,7 @@ class Merger(PassSettings):
                             typing.List[str],
                             typing.List[Action],
                         ]
-                    ] = self.convert_actionfile_to_internal_actions(
+                    ] = self.convert_actionfile_to_script_actions(
                         actionfile=actionfile,
                         absolute_path=absolute_path,
                     )
@@ -542,7 +546,7 @@ class Merger(PassSettings):
             if validated:
                 self.windfile = validated
         if (
-            not self.merge_internal_actions()
+            not self.merge_script_actions()
             or not self.merge_file_actions()
             or not self.merge_external_actions()
             or not self.merge_platform_actions()
