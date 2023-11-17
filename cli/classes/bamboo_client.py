@@ -4,10 +4,10 @@ of using the specs API to get the YAML representation of a plan. We take the YAM
 it into a defined structure that we can work with to translate it into Aeolus.
 """
 from typing import Optional, Tuple, Any, List
-from xml.dom.minidom import parseString, Document, Text, Node
 
 import requests
 import yaml
+from bs4 import BeautifulSoup
 
 from classes.bamboo_specs import (
     BambooSpecs,
@@ -238,6 +238,18 @@ def convert_stages(plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
     return stages
 
 
+def extract_code(response: dict[str, dict[str, str]]) -> Optional[str]:
+    """
+    Extract the YAML code for a plan from the given json.
+    :param response: Json document from Bamboo
+    :return: YAML code
+    """
+    if "spec" in response:
+        if "code" in response["spec"]:
+            return response["spec"]["code"]
+    return None
+
+
 class BambooClient:
     """
     Client for the Bamboo REST API. As bamboo does not provide a complete CRUD API, we create this workaround
@@ -250,19 +262,6 @@ class BambooClient:
     def __init__(self, credentials: CICredentials):
         self.credentials = credentials
 
-    def extract_code(self, node: Node) -> Optional[str]:
-        """
-        Extract the YAML code for a plan from the given xml document.
-        :param node: xml node
-        :return: YAML code
-        """
-        if node.firstChild is None:
-            if isinstance(node, Text):
-                element: Text = node
-                return element.data
-            return None
-        return self.extract_code(node=node.firstChild)
-
     def get_plan_yaml(self, plan_key: str) -> Optional[Tuple[BambooSpecs, dict[str, str]]]:
         """
         Get the YAML representation of the given plan by using the REST API.
@@ -272,13 +271,14 @@ class BambooClient:
         response = requests.get(
             f"{self.credentials.url}/rest/api/latest/plan/{plan_key}/specs",
             params={"format": "yaml"},
-            headers={"Authorization": f"Bearer {self.credentials.token}"},
+            headers={"Authorization": f"Bearer {self.credentials.token}",
+                     "Accept": "application/json"},
             timeout=30,
         )
         if response.status_code != 200:
             return None
-        document: Document = parseString(response.text)
-        code: Optional[str] = self.extract_code(node=document)
+        document: dict[str, dict[str, str]] = response.json()
+        code: Optional[str] = extract_code(response=document)
         if code is not None:
             specs: str = code.split("\n---\n")[0]
             # permissions: str = code.split("\n---\n")[1]
