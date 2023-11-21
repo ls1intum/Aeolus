@@ -7,5 +7,5 @@ RUN cp ./build/libs/bamboo-generator*-all.jar bamboo-generator.jar
 FROM openjdk:17-slim as runtime
 
 COPY --from=jar-builder /bamboo-generator.jar bamboo-generator.jar
-EXPOSE 8080
+EXPOSE 8091
 ENTRYPOINT ["java", "-jar", "bamboo-generator.jar"]
