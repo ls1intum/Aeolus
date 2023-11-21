@@ -8,9 +8,16 @@ actions:
     workdir: /tmp
     script: |
       echo "Hello from an $(pwd)"
+  - name: internal-action1
+    workdir: /tmp
+    script: |
+      mkdir test1
+      mkdir test2
     parameters:
       WHO: "me"
   - name: external-action
     use: ../actions/log-actions.yml
     parameters:
-      test_results: '**/test-results/test/*.xml'
+      test_results:
+        - '/tmp/test1'
+        - '/tmp/test2'

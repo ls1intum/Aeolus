@@ -1,7 +1,9 @@
 api: v0.0.1
 metadata:
   name: log-actions
-  description: action that provides the logs of a programming exercise
+  description: |
+    action that provides the logs of a programming exercise.
+    override the test_results parameter to configure the path to the test results.
   author:
     name: Andreas Resch
     email: andreas@resch.io
@@ -19,9 +21,3 @@ steps:
     script: |
       chmod 777 $test_results
     platform: cli
-  - name: jenkins-logs
-    parameters:
-      test_results: '**/test-results/test/*.xml'
-    platform: jenkins
-    kind: juni
-    runAlways: true

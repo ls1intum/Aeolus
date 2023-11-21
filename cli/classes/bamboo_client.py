@@ -7,7 +7,6 @@ from typing import Optional, Tuple, Any, List
 
 import requests
 import yaml
-from bs4 import BeautifulSoup
 
 from classes.bamboo_specs import (
     BambooSpecs,
@@ -271,8 +270,7 @@ class BambooClient:
         response = requests.get(
             f"{self.credentials.url}/rest/api/latest/plan/{plan_key}/specs",
             params={"format": "yaml"},
-            headers={"Authorization": f"Bearer {self.credentials.token}",
-                     "Accept": "application/json"},
+            headers={"Authorization": f"Bearer {self.credentials.token}", "Accept": "application/json"},
             timeout=30,
         )
         if response.status_code != 200:

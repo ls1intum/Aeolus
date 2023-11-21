@@ -444,20 +444,20 @@ class Merger(PassSettings):
                     return None
                 if isinstance(internals.root, PlatformAction):
                     internal = Action(root=internals.root)
-                else:
+                elif content:
                     internal = Action(
-                    root=ScriptAction(
-                        name=internals.root.name,
-                        script=content,
-                        workdir=internals.root.workdir,
-                        excludeDuring=internals.root.excludeDuring,
-                        environment=internals.root.environment,
-                        parameters=internals.root.parameters,
-                        platform=internals.root.platform,
-                        docker=internals.root.docker,
-                        runAlways=internals.root.runAlways,
+                        root=ScriptAction(
+                            name=internals.root.name,
+                            script=content,
+                            workdir=internals.root.workdir,
+                            excludeDuring=internals.root.excludeDuring,
+                            environment=internals.root.environment,
+                            parameters=internals.root.parameters,
+                            platform=internals.root.platform,
+                            docker=internals.root.docker,
+                            runAlways=internals.root.runAlways,
+                        )
                     )
-                )
                 if internal:
                     actions.append(internal)
         return original_types, actions
