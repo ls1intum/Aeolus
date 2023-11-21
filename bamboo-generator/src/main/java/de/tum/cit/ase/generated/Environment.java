@@ -23,7 +23,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "RUNNER_NAME",
     "BRANCH_NAME",
     "WORKDIR",
-    "TMPDIR"
+    "TMPDIR",
+    "REPOSITORY_URL"
 })
 @Generated("jsonschema2pojo")
 public class Environment {
@@ -92,6 +93,14 @@ public class Environment {
     @JsonProperty("TMPDIR")
     @JsonPropertyDescription("The directory where temporary files are stored.")
     private String tmpdir;
+    /**
+     * The url of the first repository that is used, if multiple repositories are needed, the second one will be referenced under REPOSITORY_URL_1 and so on.
+     * (Required)
+     * 
+     */
+    @JsonProperty("REPOSITORY_URL")
+    @JsonPropertyDescription("The url of the first repository that is used, if multiple repositories are needed, the second one will be referenced under REPOSITORY_URL_1 and so on.")
+    private String repositoryUrl;
 
     /**
      * No args constructor for use in serialization
@@ -118,8 +127,10 @@ public class Environment {
      *     The url of the result of the job that is currently executed.
      * @param branchName
      *     The name of the branch that is currently executed.
+     * @param repositoryUrl
+     *     The url of the first repository that is used, if multiple repositories are needed, the second one will be referenced under REPOSITORY_URL_1 and so on.
      */
-    public Environment(String jobName, String jobId, String jobUri, String jobUrl, String runnerName, String branchName, String workdir, String tmpdir) {
+    public Environment(String jobName, String jobId, String jobUri, String jobUrl, String runnerName, String branchName, String workdir, String tmpdir, String repositoryUrl) {
         super();
         this.jobName = jobName;
         this.jobId = jobId;
@@ -129,6 +140,7 @@ public class Environment {
         this.branchName = branchName;
         this.workdir = workdir;
         this.tmpdir = tmpdir;
+        this.repositoryUrl = repositoryUrl;
     }
 
     /**
@@ -331,6 +343,31 @@ public class Environment {
         return this;
     }
 
+    /**
+     * The url of the first repository that is used, if multiple repositories are needed, the second one will be referenced under REPOSITORY_URL_1 and so on.
+     * (Required)
+     * 
+     */
+    @JsonProperty("REPOSITORY_URL")
+    public String getRepositoryUrl() {
+        return repositoryUrl;
+    }
+
+    /**
+     * The url of the first repository that is used, if multiple repositories are needed, the second one will be referenced under REPOSITORY_URL_1 and so on.
+     * (Required)
+     * 
+     */
+    @JsonProperty("REPOSITORY_URL")
+    public void setRepositoryUrl(String repositoryUrl) {
+        this.repositoryUrl = repositoryUrl;
+    }
+
+    public Environment withRepositoryUrl(String repositoryUrl) {
+        this.repositoryUrl = repositoryUrl;
+        return this;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -367,6 +404,10 @@ public class Environment {
         sb.append('=');
         sb.append(((this.tmpdir == null)?"<null>":this.tmpdir));
         sb.append(',');
+        sb.append("repositoryUrl");
+        sb.append('=');
+        sb.append(((this.repositoryUrl == null)?"<null>":this.repositoryUrl));
+        sb.append(',');
         if (sb.charAt((sb.length()- 1)) == ',') {
             sb.setCharAt((sb.length()- 1), ']');
         } else {
@@ -386,6 +427,7 @@ public class Environment {
         result = ((result* 31)+((this.runnerName == null)? 0 :this.runnerName.hashCode()));
         result = ((result* 31)+((this.jobUrl == null)? 0 :this.jobUrl.hashCode()));
         result = ((result* 31)+((this.branchName == null)? 0 :this.branchName.hashCode()));
+        result = ((result* 31)+((this.repositoryUrl == null)? 0 :this.repositoryUrl.hashCode()));
         return result;
     }
 
@@ -398,7 +440,7 @@ public class Environment {
             return false;
         }
         Environment rhs = ((Environment) other);
-        return (((((((((this.jobName == rhs.jobName)||((this.jobName!= null)&&this.jobName.equals(rhs.jobName)))&&((this.tmpdir == rhs.tmpdir)||((this.tmpdir!= null)&&this.tmpdir.equals(rhs.tmpdir))))&&((this.jobId == rhs.jobId)||((this.jobId!= null)&&this.jobId.equals(rhs.jobId))))&&((this.jobUri == rhs.jobUri)||((this.jobUri!= null)&&this.jobUri.equals(rhs.jobUri))))&&((this.workdir == rhs.workdir)||((this.workdir!= null)&&this.workdir.equals(rhs.workdir))))&&((this.runnerName == rhs.runnerName)||((this.runnerName!= null)&&this.runnerName.equals(rhs.runnerName))))&&((this.jobUrl == rhs.jobUrl)||((this.jobUrl!= null)&&this.jobUrl.equals(rhs.jobUrl))))&&((this.branchName == rhs.branchName)||((this.branchName!= null)&&this.branchName.equals(rhs.branchName))));
+        return ((((((((((this.jobName == rhs.jobName)||((this.jobName!= null)&&this.jobName.equals(rhs.jobName)))&&((this.tmpdir == rhs.tmpdir)||((this.tmpdir!= null)&&this.tmpdir.equals(rhs.tmpdir))))&&((this.jobId == rhs.jobId)||((this.jobId!= null)&&this.jobId.equals(rhs.jobId))))&&((this.jobUri == rhs.jobUri)||((this.jobUri!= null)&&this.jobUri.equals(rhs.jobUri))))&&((this.workdir == rhs.workdir)||((this.workdir!= null)&&this.workdir.equals(rhs.workdir))))&&((this.runnerName == rhs.runnerName)||((this.runnerName!= null)&&this.runnerName.equals(rhs.runnerName))))&&((this.jobUrl == rhs.jobUrl)||((this.jobUrl!= null)&&this.jobUrl.equals(rhs.jobUrl))))&&((this.branchName == rhs.branchName)||((this.branchName!= null)&&this.branchName.equals(rhs.branchName))))&&((this.repositoryUrl == rhs.repositoryUrl)||((this.repositoryUrl!= null)&&this.repositoryUrl.equals(rhs.repositoryUrl))));
     }
 
 }

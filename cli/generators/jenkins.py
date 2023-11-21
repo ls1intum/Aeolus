@@ -3,6 +3,7 @@
 Jenkins generator. Generates a jenkins pipeline to be used in the Jenkins CI system.
 The generated pipeline is a scripted pipeline.
 """
+import typing
 from typing import Optional, List, Any
 from xml.dom.minidom import Document, parseString, Element
 
@@ -220,10 +221,16 @@ class JenkinsGenerator(BaseGenerator):
             self.add_line(indentation=6, line="environment {")
             if step.parameters is not None:
                 for param in step.parameters.root.root:
-                    self.add_line(indentation=8, line=f'{param} = "{step.parameters.root.root[param]}"')
+                    param_value: typing.Any = step.parameters.root.root[param]
+                    if isinstance(param_value, List):
+                        param_value = " ".join(param_value)
+                    self.add_line(indentation=8, line=f'{param} = "{param_value}"')
             if step.environment is not None:
                 for env_var in step.environment.root.root:
-                    self.add_line(indentation=8, line=f'{env_var} = "{step.environment.root.root[env_var]}"')
+                    value: typing.Any = step.environment.root.root[env_var]
+                    if isinstance(value, List):
+                        value = " ".join(value)
+                    self.add_line(indentation=8, line=f'{env_var} = "{value}"')
             self.add_line(indentation=6, line="}")
 
     def handle_clone(self, name: str, repository: Repository, indentation: int) -> None:

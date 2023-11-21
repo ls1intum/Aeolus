@@ -2,13 +2,14 @@
 import os
 import subprocess
 import tempfile
+import typing
 from typing import List, Optional
 
 from docker.client import DockerClient  # type: ignore
 from docker.models.containers import Container  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
 
-from classes.generated.definitions import ScriptAction, Repository, Target
+from classes.generated.definitions import ScriptAction, Repository, Target, Lifecycle
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -24,7 +25,7 @@ class CliGenerator(BaseGenerator):
 
     functions: List[str] = []
 
-    inital_directory_variable: str = "AEOLUS_INITIAL_DIRECTORY"
+    initial_directory_variable: str = "AEOLUS_INITIAL_DIRECTORY"
 
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
@@ -42,7 +43,7 @@ class CliGenerator(BaseGenerator):
         self.result.append("set -e")
 
         # actions could run in a different directory, so we need to store to the initial directory
-        self.result.append(f"export {self.inital_directory_variable}=$(pwd)")
+        self.result.append(f"export {self.initial_directory_variable}=$(pwd)")
 
         # to work with jenkins and bamboo, we need a way to access the repository url, as this is not possible
         # in a scripted jenkins pipeline, we set it as an environment variable
@@ -65,7 +66,7 @@ class CliGenerator(BaseGenerator):
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
             self.add_line(indentation=2, line=f"{function} $_current_lifecycle")
-            self.add_line(indentation=2, line=f"cd ${self.inital_directory_variable}")
+            self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
         self.result.append("}\n")
         self.result.append("main $@")
 
@@ -79,11 +80,34 @@ class CliGenerator(BaseGenerator):
         self.result.append("final_aeolus_post_action () " + "{")
         self.add_line(indentation=2, line="set +e # from now on, we don't exit on errors")
         self.add_line(indentation=2, line="echo '⚙️ executing final_aeolus_post_action'")
-        self.add_line(indentation=2, line=f"cd ${self.inital_directory_variable}")
+        self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
         for step in steps:
             self.add_line(indentation=2, line=f"{step} $_current_lifecycle")
-            self.add_line(indentation=2, line=f"cd ${self.inital_directory_variable}")
+            self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
         self.result.append("}")
+
+    def add_lifecycle_guards(self, name: str, exclusions: Optional[List[Lifecycle]], indentations: int = 2) -> None:
+        """
+        Add lifecycle guards to the given action.
+        :param name: name of the action
+        :param exclusions: list of lifecycle exclusions
+        :param indentations: number of indentations
+        """
+        if exclusions is not None:
+            # we don't need the local variable if there are no exclusions
+            self.add_line(indentation=indentations, line='local _current_lifecycle="${1}"')
+
+            for exclusion in exclusions:
+                self.add_line(
+                    indentation=indentations, line=f'if [[ "${{_current_lifecycle}}" == "{exclusion.name}" ]]; then'
+                )
+                indentations += 2
+                self.add_line(
+                    indentation=indentations, line="echo '⚠️  " f"{name} is excluded during {exclusion.name}'"
+                )
+                self.add_line(indentation=indentations, line="return 0")
+                indentations -= 2
+                self.add_line(indentation=indentations, line="fi")
 
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """
@@ -108,25 +132,23 @@ class CliGenerator(BaseGenerator):
         if call:
             self.functions.append(name)
         self.result.append(f"{name} () " + "{")
-        if step.excludeDuring is not None:
-            # we don't need the local variable if there are no exclusions
-            self.add_line(indentation=2, line='local _current_lifecycle="${1}"')
-
-            for exclusion in step.excludeDuring:
-                self.add_line(indentation=2, line=f'if [[ "${{_current_lifecycle}}" == "{exclusion.name}" ]]; then')
-                self.add_line(indentation=4, line="echo '⚠️  " f"{name} is excluded during {exclusion.name}'")
-                self.add_line(indentation=4, line="return 0")
-                self.add_line(indentation=2, line="fi")
+        self.add_lifecycle_guards(name=name, exclusions=step.excludeDuring, indentations=2)
 
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
         if step.workdir:
             self.add_line(indentation=2, line=f"cd {step.workdir}")
         if step.environment:
             for env_var in step.environment.root.root:
-                self.result.append(f'export {env_var}="' f'{step.environment.root.root[env_var]}"')
+                env_value: typing.Any = step.environment.root.root[env_var]
+                if isinstance(env_value, List):
+                    env_value = " ".join(env_value)
+                self.result.append(f'export {env_var}="' f'{env_value}"')
         if step.parameters is not None:
             for parameter in step.parameters.root.root:
-                self.add_line(indentation=2, line=f'{parameter}="' f'{step.parameters.root.root[parameter]}"')
+                value: typing.Any = step.parameters.root.root[parameter]
+                if isinstance(value, List):
+                    value = " ".join(value)
+                self.add_line(indentation=2, line=f'{parameter}="' f'{value}"')
         for line in step.script.split("\n"):
             if line:
                 self.add_line(indentation=2, line=line)
