@@ -39,9 +39,10 @@ class JenkinsGenerator(BaseGenerator):
         if config is None:
             return
         tag: str = config.tag if config.tag is not None else "latest"
+        complete_image: str = config.image + ":" + tag if ":" not in config.image else config.image
         self.result.append(" " * indentation + "agent {")
         self.result.append(" " * indentation + "  docker {")
-        self.result.append(" " * indentation + "    image '" + config.image + ":" + tag + "'")
+        self.result.append(" " * indentation + "    image '" + complete_image + "'")
         args: Optional[str] = None
         if config.volumes is not None:
             args = "-v " + ":".join(config.volumes)

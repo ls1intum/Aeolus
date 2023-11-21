@@ -24,8 +24,14 @@ public class BuildPlanService {
         if (docker == null) {
             return null;
         }
+        String dockerImage = docker.getImage();
+        if (!dockerImage.contains(":")) {
+            dockerImage += ":latest";
+        } else if (docker.getTag() != null) {
+            dockerImage += docker.getTag();
+        }
         DockerConfiguration configuration = new DockerConfiguration()
-                .image(docker.getImage() + ":" + docker.getTag())
+                .image(dockerImage)
                 .dockerRunArguments(docker.getParameters().toArray(new String[0]));
         for (Map.Entry<String, String> entry : docker.getVolumes().entrySet()) {
             configuration.volume(entry.getKey(), entry.getValue());
