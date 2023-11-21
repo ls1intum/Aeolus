@@ -195,6 +195,21 @@ class CliGenerator(BaseGenerator):
         directory: str = repository.path
         self.result.append(f"# the repository {name} is expected to be mounted into the container at /{directory}")
 
+    def determine_docker_image(self) -> str:
+        """
+        Determine the docker image to use.
+        :return: docker image
+        """
+        container_image: str = os.getenv("AEOLUS_WORKER_IMAGE", "ghcr.io/ls1intum/aeolus/worker:nightly")
+        if self.windfile.metadata.docker is not None:
+            container_image = self.windfile.metadata.docker.image
+            tag: str = "latest"
+            if self.windfile.metadata.docker.tag is not None:
+                tag = self.windfile.metadata.docker.tag
+            if ":" not in container_image:
+                container_image += ":" + tag
+        return container_image
+
     def run(self, job_id: str) -> None:
         """
         Run the generated bash script.
@@ -210,11 +225,7 @@ class CliGenerator(BaseGenerator):
             temp.flush()
             client: DockerClient = DockerClient.from_env()
             container_name: str = "aeolus-worker" if job_id is None else f"aeolus-worker-{job_id}"
-            container_image: str = os.getenv("AEOLUS_WORKER_IMAGE", "ghcr.io/ls1intum/aeolus/worker:nightly")
-            if self.windfile.metadata.docker is not None:
-                container_image = self.windfile.metadata.docker.image + (
-                    (":" + self.windfile.metadata.docker.tag) if self.windfile.metadata.docker.tag else ""
-                )
+            container_image: str = self.determine_docker_image()
             volumes: dict[str, dict[str, str]] = {temp.name: {"bind": "/entrypoint.sh", "mode": "ro"}}
             if self.windfile.repositories:
                 for name in self.windfile.repositories:

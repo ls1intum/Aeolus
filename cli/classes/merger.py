@@ -86,6 +86,12 @@ def merge_docker(docker: Docker | None, action: Action) -> None:
     :param docker: docker configuration to merge
     :param action: action to merge the docker configuration into
     """
+    if docker:
+        if ":" in docker.image:
+            image: str = docker.image.split(":")[0]
+            tag: str = docker.image.split(":")[1]
+            docker.image = image
+            docker.tag = tag
     if docker and action.root.docker is None:
         action.root.docker = docker
 
