@@ -175,7 +175,9 @@ def handle_tasks(job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooChec
     return tasks
 
 
-def convert_artifacts(artifacts: list[dict[str, Any]]) -> List[BambooArtifact]:
+def convert_artifacts(
+        artifacts: list[dict[str, int | bool | str | dict[str, Any] | list[Any] | None]]
+) -> List[BambooArtifact]:
     """
     Convert the artifacts from the Bamboo response into easy to work with objects.
     :param artifacts: list of artifacts from Bamboo

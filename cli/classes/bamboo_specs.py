@@ -211,7 +211,7 @@ class BambooJob:
 
     key: str
     tasks: list[BambooCheckoutTask | BambooTask]
-    artifacts: List[BambooArtifact]
+    artifacts: Optional[List[BambooArtifact]]
     artifact_subscriptions: list[Any]
     docker: Optional[BambooDockerConfig]
     other: Optional[dict[str, Any]]

@@ -503,7 +503,7 @@ class Merger(PassSettings):
                         excludeDuring=action.excludeDuring,
                         environment=action.environment,
                         parameters=action.parameters,
-                        resutls=action.results,
+                        results=action.results,
                         platform=action.platform,
                         docker=action.docker,
                         runAlways=action.runAlways,
