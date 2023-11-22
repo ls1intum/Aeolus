@@ -183,7 +183,7 @@ def convert_artifacts(
     :param artifacts: list of artifacts from Bamboo
     :return: list of BambooArtifact objects
     """
-    if artifacts is None:
+    if artifacts is None or not isinstance(artifacts, list):
         return None
     bamboo_artifacts: list[BambooArtifact] = []
     for artifact in artifacts:
