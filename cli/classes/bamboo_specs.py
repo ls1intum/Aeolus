@@ -164,12 +164,15 @@ class BambooDockerConfig:
     volumes: dict[str, str]
     docker_run_arguments: list[str]
 
+
 class BambooArtifact:
     """
     BambooArtifact represents a Bamboo artifact as returned by the Bamboo REST API.
     """
 
-    def __init__(self, name: str, location: str, pattern: str, exclusion: Optional[str], shared: bool, required: bool) -> None:
+    def __init__(
+        self, name: str, location: str, pattern: str, exclusion: Optional[str], shared: bool, required: bool
+    ) -> None:
         self.name = name
         self.location = location
         self.pattern = pattern

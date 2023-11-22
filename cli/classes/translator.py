@@ -33,7 +33,8 @@ from classes.generated.definitions import (
     Action,
     Dictionary,
     PlatformAction,
-    Parameters, Result,
+    Parameters,
+    Result,
 )
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
@@ -73,7 +74,7 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
 
 
 def parse_env_variables(
-        environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+    environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
 ) -> Environment:
     """
     Converts the given environment variables into a Environment object.
@@ -218,11 +219,7 @@ def convert_results(artifacts: typing.List[BambooArtifact]) -> typing.List[Resul
     results: list[Result] = []
     for artifact in artifacts:
         results.append(
-            Result(
-                name=artifact.name,
-                path=artifact.location + "/" + artifact.pattern,
-                ignore=artifact.exclusion
-            )
+            Result(name=artifact.name, path=artifact.location + "/" + artifact.pattern, ignore=artifact.exclusion)
         )
     return results
 
@@ -244,7 +241,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                     action: Optional[Action] = extract_action(job=job, task=task, environment=environment)
                     if action is not None:
                         actions.append(action)
-            #we have a different abstraction for artifacts, so we simply append them to the last action
+            # we have a different abstraction for artifacts, so we simply append them to the last action
             if job.artifacts is not None:
                 if len(actions) > 0:
                     actions[-1].root.results = convert_results(job.artifacts)
@@ -252,7 +249,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
 
 
 def extract_repositories(
-        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.

@@ -19,7 +19,8 @@ from classes.bamboo_specs import (
     BambooCondition,
     BambooConditionVariable,
     BambooDockerConfig,
-    BambooSpecialTask, BambooArtifact,
+    BambooSpecialTask,
+    BambooArtifact,
 )
 from classes.ci_credentials import CICredentials
 
