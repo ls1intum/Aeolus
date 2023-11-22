@@ -164,6 +164,26 @@ class BambooDockerConfig:
     volumes: dict[str, str]
     docker_run_arguments: list[str]
 
+class BambooArtifact:
+    """
+    BambooArtifact represents a Bamboo artifact as returned by the Bamboo REST API.
+    """
+
+    def __init__(self, name: str, location: str, pattern: str, exclusion: Optional[str], shared: bool, required: bool) -> None:
+        self.name = name
+        self.location = location
+        self.pattern = pattern
+        self.exclusion = exclusion
+        self.shared = shared
+        self.required = required
+
+    name: str
+    location: str
+    pattern: str
+    exclusion: Optional[str]
+    shared: bool
+    required: bool
+
 
 class BambooJob:
     """
@@ -173,19 +193,22 @@ class BambooJob:
     def __init__(
         self,
         key: str,
-        tasks: list[BambooCheckoutTask | BambooTask | BambooSpecialTask],
-        artifact_subscriptions: list[Any],
+        tasks: List[BambooCheckoutTask | BambooTask | BambooSpecialTask],
+        artifacts: Optional[List[BambooArtifact]],
+        artifact_subscriptions: List[Any],
         docker: Optional[BambooDockerConfig],
         other: Optional[dict[str, Any]],
     ) -> None:
         self.key = key
         self.tasks = tasks
+        self.artifacts = artifacts
         self.artifact_subscriptions = artifact_subscriptions
         self.docker = docker
         self.other = other
 
     key: str
     tasks: list[BambooCheckoutTask | BambooTask]
+    artifacts: List[BambooArtifact]
     artifact_subscriptions: list[Any]
     docker: Optional[BambooDockerConfig]
     other: Optional[dict[str, Any]]

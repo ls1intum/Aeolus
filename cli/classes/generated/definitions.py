@@ -71,6 +71,20 @@ class Parameters(RootModel):
     root: Dictionary = Field(..., description='The parameters of an action.', title='Parameters of an action.')
 
 
+class Result(BaseModel):
+    """
+    The result of an action. For the CI system to keep/publish.
+    """
+
+    name: Optional[str] = Field(None, description='The name of the result.', examples=['testReport'])
+    path: Optional[str] = Field(
+        None,
+        description='The path to the result to keep, can be a file or a directory.',
+        examples=['target/test-reports'],
+    )
+    ignore: Optional[str] = Field(None, description="Ignore this pattern, don't keep it.", examples=['*.txt'])
+
+
 class Repository(BaseModel):
     """
     Repository to be checked out during the execution of the actions
@@ -128,6 +142,9 @@ class ExternalAction(BaseModel):
     workdir: Optional[str] = Field(
         None, description='The working directory of the external action.', examples=['tests']
     )
+    results: Optional[List[Result]] = Field(
+        None, description='The results of the action. For the CI system to keep/publish.'
+    )
 
 
 class FileAction(BaseModel):
@@ -156,6 +173,9 @@ class FileAction(BaseModel):
         False, description='If this is set to true, the action is always executed, even if other actions fail.'
     )
     workdir: Optional[str] = Field(None, description='The working directory of the file action.', examples=['tests'])
+    results: Optional[List[Result]] = Field(
+        None, description='The results of the action. For the CI system to keep/publish.'
+    )
 
 
 class PlatformAction(BaseModel):
@@ -187,6 +207,9 @@ class PlatformAction(BaseModel):
     workdir: Optional[str] = Field(
         None, description='The working directory of the platform action.', examples=['tests']
     )
+    results: Optional[List[Result]] = Field(
+        None, description='The results of the action. For the CI system to keep/publish.'
+    )
 
 
 class ScriptAction(BaseModel):
@@ -216,6 +239,9 @@ class ScriptAction(BaseModel):
     )
     workdir: Optional[str] = Field(
         None, description='The working directory of the platform action.', examples=['tests']
+    )
+    results: Optional[List[Result]] = Field(
+        None, description='The results of the action. For the CI system to keep/publish.'
     )
 
 

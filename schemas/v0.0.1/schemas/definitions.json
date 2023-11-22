@@ -241,6 +241,13 @@
         "examples": [
           "tests"
         ]
+      },
+      "results": {
+        "description": "The results of the action. For the CI system to keep/publish.",
+        "type": "array",
+        "items": {
+          "$ref": "#/result"
+        }
       }
     },
     "required": [
@@ -306,6 +313,13 @@
         "examples": [
           "tests"
         ]
+      },
+      "results": {
+        "description": "The results of the action. For the CI system to keep/publish.",
+        "type": "array",
+        "items": {
+          "$ref": "#/result"
+        }
       }
     },
     "required": [
@@ -364,6 +378,13 @@
         "examples": [
           "tests"
         ]
+      },
+      "results": {
+        "description": "The results of the action. For the CI system to keep/publish.",
+        "type": "array",
+        "items": {
+          "$ref": "#/result"
+        }
       }
     },
     "required": [
@@ -423,6 +444,13 @@
         "examples": [
           "tests"
         ]
+      },
+      "results": {
+        "description": "The results of the action. For the CI system to keep/publish.",
+        "type": "array",
+        "items": {
+          "$ref": "#/result"
+        }
       }
     },
     "required": [
@@ -592,5 +620,34 @@
     "required": [
       "image"
     ]
+  },
+  "result": {
+    "description": "The result of an action. For the CI system to keep/publish.",
+    "title": "Result of an action.",
+    "type": "object",
+    "allowAdditionalProperties": false,
+    "properties": {
+      "name": {
+        "description": "The name of the result.",
+        "type": "string",
+        "examples": [
+          "testReport"
+        ]
+      },
+      "path": {
+        "description": "The path to the result to keep, can be a file or a directory.",
+        "type": "string",
+        "examples": [
+          "target/test-reports"
+        ]
+      },
+      "ignore": {
+        "description": "Ignore this pattern, don't keep it.",
+        "type": "string",
+        "examples": [
+          "*.txt"
+        ]
+      }
+    }
   }
 }

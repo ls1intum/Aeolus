@@ -19,7 +19,7 @@ from classes.bamboo_specs import (
     BambooCondition,
     BambooConditionVariable,
     BambooDockerConfig,
-    BambooSpecialTask,
+    BambooSpecialTask, BambooArtifact,
 )
 from classes.ci_credentials import CICredentials
 
@@ -174,6 +174,28 @@ def handle_tasks(job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooChec
     return tasks
 
 
+def convert_artifacts(artifacts: list[dict[str, Any]]) -> List[BambooArtifact]:
+    """
+    Convert the artifacts from the Bamboo response into easy to work with objects.
+    :param artifacts: list of artifacts from Bamboo
+    :return: list of BambooArtifact objects
+    """
+    bamboo_artifacts: list[BambooArtifact] = []
+    for artifact in artifacts:
+        artifact = fix_keys(dictionary=artifact)
+        bamboo_artifacts.append(
+            BambooArtifact(
+                name=str(artifact["name"]),
+                location=str(artifact["location"]),
+                pattern=str(artifact["pattern"]),
+                exclusion=str(artifact["exclusion"]) if "exclusion" in artifact else None,
+                shared=bool(artifact["shared"]) if "shared" in artifact else False,
+                required=bool(artifact["required"]) if "required" in artifact else False,
+            )
+        )
+    return bamboo_artifacts
+
+
 def convert_stages(plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
     """
     We convert the stages from the API response into structured
@@ -190,6 +212,7 @@ def convert_stages(plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
         stage_dict[stage_name]["jobs"] = {}
         bamboo_docker: Optional[BambooDockerConfig] = None
         stage: BambooStage = BambooStage(**stage_dict[stage_name])
+        artifacts: Optional[List[BambooArtifact]] = None
         for job_name in job_list:
             job_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[Any]]] = plan_specs[job_name]
             job_dict = fix_keys(dictionary=job_dict)
@@ -211,6 +234,8 @@ def convert_stages(plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
                 for final in handle_final_tasks(final_tasks=job_dict["final_tasks"]):
                     job_dict["tasks"].append(final)
                 del job_dict["final_tasks"]
+            if "artifacts" in job_dict:
+                artifacts = convert_artifacts(artifacts=job_dict["artifacts"])
             if "other" not in job_dict:
                 job_dict["other"] = None
             tasks_dict: Optional[list[dict[str, Any]]] = None
@@ -226,6 +251,7 @@ def convert_stages(plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
             job: BambooJob = BambooJob(
                 key=str(job_dict["key"]),
                 tasks=tasks,
+                artifacts=artifacts if artifacts is not None else None,
                 artifact_subscriptions=job_dict["artifact_subscriptions"]
                 if isinstance(job_dict["artifact_subscriptions"], list)
                 else [],

@@ -17,7 +17,7 @@ from classes.bamboo_specs import (
     BambooTask,
     BambooRepository,
     BambooSpecialTask,
-    BambooDockerConfig,
+    BambooDockerConfig, BambooArtifact,
 )
 from classes.ci_credentials import CICredentials
 from classes.generated.definitions import (
@@ -33,7 +33,7 @@ from classes.generated.definitions import (
     Action,
     Dictionary,
     PlatformAction,
-    Parameters,
+    Parameters, Result,
 )
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
@@ -73,7 +73,7 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
 
 
 def parse_env_variables(
-    environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+        environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
 ) -> Environment:
     """
     Converts the given environment variables into a Environment object.
@@ -166,6 +166,7 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                         docker=docker,
                         parameters=params,
                         environment=envs,
+                        results=None,
                         platform=None,
                         runAlways=task.always_execute,
                     )
@@ -181,6 +182,7 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                         file=None,
                         function=None,
                         docker=docker,
+                        results=None,
                         environment=envs,
                         platform=Target.bamboo,
                         runAlways=task.always_execute,
@@ -199,11 +201,30 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                 docker=docker,
                 parameters=params,
                 environment=envs,
+                results=None,
                 platform=None,
                 runAlways=task.always_execute,
             )
         )
     return action
+
+
+def convert_results(artifacts: typing.List[BambooArtifact]) -> typing.List[Result]:
+    """
+    Convert the artifacts from the Bamboo response into easy to work with objects.
+    :param artifacts: list of artifacts from Bamboo
+    :return: list of BambooArtifact objects
+    """
+    results: list[Result] = []
+    for artifact in artifacts:
+        results.append(
+            Result(
+                name=artifact.name,
+                path=artifact.location + "/" + artifact.pattern,
+                ignore=artifact.exclusion
+            )
+        )
+    return results
 
 
 def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSchema) -> list[Action]:
@@ -223,11 +244,15 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                     action: Optional[Action] = extract_action(job=job, task=task, environment=environment)
                     if action is not None:
                         actions.append(action)
+            #we have a different abstraction for artifacts, so we simply append them to the last action
+            if job.artifacts is not None:
+                if len(actions) > 0:
+                    actions[-1].root.results = convert_results(job.artifacts)
     return actions
 
 
 def extract_repositories(
-    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.
