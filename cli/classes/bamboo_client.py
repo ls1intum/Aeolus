@@ -252,7 +252,7 @@ def convert_stages(plan_specs: dict[str, Any]) -> dict[str, BambooStage]:
             job: BambooJob = BambooJob(
                 key=str(job_dict["key"]),
                 tasks=tasks,
-                artifacts=artifacts if artifacts is not None else None,
+                artifacts=artifacts,
                 artifact_subscriptions=job_dict["artifact_subscriptions"]
                 if isinstance(job_dict["artifact_subscriptions"], list)
                 else [],

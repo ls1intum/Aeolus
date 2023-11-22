@@ -17,7 +17,8 @@ from classes.bamboo_specs import (
     BambooTask,
     BambooRepository,
     BambooSpecialTask,
-    BambooDockerConfig, BambooArtifact,
+    BambooDockerConfig,
+    BambooArtifact,
 )
 from classes.ci_credentials import CICredentials
 from classes.generated.definitions import (
