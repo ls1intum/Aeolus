@@ -18,6 +18,7 @@ public class ExternalAction extends Action {
         action.setExcludeDuring((List<String>) map.getOrDefault("excludeDuring", new ArrayList<>()));
         action.setRunAlways((boolean) map.getOrDefault("runAlways", false));
         action.setDocker(DockerConfig.fromMap((Map<String, Object>) map.getOrDefault("docker", new HashMap<>())));
+        action.setResults(Result.fromList((List<Object>) map.getOrDefault("results", new ArrayList<>())));
         return action;
     }
 

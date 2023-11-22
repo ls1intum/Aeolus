@@ -9,6 +9,7 @@ public abstract class Action {
     private Map<String, Object> parameters;
     private Map<String, String> environment;
     private List<String> excludeDuring;
+    private List<Result> results;
     private DockerConfig docker;
     private boolean runAlways;
     private String workdir;
@@ -77,5 +78,13 @@ public abstract class Action {
 
     public void setWorkdir(String workdir) {
         this.workdir = workdir;
+    }
+
+    public List<Result> getResults() {
+        return results;
+    }
+
+    public void setResults(List<Result> results) {
+        this.results = results;
     }
 }

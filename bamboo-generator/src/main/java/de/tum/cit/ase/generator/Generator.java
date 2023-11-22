@@ -8,6 +8,7 @@ import com.atlassian.bamboo.specs.api.builders.notification.Notification;
 import com.atlassian.bamboo.specs.api.builders.plan.Job;
 import com.atlassian.bamboo.specs.api.builders.plan.Plan;
 import com.atlassian.bamboo.specs.api.builders.plan.Stage;
+import com.atlassian.bamboo.specs.api.builders.plan.artifact.Artifact;
 import com.atlassian.bamboo.specs.api.builders.plan.branches.BranchCleanup;
 import com.atlassian.bamboo.specs.api.builders.plan.branches.PlanBranchManagement;
 import com.atlassian.bamboo.specs.api.builders.plan.configuration.ConcurrentBuilds;
@@ -124,6 +125,9 @@ public class Generator {
         List<Task<?, ?>> defaultTasks = new ArrayList<>();
         List<Task<?, ?>> defaultFinalTasks = new ArrayList<>();
         for (Action action : windFile.getActions()) {
+            if (oneStageIsEnough) {
+                defaultJob = this.addArtifacts(defaultJob, action);
+            }
             if (action instanceof ExternalAction) {
                 continue;
             }
@@ -148,6 +152,7 @@ public class Generator {
                     if (docker != null) {
                         job = job.dockerConfiguration(docker);
                     }
+                    job = this.addArtifacts(job, scriptAction);
                     Stage stage = new Stage(scriptAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(
                             job
                     );
@@ -188,6 +193,33 @@ public class Generator {
         }
         plan = plan.stages(stageList.toArray(new Stage[]{}));
         result = BambooSpecSerializer.dump(plan);
+    }
+
+    public Job addArtifacts(Job job, Action action) {
+        if (action.getResults() != null) {
+            List<Artifact> artifacts = new ArrayList<>();
+            for (Result result : action.getResults()) {
+                try {
+                    var pathComponents = result.getPath().split("/");
+                    var pattern = result.getPath();
+                    var path = "";
+                    if (pathComponents.length > 1) {
+                        pattern = pathComponents[pathComponents.length - 1];
+                        path = result.getPath().substring(0, result.getPath().length() - pattern.length() - 1);
+                    }
+                    Artifact artifact = new Artifact().name(result.getName()).copyPatterns(pattern).location(path).shared(false).required(false);
+                    if (result.getIgnore() != null) {
+                        artifact = artifact.exclusionPatterns(result.getIgnore());
+                    }
+                    artifacts.add(artifact);
+                } catch (Exception e) {
+                    System.err.println("Error while adding artifact " + result.getName() + " to job " + job.getKey());
+                    e.printStackTrace();
+                }
+            }
+            job = job.artifacts(artifacts.toArray(new Artifact[]{}));
+        }
+        return job;
     }
 
     public String getResult() {
