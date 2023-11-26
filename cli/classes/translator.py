@@ -230,6 +230,62 @@ def convert_results(artifacts: typing.List[BambooArtifact]) -> typing.List[Resul
     return results
 
 
+def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions: list[PlatformAction]) -> None:
+    """
+    Converts the given list of junit tasks into a list of results.
+    :param homeless_junit_actions: list of junit tasks
+    """
+    for junit_action in homeless_junit_actions:
+        if len(actions) > 0:
+            paths: list[str] = []
+            if (
+                  junit_action.parameters is None or
+                  junit_action.parameters.root is None or
+                  junit_action.parameters.root.root is None or
+                  junit_action.parameters.root.root["test_results"] is None
+            ):
+                # we don't want to add empty junit actions with no parameter test_results
+                continue
+            if isinstance(junit_action.parameters.root.root["test_results"], list):
+                paths = junit_action.parameters.root.root["test_results"]
+            elif isinstance(junit_action.parameters.root.root["test_results"], str):
+                paths.append(junit_action.parameters.root.root["test_results"])
+            results: list[Result] = []
+            for path in paths:
+                results.append(Result(name=f"{junit_action.name}_{path}", path=path, type="junit", ignore=None))
+            could_be_added: bool = False
+            for i, element in reversed(list(enumerate(actions))):
+                if isinstance(element.root, ScriptAction):
+                    if (
+                          element.root.excludeDuring == junit_action.excludeDuring
+                          and element.root.runAlways == junit_action.runAlways
+                          and element.root.workdir == junit_action.workdir
+                    ):
+                        could_be_added = True
+                        if element.root.results is None:
+                            element.root.results = results
+                        else:
+                            for result in results:
+                                element.root.results.append(result)
+                        break
+            if not could_be_added:
+                actions.append(
+                    Action(
+                        root=ScriptAction(
+                            name=junit_action.name,
+                            script="#empty script action, just for the results",
+                            excludeDuring=junit_action.excludeDuring,
+                            workdir=junit_action.workdir,
+                            docker=junit_action.docker,
+                            parameters=None,
+                            environment=None,
+                            results=results,
+                            platform=None,
+                            runAlways=junit_action.runAlways,
+                        )
+                    )
+                )
+
 def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSchema) -> list[Action]:
     """
     Converts all jobs and tasks from the given stages (from the REST API)
@@ -257,56 +313,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                     actions[-1].root.results = convert_results(job.artifacts)
             # we also don't want any orphaned junit actions, so we add them to the last action with the same
             # excludeDuring and runAlways
-            for junit_action in homeless_junit_actions:
-                if len(actions) > 0:
-                    paths: list[str] = []
-                    if (
-                      junit_action.parameters is None or
-                      junit_action.parameters.root is None or
-                      junit_action.parameters.root.root is None or
-                      junit_action.parameters.root.root["test_results"] is None
-                    ):
-                        # we don't want to add empty junit actions with no parameter test_results
-                        continue
-                    if isinstance(junit_action.parameters.root.root["test_results"], list):
-                        paths = junit_action.parameters.root.root["test_results"]
-                    elif isinstance(junit_action.parameters.root.root["test_results"], str):
-                        paths.append(junit_action.parameters.root.root["test_results"])
-                    results: list[Result] = []
-                    for path in paths:
-                        results.append(Result(name=f"{junit_action.name}_{path}", path=path, type="junit", ignore=None))
-                    could_be_added: bool = False
-                    for i, element in reversed(list(enumerate(actions))):
-                        if isinstance(element.root, ScriptAction):
-                            if (
-                                element.root.excludeDuring == junit_action.excludeDuring
-                                and element.root.runAlways == junit_action.runAlways
-                                and element.root.workdir == junit_action.workdir
-                            ):
-                                could_be_added = True
-                                if element.root.results is None:
-                                    element.root.results = results
-                                else:
-                                    for result in results:
-                                        element.root.results.append(result)
-                                break
-                    if not could_be_added:
-                        actions.append(
-                            Action(
-                                root=ScriptAction(
-                                    name=junit_action.name,
-                                    script="#empty script action, just for the results",
-                                    excludeDuring=junit_action.excludeDuring,
-                                    workdir=junit_action.workdir,
-                                    docker=junit_action.docker,
-                                    parameters=None,
-                                    environment=None,
-                                    results=results,
-                                    platform=None,
-                                    runAlways=junit_action.runAlways,
-                                )
-                            )
-                        )
+            convert_junit_tasks_to_results(actions=actions, homeless_junit_actions=homeless_junit_actions)
 
     return actions
 
