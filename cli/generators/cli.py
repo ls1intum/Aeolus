@@ -123,7 +123,7 @@ class CliGenerator(BaseGenerator):
         for workdir in self.results:
             self.add_line(indentation=2, line=f"cd {workdir}")
             for result in self.results[workdir]:
-                self.add_line(indentation=2, line=f"local _sources=\"{result.path}\"")
+                self.add_line(indentation=2, line=f'local _sources="{result.path}"')
                 if result.ignore:
                     self.add_line(indentation=2, line=f"_sources=$(echo $_sources/!({result.ignore}))")
                 self.add_line(indentation=2, line=f"mv $_sources /aeolus-results/{result.path}")
@@ -242,13 +242,6 @@ class CliGenerator(BaseGenerator):
                 container_image += ":" + tag
         return container_image
 
-    def handle_results(self) -> None:
-        """
-        Handle results in the windfile.
-        """
-        for result in self.results:
-            self.add_line(indentation=2, line=f"mkdir -p {result}")
-            self.add_line(indentation=2, line=f"cp -r {result}/* {result}")
 
     def run(self, job_id: str) -> None:
         """

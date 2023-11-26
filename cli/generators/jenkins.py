@@ -9,7 +9,7 @@ from xml.dom.minidom import Document, parseString, Element
 
 import jenkins  # type: ignore
 
-from classes.generated.definitions import ScriptAction, Target, Repository, Docker, Result
+from classes.generated.definitions import ScriptAction, Target, Repository, Docker
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -25,7 +25,8 @@ class JenkinsGenerator(BaseGenerator):
     """
 
     def __init__(
-        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
+            self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings,
+            metadata: PassMetadata
     ):
         input_settings.target = Target.jenkins
         super().__init__(windfile, input_settings, output_settings, metadata)
@@ -40,9 +41,9 @@ class JenkinsGenerator(BaseGenerator):
             return
         tag: str = config.tag if config.tag is not None else "latest"
         complete_image: str = config.image + ":" + tag if ":" not in config.image else config.image
-        self.result.append(" " * indentation + "agent {")
-        self.result.append(" " * indentation + "  docker {")
-        self.result.append(" " * indentation + "    image '" + complete_image + "'")
+        self.add_line(indentation=indentation, line="agent {")
+        self.add_line(indentation=indentation, line="  docker {")
+        self.add_line(indentation=indentation, line="    image '" + complete_image + "'")
         args: Optional[str] = None
         if config.volumes is not None:
             args = "-v " + ":".join(config.volumes)
@@ -51,9 +52,9 @@ class JenkinsGenerator(BaseGenerator):
                 args = ""
             args += " " + " ".join(config.parameters)
         if args is not None:
-            self.result.append(" " * indentation + "    args '" + args + "'")
-        self.result.append(" " * indentation + "  }")
-        self.result.append(" " * indentation + "}")
+            self.add_line(indentation=indentation, line="    args '" + args + "'")
+        self.add_line(indentation=indentation, line="  }")
+        self.add_line(indentation=indentation, line="}")
 
     def add_prefix(self) -> None:
         """
@@ -171,20 +172,20 @@ class JenkinsGenerator(BaseGenerator):
         Add a script to the pipeline.
         :param indentation: indentation level
         """
-        self.result.append(" " * indentation + f"always " + "{")
+        self.add_line(indentation=indentation, line="always {")
         indentation += 2
-        self.result.append(" " * indentation + f"echo '⚙️ publishing results'")
+        self.add_line(indentation=indentation, line="echo '⚙️ publishing results'")
         for workdir in self.results:
             for result in self.results[workdir]:
                 full_path: str = workdir + "/" + result.path
                 ignore: str = f"exclude: {result.ignore}" if result.ignore else ""
                 if result.type == "junit":
-                    self.result.append(" " * indentation + f"junit '{full_path}'")
+                    self.add_line(indentation=indentation, line=f"junit '{full_path}'")
                 else:
-                    self.result.append(" " * indentation + f"archiveArtifacts: '{full_path}', fingerprint: true, "
-                                                           f"allowEmptyArchive: true, {ignore}")
+                    self.add_line(indentation=indentation, line=f"archiveArtifacts: '{full_path}', fingerprint: true, "
+                                                                f"allowEmptyArchive: true, {ignore}")
         indentation -= 2
-        self.result.append(" " * indentation + "}")
+        self.add_line(indentation=indentation, line="}")
 
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """

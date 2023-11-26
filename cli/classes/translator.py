@@ -220,7 +220,11 @@ def convert_results(artifacts: typing.List[BambooArtifact]) -> typing.List[Resul
     results: list[Result] = []
     for artifact in artifacts:
         results.append(
-            Result(name=artifact.name, path=artifact.location + "/" + artifact.pattern, ignore=artifact.exclusion)
+            Result(
+                name=artifact.name,
+                path=artifact.location + "/" + artifact.pattern,
+                ignore=artifact.exclusion,
+                type=None)
         )
     return results
 
@@ -255,6 +259,12 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
             for junitAction in homelessJunitActions:
                 if len(actions) > 0:
                     paths: list[str] = []
+                    if (junitAction.parameters is None or
+                            junitAction.parameters.root is None or
+                            junitAction.parameters.root.root is None or
+                            junitAction.parameters.root.root["test_results"] is None):
+                        # we don't want to add empty junit actions with no parameter test_results
+                        continue
                     if isinstance(junitAction.parameters.root.root["test_results"], list):
                         paths = junitAction.parameters.root.root["test_results"]
                     else:
@@ -265,14 +275,16 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                     could_be_added: bool = False
                     for i, element in reversed(list(enumerate(actions))):
                         if isinstance(element.root, ScriptAction):
-                            if (element.root.excludeDuring == junitAction.excludeDuring
+                            if (
+                                    element.root.excludeDuring == junitAction.excludeDuring
                                     and element.root.runAlways == junitAction.runAlways
-                                    and element.root.workdir == junitAction.workdir):
+                                    and element.root.workdir == junitAction.workdir
+                            ):
                                 could_be_added = True
                                 if element.root.results is None:
                                     element.root.results = results
                                 else:
-                                    element.root.results.root.append(results)
+                                    element.root.results.append(results)
                                 break
                     if not could_be_added:
                         actions.append(
@@ -296,7 +308,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
 
 
 def extract_repositories(
-        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.
