@@ -75,7 +75,7 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
 
 
 def parse_env_variables(
-      environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+    environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
 ) -> Environment:
     """
     Converts the given environment variables into a Environment object.
@@ -261,16 +261,16 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                 if len(actions) > 0:
                     paths: list[str] = []
                     if (
-                          junit_action.parameters is None or
-                          junit_action.parameters.root is None or
-                          junit_action.parameters.root.root is None or
-                          junit_action.parameters.root.root["test_results"] is None
+                      junit_action.parameters is None or
+                      junit_action.parameters.root is None or
+                      junit_action.parameters.root.root is None or
+                      junit_action.parameters.root.root["test_results"] is None
                     ):
                         # we don't want to add empty junit actions with no parameter test_results
                         continue
                     if isinstance(junit_action.parameters.root.root["test_results"], list):
                         paths = junit_action.parameters.root.root["test_results"]
-                    else:
+                    elif isinstance(junit_action.parameters.root.root["test_results"], str):
                         paths.append(junit_action.parameters.root.root["test_results"])
                     results: list[Result] = []
                     for path in paths:

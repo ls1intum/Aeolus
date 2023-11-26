@@ -183,7 +183,7 @@ class JenkinsGenerator(BaseGenerator):
                 else:
                     self.add_line(
                         indentation=indentation,
-                        line=f"archiveArtifacts: '{full_path}', fingerprint: true, allowEmptyArchive: true, {ignore}"
+                        line=f"archiveArtifacts: '{full_path}', fingerprint: true, allowEmptyArchive: true, {ignore}",
                     )
         indentation -= 2
         self.add_line(indentation=indentation, line="}")
