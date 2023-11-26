@@ -1,18 +1,15 @@
 services:
   playground:
-    container_name: aeolus-playground
     hostname: aeolus-playground
     image: ghcr.io/ls1intum/aeolus/playground:${AEOLUS_DOCKER_TAG:-latest}
     pull_policy: if_not_present
     restart: unless-stopped
   api:
-    container_name: aeolus-api
     hostname: aeolus-api
     image: ghcr.io/ls1intum/aeolus/api:${AEOLUS_DOCKER_TAG:-latest}
     pull_policy: if_not_present
     restart: unless-stopped
   bamboo-api:
-    container_name: aeolus-bamboo-api
     hostname: aeolus-bamboo-api
     image: ghcr.io/ls1intum/aeolus/bamboo-generator:${AEOLUS_DOCKER_TAG:-latest}
     command: "--api"

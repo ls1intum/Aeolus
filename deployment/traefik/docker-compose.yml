@@ -9,11 +9,12 @@ services:
       service: playground
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.aeolus-playground.rule=(HostRegexp(`${AEOLUS_HOST}`) && !PathPrefix(`/api`))"
+      - "traefik.docker.network=traefik"
+      - 'traefik.http.routers.aeolus-playground.rule=(HostRegexp(`{host:.+}`) && !PathPrefix("/api"))'
       - "traefik.http.routers.aeolus-playground.entrypoints=https"
       - "traefik.http.routers.aeolus-playground.tls=true"
       - "traefik.http.routers.aeolus-playground.tls.certResolver=leresolver"
-      - 'traefik.services.aeolus-playground.loadbalancer.passHostHeader=true'
+      - "traefik.services.aeolus-playground.loadbalancer.passHostHeader=true"
     networks:
       - traefik
   api:
@@ -21,27 +22,24 @@ services:
       file: ../docker-compose.yml
       service: api
     environment:
-      BAMBOO_GENERATOR_API_HOST: "http://aeolus-bamboo-api:8080"
+      BAMBOO_GENERATOR_API_HOST: "http://aeolus-bamboo-api:8091"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.aeolus-api.rule=(HostRegexp(`${AEOLUS_HOST}`) && PathPrefix(`/api`))"
+      - "traefik.docker.network=traefik"
+      - 'traefik.http.routers.aeolus-api.rule=(HostRegexp(`{host:.+}`) && PathPrefix("/api"))'
       - "traefik.http.routers.aeolus-api.entrypoints=https"
       - "traefik.http.routers.aeolus-api.tls=true"
       - "traefik.http.routers.aeolus-api.tls.certResolver=leresolver"
       - 'traefik.services.aeolus-api.loadbalancer.passHostHeader=true'
       - "traefik.http.middlewares.aeolus-api.stripprefix.prefixes=/api"
-      - 'traefik.http.routers.aeolus-api.middlewares=aeolus-api'
+      - "traefik.http.routers.aeolus-api.middlewares=aeolus-api"
     networks:
-      - aeolus
       - traefik
   bamboo-api:
     extends:
       file: ../docker-compose.yml
       service: bamboo-api
-    labels:
-      - "traefik.enable=false"
     networks:
-      - aeolus
       - traefik
   traefik:
     container_name: traefik
@@ -56,6 +54,7 @@ services:
       - ./traefik.log:/traefik.log
     labels:
       - 'traefik.enable=false'
+      - "traefik.docker.network=traefik"
     networks:
       - traefik
     ports:
@@ -65,5 +64,4 @@ services:
       - "host.docker.internal:host-gateway"
 
 networks:
-  aeolus:
   traefik:
