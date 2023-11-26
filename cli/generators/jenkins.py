@@ -25,8 +25,7 @@ class JenkinsGenerator(BaseGenerator):
     """
 
     def __init__(
-            self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings,
-            metadata: PassMetadata
+        self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
         input_settings.target = Target.jenkins
         super().__init__(windfile, input_settings, output_settings, metadata)
@@ -127,13 +126,13 @@ class JenkinsGenerator(BaseGenerator):
 
     # pylint: disable=too-many-arguments
     def add_script(
-            self,
-            wrapper: str,
-            name: str,
-            original_type: Optional[str],
-            script: str,
-            indentation: int,
-            workdir: Optional[str],
+        self,
+        wrapper: str,
+        name: str,
+        original_type: Optional[str],
+        script: str,
+        indentation: int,
+        workdir: Optional[str],
     ) -> None:
         """
         Add a script to the pipeline.
@@ -165,8 +164,8 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append(" " * indentation + "}")
 
     def add_results(
-            self,
-            indentation: int,
+        self,
+        indentation: int,
     ) -> None:
         """
         Add a script to the pipeline.
@@ -182,8 +181,10 @@ class JenkinsGenerator(BaseGenerator):
                 if result.type == "junit":
                     self.add_line(indentation=indentation, line=f"junit '{full_path}'")
                 else:
-                    self.add_line(indentation=indentation, line=f"archiveArtifacts: '{full_path}', fingerprint: true, "
-                                                                f"allowEmptyArchive: true, {ignore}")
+                    self.add_line(
+                        indentation=indentation,
+                        line=f"archiveArtifacts: '{full_path}', fingerprint: true, allowEmptyArchive: true, {ignore}"
+                    )
         indentation -= 2
         self.add_line(indentation=indentation, line="}")
 

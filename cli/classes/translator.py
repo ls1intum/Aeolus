@@ -224,7 +224,7 @@ def convert_results(artifacts: typing.List[BambooArtifact]) -> typing.List[Resul
                 name=artifact.name,
                 path=artifact.location + "/" + artifact.pattern,
                 ignore=artifact.exclusion,
-                type=None
+                type=None,
             )
         )
     return results
@@ -257,28 +257,31 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                     actions[-1].root.results = convert_results(job.artifacts)
             # we also don't want any orphaned junit actions, so we add them to the last action with the same
             # excludeDuring and runAlways
-            for junitAction in homeless_junit_actions:
+            for junit_action in homeless_junit_actions:
                 if len(actions) > 0:
                     paths: list[str] = []
-                    if (junitAction.parameters is None or junitAction.parameters.root is None or
-                          junitAction.parameters.root.root is None or
-                          junitAction.parameters.root.root["test_results"] is None):
+                    if (
+                          junit_action.parameters is None or
+                          junit_action.parameters.root is None or
+                          junit_action.parameters.root.root is None or
+                          junit_action.parameters.root.root["test_results"] is None
+                    ):
                         # we don't want to add empty junit actions with no parameter test_results
                         continue
-                    if isinstance(junitAction.parameters.root.root["test_results"], list):
-                        paths = junitAction.parameters.root.root["test_results"]
+                    if isinstance(junit_action.parameters.root.root["test_results"], list):
+                        paths = junit_action.parameters.root.root["test_results"]
                     else:
-                        paths.append(junitAction.parameters.root.root["test_results"])
+                        paths.append(junit_action.parameters.root.root["test_results"])
                     results: list[Result] = []
                     for path in paths:
-                        results.append(Result(name=f"{junitAction.name}_{path}", path=path, type="junit", ignore=None))
+                        results.append(Result(name=f"{junit_action.name}_{path}", path=path, type="junit", ignore=None))
                     could_be_added: bool = False
                     for i, element in reversed(list(enumerate(actions))):
                         if isinstance(element.root, ScriptAction):
                             if (
-                                  element.root.excludeDuring == junitAction.excludeDuring
-                                  and element.root.runAlways == junitAction.runAlways
-                                  and element.root.workdir == junitAction.workdir
+                                element.root.excludeDuring == junit_action.excludeDuring
+                                and element.root.runAlways == junit_action.runAlways
+                                and element.root.workdir == junit_action.workdir
                             ):
                                 could_be_added = True
                                 if element.root.results is None:
@@ -291,16 +294,16 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                         actions.append(
                             Action(
                                 root=ScriptAction(
-                                    name=junitAction.name,
+                                    name=junit_action.name,
                                     script="#empty script action, just for the results",
-                                    excludeDuring=junitAction.excludeDuring,
-                                    workdir=junitAction.workdir,
-                                    docker=junitAction.docker,
+                                    excludeDuring=junit_action.excludeDuring,
+                                    workdir=junit_action.workdir,
+                                    docker=junit_action.docker,
                                     parameters=None,
                                     environment=None,
                                     results=results,
                                     platform=None,
-                                    runAlways=junitAction.runAlways,
+                                    runAlways=junit_action.runAlways,
                                 )
                             )
                         )
@@ -309,7 +312,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
 
 
 def extract_repositories(
-      stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.
