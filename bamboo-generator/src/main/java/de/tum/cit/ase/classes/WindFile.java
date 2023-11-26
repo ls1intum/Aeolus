@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class WindFile {
 
@@ -51,24 +50,6 @@ public class WindFile {
         return windfile;
     }
 
-    private void convertJunitResultsToActions() {
-        List<Action> newActions = new ArrayList<>();
-        for (Action action : this.getActions()) {
-            List<Result> results = action.getResults();
-            if (results.isEmpty() || results.stream().noneMatch(r -> r.getType().equals("junit"))) {
-                newActions.add(action);
-                break;
-            }
-            List<Result> resultsToReplace = results.stream().filter(r -> r.getType().equals("junit")).toList();
-            for (Result result : resultsToReplace) {
-                PlatformAction newResultAction = getResultAction(action, result);
-                newActions.add(newResultAction);
-            }
-            action.setResults(results.stream().filter(r -> !r.getType().equals("junit")).toList());
-        }
-        this.setActions(newActions);
-    }
-
     @NotNull
     private static PlatformAction getResultAction(Action action, Result result) {
         PlatformAction newResultAction = new PlatformAction();
@@ -96,6 +77,24 @@ public class WindFile {
         Yaml yaml = new Yaml();
         Map<String, Object> data = yaml.load(inputStream);
         return fromYAML(yaml.dump(data));
+    }
+
+    private void convertJunitResultsToActions() {
+        List<Action> newActions = new ArrayList<>();
+        for (Action action : this.getActions()) {
+            List<Result> results = action.getResults();
+            if (results.isEmpty() || results.stream().noneMatch(r -> r.getType().equals("junit"))) {
+                newActions.add(action);
+                continue;
+            }
+            List<Result> resultsToReplace = results.stream().filter(r -> "junit".equals(r.getType())).toList();
+            for (Result result : resultsToReplace) {
+                PlatformAction newResultAction = getResultAction(action, result);
+                newActions.add(newResultAction);
+            }
+            action.setResults(results.stream().filter(r -> !"junit".equals(r.getType())).toList());
+        }
+        this.setActions(newActions);
     }
 
     public String getFilePath() {

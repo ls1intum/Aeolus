@@ -135,7 +135,7 @@ def handle_tasks(job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooChec
         task_dict: dict[str, Optional[int | bool | str | dict[str, Any] | list[str]] | list[dict[str, Any]]] = fix_keys(
             dictionary=task[task_type]
         )
-        if task_type in ("junit", "maven"):
+        if task_type in ("junit", "maven", "test_parser"):
             parameters: dict[Any, int | bool | str | float | list | None] = {}
             for key, value in task_dict.items():
                 if key not in ["type", "description", "always_execute"]:

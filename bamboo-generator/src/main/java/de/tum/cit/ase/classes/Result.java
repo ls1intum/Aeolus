@@ -52,7 +52,7 @@ public class Result {
 
     public static List<Result> fromList(List<Object> resultsList) {
         if (resultsList == null || resultsList.isEmpty()) {
-            return null;
+            return new ArrayList<>();
         }
         List<Result> results = new ArrayList<>();
         for (Object result : resultsList) {

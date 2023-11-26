@@ -75,7 +75,7 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
 
 
 def parse_env_variables(
-    environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+        environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
 ) -> Environment:
     """
     Converts the given environment variables into a Environment object.
@@ -237,20 +237,66 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
     for _, stage in stages.items():
         for job_name in stage.jobs:
             job: BambooJob = stage.jobs[job_name]
+            homelessJunitActions: list[PlatformAction] = []
             for task in job.tasks:
                 if isinstance(task, BambooTask):
                     action: Optional[Action] = extract_action(job=job, task=task, environment=environment)
                     if action is not None:
-                        actions.append(action)
+                        if isinstance(action.root, PlatformAction) and action.root.kind in ("junit", "test_parser"):
+                            homelessJunitActions.append(action.root)
+                        else:
+                            actions.append(action)
             # we have a different abstraction for artifacts, so we simply append them to the last action
             if job.artifacts is not None:
                 if len(actions) > 0:
                     actions[-1].root.results = convert_results(job.artifacts)
+            # we also don't want any orphaned junit actions, so we add them to the last action with the same
+            # excludeDuring and runAlways
+            for junitAction in homelessJunitActions:
+                if len(actions) > 0:
+                    paths: list[str] = []
+                    if isinstance(junitAction.parameters.root.root["test_results"], list):
+                        paths = junitAction.parameters.root.root["test_results"]
+                    else:
+                        paths.append(junitAction.parameters.root.root["test_results"])
+                    results: list[Result] = []
+                    for path in paths:
+                        results.append(Result(name=f"{junitAction.name}_{path}", path=path, type="junit", ignore=None))
+                    could_be_added: bool = False
+                    for i, element in reversed(list(enumerate(actions))):
+                        if isinstance(element.root, ScriptAction):
+                            if (element.root.excludeDuring == junitAction.excludeDuring
+                                    and element.root.runAlways == junitAction.runAlways
+                                    and element.root.workdir == junitAction.workdir):
+                                could_be_added = True
+                                if element.root.results is None:
+                                    element.root.results = results
+                                else:
+                                    element.root.results.root.append(results)
+                                break
+                    if not could_be_added:
+                        actions.append(
+                            Action(
+                                root=ScriptAction(
+                                    name=junitAction.name,
+                                    script="#empty script action, just for the results",
+                                    excludeDuring=junitAction.excludeDuring,
+                                    workdir=junitAction.workdir,
+                                    docker=junitAction.docker,
+                                    parameters=None,
+                                    environment=None,
+                                    results=results,
+                                    platform=None,
+                                    runAlways=junitAction.runAlways,
+                                )
+                            )
+                        )
+
     return actions
 
 
 def extract_repositories(
-    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+        stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.
