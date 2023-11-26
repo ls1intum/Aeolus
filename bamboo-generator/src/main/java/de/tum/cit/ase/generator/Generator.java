@@ -47,6 +47,7 @@ public class Generator {
 
     /**
      * If no docker configuration is specified, we can put all tasks in one stage, this is easier to read
+     *
      * @param windFile the parsed Windfile
      * @return true if all tasks can be put in one stage, false otherwise
      */
@@ -80,7 +81,7 @@ public class Generator {
         String name = windFile.getMetadata().getPlanName();
         System.out.println("Generating plan " + planKey);
         System.out.println("Generating project " + name);
-        plan = new Plan(project, name, planKey).description("Plan created from " + windFile.getFilePath())
+        plan = new Plan(project, name, planKey).description(windFile.getMetadata().getDescription())
                 .variables(new Variable("lifecycle_stage", "working_time"))
                 .pluginConfigurations(new ConcurrentBuilds().useSystemWideDefault(true))
                 .planBranchManagement(new PlanBranchManagement().delete(new BranchCleanup()).notificationForCommitters());
@@ -105,7 +106,6 @@ public class Generator {
 
         if (!windFile.getRepositories().isEmpty()) {
             List<CheckoutItem> checkoutItems = new ArrayList<>();
-
             for (Repository repository : windFile.getRepositories()) {
                 repos.add(buildPlanService.addRepository(repository, windFile.getMetadata().getGitCredentials()));
                 checkoutItems.add(new CheckoutItem().repository(repository.getName()).path(repository.getPath()));
@@ -125,64 +125,42 @@ public class Generator {
         List<Task<?, ?>> defaultTasks = new ArrayList<>();
         List<Task<?, ?>> defaultFinalTasks = new ArrayList<>();
         for (Action action : windFile.getActions()) {
-            if (oneStageIsEnough) {
-                defaultJob = this.addArtifacts(defaultJob, action);
-            }
             if (action instanceof ExternalAction) {
                 continue;
             }
-            if (action instanceof ScriptAction scriptAction) {
-                var keyInput = scriptAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
-                var key = new BambooKey(keyInput);
-                var tasks = buildPlanService.handleAction(scriptAction);
-                if (oneStageIsEnough) {
-                    if (scriptAction.isRunAlways()) {
-                        defaultFinalTasks.addAll(tasks);
-                    } else {
-                        defaultTasks.addAll(tasks);
-                    }
-                } else {
-                    var job = new Job(scriptAction.getName(), key);
-                    if (scriptAction.isRunAlways()) {
-                        job = job.finalTasks(tasks.toArray(new Task[]{}));
-                    } else {
-                        job = job.tasks(tasks.toArray(new Task[]{}));
-                    }
-                    var docker = BuildPlanService.convertDockerConfig(scriptAction.getDocker());
-                    if (docker != null) {
-                        job = job.dockerConfiguration(docker);
-                    }
-                    job = this.addArtifacts(job, scriptAction);
-                    Stage stage = new Stage(scriptAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(
-                            job
-                    );
-                    stageList.add(stage);
-                }
+            if (oneStageIsEnough) {
+                defaultJob = this.addArtifacts(defaultJob, action);
             }
-            if (action instanceof PlatformAction platformAction) {
-                var keyInput = platformAction.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
-                var key = new BambooKey(keyInput);
-                var tasks = buildPlanService.handleSpecialAction(platformAction);
-                if (oneStageIsEnough) {
-                    if (platformAction.isRunAlways()) {
-                        defaultFinalTasks.addAll(tasks);
-                    } else {
-                        defaultTasks.addAll(tasks);
-                    }
+            var keyInput = action.getName().toUpperCase().replaceAll("[^a-zA-Z0-9]", "") + stageList.size();
+            var key = new BambooKey(keyInput);
+            List<Task<?, ?>> tasks = new ArrayList<>();
+            if (action instanceof ScriptAction scriptAction) {
+                tasks = buildPlanService.handleAction(scriptAction);
+            } else if (action instanceof PlatformAction platformAction) {
+                tasks = buildPlanService.handleSpecialAction(platformAction);
+            }
+            if (oneStageIsEnough) {
+                if (action.isRunAlways()) {
+                    defaultFinalTasks.addAll(tasks);
                 } else {
-                    var job = new Job(platformAction.getName(), key);
-                    if (platformAction.isRunAlways()) {
-                        job = job.finalTasks(tasks.toArray(new Task[]{}));
-                    } else {
-                        job = job.tasks(tasks.toArray(new Task[]{}));
-                    }
-                    var docker = BuildPlanService.convertDockerConfig(platformAction.getDocker());
-                    if (docker != null) {
-                        job = job.dockerConfiguration(docker);
-                    }
-                    Stage stage = new Stage(platformAction.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(job);
-                    stageList.add(stage);
+                    defaultTasks.addAll(tasks);
                 }
+            } else {
+                var job = new Job(action.getName(), key);
+                if (action.isRunAlways()) {
+                    job = job.finalTasks(tasks.toArray(new Task[]{}));
+                } else {
+                    job = job.tasks(tasks.toArray(new Task[]{}));
+                }
+                var docker = BuildPlanService.convertDockerConfig(action.getDocker());
+                if (docker != null) {
+                    job = job.dockerConfiguration(docker);
+                }
+                job = this.addArtifacts(job, action);
+                Stage stage = new Stage(action.getName().replaceAll("[^a-zA-Z0-9]", "")).jobs(
+                        job
+                );
+                stageList.add(stage);
             }
         }
         if (oneStageIsEnough) {
@@ -199,38 +177,40 @@ public class Generator {
      * This method is used to add the artifacts to the job, it is used to add the artifacts to the default job
      * if we only have one stage, and to add the artifacts to the job of the stage if we have multiple stages.
      * If the result is of type "junit", we add the junit parser to the job in other parts of the application.
-     * @param job the job to add the artifacts to
+     *
+     * @param job    the job to add the artifacts to
      * @param action the action that contains the artifacts
      * @return the job with the artifacts added
      */
     public Job addArtifacts(Job job, Action action) {
-        if (action.getResults() != null) {
-            List<Artifact> artifacts = new ArrayList<>();
-            for (Result result : action.getResults()) {
-                if (result.getType().equals("junit")) {
-                    // junit parser is added as a task
-                    continue;
-                }
-                try {
-                    var pathComponents = result.getPath().split("/");
-                    var pattern = result.getPath();
-                    var path = "";
-                    if (pathComponents.length > 1) {
-                        pattern = pathComponents[pathComponents.length - 1];
-                        path = result.getPath().substring(0, result.getPath().length() - pattern.length() - 1);
-                    }
-                    Artifact artifact = new Artifact().name(result.getName()).copyPatterns(pattern).location(path).shared(false).required(false);
-                    if (result.getIgnore() != null) {
-                        artifact = artifact.exclusionPatterns(result.getIgnore());
-                    }
-                    artifacts.add(artifact);
-                } catch (Exception e) {
-                    System.err.println("Error while adding artifact " + result.getName() + " to job " + job.getKey());
-                    e.printStackTrace();
-                }
-            }
-            job = job.artifacts(artifacts.toArray(new Artifact[]{}));
+        if (action.getResults() == null) {
+            return job;
         }
+        List<Artifact> artifacts = new ArrayList<>();
+        for (Result result : action.getResults()) {
+            if (result.getType().equals("junit")) {
+                // junit parser is added as a task
+                continue;
+            }
+            try {
+                var pathComponents = result.getPath().split("/");
+                var pattern = result.getPath();
+                var path = "";
+                if (pathComponents.length > 1) {
+                    pattern = pathComponents[pathComponents.length - 1];
+                    path = result.getPath().substring(0, result.getPath().length() - pattern.length() - 1);
+                }
+                Artifact artifact = new Artifact().name(result.getName()).copyPatterns(pattern).location(path).shared(false).required(false);
+                if (result.getIgnore() != null) {
+                    artifact = artifact.exclusionPatterns(result.getIgnore());
+                }
+                artifacts.add(artifact);
+            } catch (Exception e) {
+                System.err.println("Error while adding artifact " + result.getName() + " to job " + job.getKey());
+                e.printStackTrace();
+            }
+        }
+        job = job.artifacts(artifacts.toArray(new Artifact[]{}));
         return job;
     }
 

@@ -17,12 +17,10 @@ import java.util.Map;
 
 public class WindFile {
 
-    private String filePath;
     private String api;
     private WindFileMetadata metadata;
     private List<Repository> repositories = new ArrayList<>();
     private List<Action> actions = new ArrayList<>();
-    private Map<String, Map<String, Map<String, String>>> preProcessingMetadata = new HashMap<>();
 
     public static WindFile fromJson(String json) throws ClassCastException, JsonProcessingException {
         JsonNode jsonNodeTree = new ObjectMapper().readTree(json);
@@ -33,7 +31,6 @@ public class WindFile {
     public static WindFile fromYAML(String yaml) throws ClassCastException {
         Map<String, Object> data = new Yaml().load(yaml);
         WindFile windfile = new WindFile();
-        windfile.setFilePath("stdin");
         windfile.setApi(data.get("api").toString());
         windfile.setMetadata(WindFileMetadata.fromMap((Map<String, Object>) data.get("metadata")));
         Map<String, Object> repositories = (Map<String, Object>) data.getOrDefault("repositories", new HashMap<String, Object>());
@@ -51,17 +48,18 @@ public class WindFile {
     }
 
     @NotNull
-    private static PlatformAction getResultAction(Action action, Result result) {
+    private static PlatformAction getResultAction(Action action, List<Result> results) {
+        Result result = results.get(0);
         PlatformAction newResultAction = new PlatformAction();
         newResultAction.setRunAlways(action.isRunAlways());
         newResultAction.setKind("junit");
         newResultAction.setName(action.getName() + "-" + result.getName());
-        String path = result.getPath();
+        List<String> paths = results.stream().map(Result::getPath).toList();
         if (action.getWorkdir() != null) {
-            path = action.getWorkdir() + "/" + path;
+            paths = paths.stream().map(p -> action.getWorkdir() + "/" + p).toList();
         }
         Map<String, Object> parameters = new HashMap<>();
-        parameters.put("test_results", path);
+        parameters.put("test_results", paths);
         parameters.put("ignore_time", false);
         newResultAction.setParameters(parameters);
         newResultAction.setEnvironment(action.getEnvironment());
@@ -88,21 +86,15 @@ public class WindFile {
                 continue;
             }
             List<Result> resultsToReplace = results.stream().filter(r -> "junit".equals(r.getType())).toList();
-            for (Result result : resultsToReplace) {
-                PlatformAction newResultAction = getResultAction(action, result);
-                newActions.add(newResultAction);
+            if (resultsToReplace.isEmpty()) {
+                newActions.add(action);
+                continue;
             }
+            PlatformAction newResultAction = getResultAction(action, resultsToReplace);
+            newActions.add(newResultAction);
             action.setResults(results.stream().filter(r -> !"junit".equals(r.getType())).toList());
         }
         this.setActions(newActions);
-    }
-
-    public String getFilePath() {
-        return filePath;
-    }
-
-    private void setFilePath(String filePath) {
-        this.filePath = filePath;
     }
 
     public String getApi() {
@@ -139,17 +131,5 @@ public class WindFile {
 
     public List<Repository> getRepositories() {
         return repositories;
-    }
-
-    public void setRepositories(List<Repository> repositories) {
-        this.repositories = repositories;
-    }
-
-    public Map<String, Map<String, Map<String, String>>> getPreProcessingMetadata() {
-        return preProcessingMetadata;
-    }
-
-    public void setPreProcessingMetadata(Map<String, Map<String, Map<String, String>>> preProcessingMetadata) {
-        this.preProcessingMetadata = preProcessingMetadata;
     }
 }
