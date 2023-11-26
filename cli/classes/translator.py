@@ -239,10 +239,10 @@ def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions
         if len(actions) > 0:
             paths: list[str] = []
             if (
-                  junit_action.parameters is None or
-                  junit_action.parameters.root is None or
-                  junit_action.parameters.root.root is None or
-                  junit_action.parameters.root.root["test_results"] is None
+              junit_action.parameters is None or
+              junit_action.parameters.root is None or
+              junit_action.parameters.root.root is None or
+              junit_action.parameters.root.root["test_results"] is None
             ):
                 # we don't want to add empty junit actions with no parameter test_results
                 continue
@@ -257,9 +257,9 @@ def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions
             for i, element in reversed(list(enumerate(actions))):
                 if isinstance(element.root, ScriptAction):
                     if (
-                          element.root.excludeDuring == junit_action.excludeDuring
-                          and element.root.runAlways == junit_action.runAlways
-                          and element.root.workdir == junit_action.workdir
+                      element.root.excludeDuring == junit_action.excludeDuring
+                      and element.root.runAlways == junit_action.runAlways
+                      and element.root.workdir == junit_action.workdir
                     ):
                         could_be_added = True
                         if element.root.results is None:
@@ -285,6 +285,7 @@ def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions
                         )
                     )
                 )
+
 
 def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSchema) -> list[Action]:
     """
