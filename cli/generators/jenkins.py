@@ -174,8 +174,8 @@ class JenkinsGenerator(BaseGenerator):
         self.add_line(indentation=indentation, line="always {")
         indentation += 2
         self.add_line(indentation=indentation, line="echo '⚙️ publishing results'")
-        for workdir in self.results:
-            for result in self.results[workdir]:
+        for workdir, entries in self.results.items():
+            for result in entries:
                 full_path: str = workdir + "/" + result.path
                 ignore: str = f"exclude: {result.ignore}" if result.ignore else ""
                 if result.type == "junit":

@@ -256,19 +256,19 @@ def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions
         for path in paths:
             results.append(Result(name=f"{junit_action.name}_{path}", path=path, type="junit", ignore=None))
         could_be_added: bool = False
-        for i, element in reversed(list(enumerate(actions))):
-            if isinstance(element.root, ScriptAction):
+        for action in reversed(list(actions)):
+            if isinstance(action.root, ScriptAction):
                 if (
-                    element.root.excludeDuring == junit_action.excludeDuring
-                    and element.root.runAlways == junit_action.runAlways
-                    and element.root.workdir == junit_action.workdir
+                    action.root.excludeDuring == junit_action.excludeDuring
+                    and action.root.runAlways == junit_action.runAlways
+                    and action.root.workdir == junit_action.workdir
                 ):
                     could_be_added = True
-                    if element.root.results is None:
-                        element.root.results = results
+                    if action.root.results is None:
+                        action.root.results = results
                     else:
                         for result in results:
-                            element.root.results.append(result)
+                            action.root.results.append(result)
                     break
         if not could_be_added:
             actions.append(

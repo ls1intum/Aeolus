@@ -120,9 +120,9 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=2, line="echo '⚙️ moving results'")
         self.add_line(indentation=2, line="mkdir -p /aeolus-results")
         self.add_line(indentation=2, line="shopt -s extglob")
-        for workdir in self.results:
+        for workdir, entries in self.results.items():
             self.add_line(indentation=2, line=f"cd {workdir}")
-            for result in self.results[workdir]:
+            for result in entries:
                 self.add_line(indentation=2, line=f'local _sources="{result.path}"')
                 if result.ignore:
                     self.add_line(indentation=2, line=f"_sources=$(echo $_sources/!({result.ignore}))")
