@@ -75,7 +75,7 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
 
 
 def parse_env_variables(
-        environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
+      environment: EnvironmentSchema, variables: dict[Any, int | str | float | bool | list[Any] | None]
 ) -> Environment:
     """
     Converts the given environment variables into a Environment object.
@@ -224,7 +224,8 @@ def convert_results(artifacts: typing.List[BambooArtifact]) -> typing.List[Resul
                 name=artifact.name,
                 path=artifact.location + "/" + artifact.pattern,
                 ignore=artifact.exclusion,
-                type=None)
+                type=None
+            )
         )
     return results
 
@@ -241,13 +242,13 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
     for _, stage in stages.items():
         for job_name in stage.jobs:
             job: BambooJob = stage.jobs[job_name]
-            homelessJunitActions: list[PlatformAction] = []
+            homeless_junit_actions: list[PlatformAction] = []
             for task in job.tasks:
                 if isinstance(task, BambooTask):
                     action: Optional[Action] = extract_action(job=job, task=task, environment=environment)
                     if action is not None:
                         if isinstance(action.root, PlatformAction) and action.root.kind in ("junit", "test_parser"):
-                            homelessJunitActions.append(action.root)
+                            homeless_junit_actions.append(action.root)
                         else:
                             actions.append(action)
             # we have a different abstraction for artifacts, so we simply append them to the last action
@@ -256,13 +257,12 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                     actions[-1].root.results = convert_results(job.artifacts)
             # we also don't want any orphaned junit actions, so we add them to the last action with the same
             # excludeDuring and runAlways
-            for junitAction in homelessJunitActions:
+            for junitAction in homeless_junit_actions:
                 if len(actions) > 0:
                     paths: list[str] = []
-                    if (junitAction.parameters is None or
-                            junitAction.parameters.root is None or
-                            junitAction.parameters.root.root is None or
-                            junitAction.parameters.root.root["test_results"] is None):
+                    if (junitAction.parameters is None or junitAction.parameters.root is None or
+                          junitAction.parameters.root.root is None or
+                          junitAction.parameters.root.root["test_results"] is None):
                         # we don't want to add empty junit actions with no parameter test_results
                         continue
                     if isinstance(junitAction.parameters.root.root["test_results"], list):
@@ -276,15 +276,16 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                     for i, element in reversed(list(enumerate(actions))):
                         if isinstance(element.root, ScriptAction):
                             if (
-                                    element.root.excludeDuring == junitAction.excludeDuring
-                                    and element.root.runAlways == junitAction.runAlways
-                                    and element.root.workdir == junitAction.workdir
+                                  element.root.excludeDuring == junitAction.excludeDuring
+                                  and element.root.runAlways == junitAction.runAlways
+                                  and element.root.workdir == junitAction.workdir
                             ):
                                 could_be_added = True
                                 if element.root.results is None:
                                     element.root.results = results
                                 else:
-                                    element.root.results.append(results)
+                                    for result in results:
+                                        element.root.results.append(result)
                                 break
                     if not could_be_added:
                         actions.append(
@@ -308,7 +309,7 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
 
 
 def extract_repositories(
-    stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
+      stages: dict[str, BambooStage], repositories: dict[str, BambooRepository]
 ) -> dict[str, Repository]:
     """
     Extracts the repositories from the given stages. So we can add them to the windfile.

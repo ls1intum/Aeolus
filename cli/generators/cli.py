@@ -242,7 +242,6 @@ class CliGenerator(BaseGenerator):
                 container_image += ":" + tag
         return container_image
 
-
     def run(self, job_id: str) -> None:
         """
         Run the generated bash script.
