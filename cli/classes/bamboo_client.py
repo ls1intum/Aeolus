@@ -71,7 +71,7 @@ def parse_condition(conditions: Optional[list[str] | list[dict[str, Any]]]) -> O
         return None
     condition: Optional[BambooCondition] = None
     for entry in conditions:
-        # check if this behaves differently if there are more than one conditions
+        # check if this behaves differently, if there are more than one conditions
         if isinstance(entry, dict):
             dictionary: dict[str, dict[str, str]] = fix_keys(dictionary=entry)
             matches: dict[str, dict[str, str]] = fix_keys(dictionary=dictionary["variable"])
