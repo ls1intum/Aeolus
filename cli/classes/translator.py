@@ -230,6 +230,46 @@ def convert_results(artifacts: typing.List[BambooArtifact]) -> typing.List[Resul
     return results
 
 
+def add_results_to_action(junit_action: PlatformAction, actions: list[Action], results: list[Result]) -> None:
+    """
+    Adds the given junit result to the given list of actions.
+    :param junit_action: junit action that needs to be added
+    :param actions: list of actions
+    :param results: results to add
+    """
+    could_be_added: bool = False
+    for action in reversed(list(actions)):
+        if isinstance(action.root, ScriptAction):
+            if (
+                  action.root.excludeDuring == junit_action.excludeDuring
+                  and action.root.runAlways == junit_action.runAlways
+                  and action.root.workdir == junit_action.workdir
+            ):
+                could_be_added = True
+                if action.root.results is None:
+                    action.root.results = results
+                else:
+                    for result in results:
+                        action.root.results.append(result)
+                break
+    if not could_be_added:
+        actions.append(
+            Action(
+                root=ScriptAction(
+                    name=junit_action.name,
+                    script="#empty script action, just for the results",
+                    excludeDuring=junit_action.excludeDuring,
+                    workdir=junit_action.workdir,
+                    docker=junit_action.docker,
+                    parameters=None,
+                    environment=None,
+                    results=results,
+                    platform=None,
+                    runAlways=junit_action.runAlways,
+                )
+            )
+        )
+
 def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions: list[PlatformAction]) -> None:
     """
     Converts the given list of junit tasks into a list of results.
@@ -239,7 +279,6 @@ def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions
     if len(homeless_junit_actions) == 0:
         return
     for junit_action in homeless_junit_actions:
-        paths: list[str] = []
         if (
             junit_action.parameters is None
             or junit_action.parameters.root is None
@@ -248,6 +287,7 @@ def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions
         ):
             # we don't want to add empty junit actions with no parameter test_results
             continue
+        paths: list[str] = []
         if isinstance(junit_action.parameters.root.root["test_results"], list):
             paths = junit_action.parameters.root.root["test_results"]
         elif isinstance(junit_action.parameters.root.root["test_results"], str):
@@ -255,38 +295,7 @@ def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions
         results: list[Result] = []
         for path in paths:
             results.append(Result(name=f"{junit_action.name}_{path}", path=path, type="junit", ignore=None))
-        could_be_added: bool = False
-        for action in reversed(list(actions)):
-            if isinstance(action.root, ScriptAction):
-                if (
-                    action.root.excludeDuring == junit_action.excludeDuring
-                    and action.root.runAlways == junit_action.runAlways
-                    and action.root.workdir == junit_action.workdir
-                ):
-                    could_be_added = True
-                    if action.root.results is None:
-                        action.root.results = results
-                    else:
-                        for result in results:
-                            action.root.results.append(result)
-                    break
-        if not could_be_added:
-            actions.append(
-                Action(
-                    root=ScriptAction(
-                        name=junit_action.name,
-                        script="#empty script action, just for the results",
-                        excludeDuring=junit_action.excludeDuring,
-                        workdir=junit_action.workdir,
-                        docker=junit_action.docker,
-                        parameters=None,
-                        environment=None,
-                        results=results,
-                        platform=None,
-                        runAlways=junit_action.runAlways,
-                    )
-                )
-            )
+        add_results_to_action(junit_action=junit_action, actions=actions, results=results)
 
 
 def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSchema) -> list[Action]:
