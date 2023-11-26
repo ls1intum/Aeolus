@@ -76,13 +76,14 @@ class Result(BaseModel):
     The result of an action. For the CI system to keep/publish.
     """
 
-    name: Optional[str] = Field(None, description='The name of the result.', examples=['testReport'])
-    path: Optional[str] = Field(
-        None,
+    name: str = Field(..., description='The name of the result.', examples=['testReport'])
+    path: str = Field(
+        ...,
         description='The path to the result to keep, can be a file or a directory.',
         examples=['target/test-reports'],
     )
     ignore: Optional[str] = Field(None, description="Ignore this pattern, don't keep it.", examples=['*.txt'])
+    type: Optional[str] = Field(None, description='The type of the result.', examples=['junit'])
 
 
 class Repository(BaseModel):

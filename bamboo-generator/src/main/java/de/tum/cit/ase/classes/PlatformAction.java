@@ -19,6 +19,7 @@ public class PlatformAction extends Action {
         action.setRunAlways((boolean) map.getOrDefault("runAlways", false));
         action.setWorkdir((String) map.getOrDefault("workdir", null));
         action.setDocker(DockerConfig.fromMap((Map<String, Object>) map.getOrDefault("docker", new HashMap<>())));
+        action.setResults(Result.fromList((List<Object>) map.getOrDefault("results", new ArrayList<>())));
         return action;
     }
 
@@ -26,7 +27,7 @@ public class PlatformAction extends Action {
         return kind;
     }
 
-    private void setKind(String kind) {
+    public void setKind(String kind) {
         this.kind = kind;
     }
 }

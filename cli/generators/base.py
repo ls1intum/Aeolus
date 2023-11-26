@@ -5,7 +5,7 @@ Base class for generators. Specifies the interface for generators.
 """
 import typing
 
-from classes.generated.definitions import ScriptAction, Repository, Environment, Dictionary
+from classes.generated.definitions import ScriptAction, Repository, Environment, Dictionary, Result
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
@@ -27,6 +27,7 @@ class BaseGenerator:
     final_result: typing.Optional[str]
     environment: EnvironmentSchema
     key: typing.Optional[str]
+    results: dict[str, list[Result]] = {}
 
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
@@ -86,6 +87,31 @@ class BaseGenerator:
             if action.root.runAlways:
                 return True
         return False
+
+    def has_results(self) -> bool:
+        """
+        Check if there are results in the windfile.
+        """
+        if self.results:
+            return True
+        for action in self.windfile.actions:
+            if action.root.results:
+                return True
+        return False
+
+    def handle_results(self) -> None:
+        """
+        Handle results in the windfile.
+        """
+        raise NotImplementedError("handle_results() not implemented")
+
+    def add_result(self, workdir: str, result: Result) -> None:
+        """
+        Add a result to the results dictionary.
+        """
+        if workdir not in self.results:
+            self.results[workdir] = []
+        self.results[workdir].append(result)
 
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """

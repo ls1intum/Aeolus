@@ -40,9 +40,9 @@ class JenkinsGenerator(BaseGenerator):
             return
         tag: str = config.tag if config.tag is not None else "latest"
         complete_image: str = config.image + ":" + tag if ":" not in config.image else config.image
-        self.result.append(" " * indentation + "agent {")
-        self.result.append(" " * indentation + "  docker {")
-        self.result.append(" " * indentation + "    image '" + complete_image + "'")
+        self.add_line(indentation=indentation, line="agent {")
+        self.add_line(indentation=indentation, line="  docker {")
+        self.add_line(indentation=indentation, line="    image '" + complete_image + "'")
         args: Optional[str] = None
         if config.volumes is not None:
             args = "-v " + ":".join(config.volumes)
@@ -51,9 +51,9 @@ class JenkinsGenerator(BaseGenerator):
                 args = ""
             args += " " + " ".join(config.parameters)
         if args is not None:
-            self.result.append(" " * indentation + "    args '" + args + "'")
-        self.result.append(" " * indentation + "  }")
-        self.result.append(" " * indentation + "}")
+            self.add_line(indentation=indentation, line="    args '" + args + "'")
+        self.add_line(indentation=indentation, line="  }")
+        self.add_line(indentation=indentation, line="}")
 
     def add_prefix(self) -> None:
         """
@@ -122,7 +122,7 @@ class JenkinsGenerator(BaseGenerator):
             indentation=indentation,
             workdir=step.workdir,
         )
-        self.add_line(indentation=indentation - 2, line="}")
+        self.handle_step_results(workdir=step.workdir, step=step)
 
     # pylint: disable=too-many-arguments
     def add_script(
@@ -163,6 +163,31 @@ class JenkinsGenerator(BaseGenerator):
         indentation -= 2
         self.result.append(" " * indentation + "}")
 
+    def add_results(
+        self,
+        indentation: int,
+    ) -> None:
+        """
+        Add a script to the pipeline.
+        :param indentation: indentation level
+        """
+        self.add_line(indentation=indentation, line="always {")
+        indentation += 2
+        self.add_line(indentation=indentation, line="echo '⚙️ publishing results'")
+        for workdir, entries in self.results.items():
+            for result in entries:
+                full_path: str = workdir + "/" + result.path
+                ignore: str = f"exclude: {result.ignore}" if result.ignore else ""
+                if result.type == "junit":
+                    self.add_line(indentation=indentation, line=f"junit '{full_path}'")
+                else:
+                    self.add_line(
+                        indentation=indentation,
+                        line=f"archiveArtifacts: '{full_path}', fingerprint: true, allowEmptyArchive: true, {ignore}",
+                    )
+        indentation -= 2
+        self.add_line(indentation=indentation, line="}")
+
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """
         Translate a step into a CI action.
@@ -193,6 +218,7 @@ class JenkinsGenerator(BaseGenerator):
         self.result.append(f"    // original type was {original_type}")
         self.result.append(f"    stage('{name}') " + "{")
         self.add_docker_config(config=step.docker, indentation=6)
+        self.handle_step_results(workdir=step.workdir, step=step)
 
         if step.excludeDuring is not None:
             self.result.append("      when {")
@@ -212,6 +238,17 @@ class JenkinsGenerator(BaseGenerator):
         )
         self.result.append("    }")
         return None
+
+    def handle_step_results(self, workdir: Optional[str], step: ScriptAction) -> None:
+        """
+        Process the results of a step.
+        :param workdir: working directory of the step
+        :param step: object to process
+        """
+        key: str = workdir if workdir else "."
+        if step.results:
+            for result in step.results:
+                self.add_result(workdir=key, result=result)
 
     def add_environment_variables(self, step: ScriptAction) -> None:
         """
@@ -360,11 +397,14 @@ class JenkinsGenerator(BaseGenerator):
             if isinstance(step.root, ScriptAction) and not step.root.runAlways:
                 self.handle_step(name=step.root.name, step=step.root, call=True)
         self.add_line(indentation=2, line="}")
-        if self.has_always_actions():
+        if self.has_always_actions() or self.has_results():
             self.add_line(indentation=2, line="post {")
             for post_step in self.windfile.actions:
                 if isinstance(post_step.root, ScriptAction) and post_step.root.runAlways:
                     self.handle_always_step(name=post_step.root.name, step=post_step.root)
+            if self.has_results():
+                self.add_results(indentation=4)
+            self.add_line(indentation=2, line="}")
         self.add_postfix()
         if self.output_settings.ci_credentials is not None:
             self.publish()

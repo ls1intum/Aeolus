@@ -62,7 +62,7 @@ class CliGenerator(BaseGenerator):
         self.result.append("# main function")
         self.result.append("main () {")
         self.add_line(indentation=2, line='local _current_lifecycle="${1}"')
-        if self.has_always_actions():
+        if self.has_always_actions() or self.has_results():
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
             self.add_line(indentation=2, line=f"{function} $_current_lifecycle")
@@ -109,6 +109,37 @@ class CliGenerator(BaseGenerator):
                 indentations -= 2
                 self.add_line(indentation=indentations, line="fi")
 
+    def handle_results(self) -> None:
+        """
+        https://askubuntu.com/a/889746
+        https://stackoverflow.com/a/8088439
+        Handle the results of all steps
+        """
+        self.result.append("\n# move results")
+        self.result.append("aeolus_move_results () " + "{")
+        self.add_line(indentation=2, line="echo '⚙️ moving results'")
+        self.add_line(indentation=2, line="mkdir -p /aeolus-results")
+        self.add_line(indentation=2, line="shopt -s extglob")
+        for workdir, entries in self.results.items():
+            self.add_line(indentation=2, line=f"cd {workdir}")
+            for result in entries:
+                self.add_line(indentation=2, line=f'local _sources="{result.path}"')
+                if result.ignore:
+                    self.add_line(indentation=2, line=f"_sources=$(echo $_sources/!({result.ignore}))")
+                self.add_line(indentation=2, line=f"mv $_sources /aeolus-results/{result.path}")
+        self.result.append("}")
+
+    def handle_step_results(self, workdir: Optional[str], step: ScriptAction) -> None:
+        """
+        Process the results of a step.
+        :param workdir: working directory of the step
+        :param step: object to process
+        """
+        key: str = workdir if workdir else f"${self.initial_directory_variable}"
+        if step.results:
+            for result in step.results:
+                self.add_result(workdir=key, result=result)
+
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """
         Translate a step into a CI action.
@@ -135,6 +166,7 @@ class CliGenerator(BaseGenerator):
         self.add_lifecycle_guards(name=name, exclusions=step.excludeDuring, indentations=2)
 
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
+        self.handle_step_results(workdir=step.workdir, step=step)
         if step.workdir:
             self.add_line(indentation=2, line=f"cd {step.workdir}")
         if step.environment:
@@ -270,12 +302,15 @@ class CliGenerator(BaseGenerator):
         for step in self.windfile.actions:
             if isinstance(step.root, ScriptAction):
                 self.handle_step(name=step.root.name, step=step.root, call=not step.root.runAlways)
-
-        if self.has_always_actions():
+        if self.has_results():
+            self.handle_results()
+        if self.has_always_actions() or self.has_results():
             always_actions: list[str] = []
             for step in self.windfile.actions:
                 if isinstance(step.root, ScriptAction) and step.root.runAlways:
                     always_actions.append(step.root.name)
+            if self.has_results():
+                always_actions.append("aeolus_move_results")
             self.handle_always_steps(steps=always_actions)
         self.add_postfix()
         return super().generate()

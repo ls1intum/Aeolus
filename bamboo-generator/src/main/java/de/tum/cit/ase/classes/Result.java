@@ -9,11 +9,13 @@ public class Result {
     private String name;
     private String path;
     private String ignore;
+    private String type;
 
-    public Result(String name, String path, String ignore) {
+    public Result(String name, String path, String ignore, String type) {
         this.name = name;
         this.path = path;
         this.ignore = ignore;
+        this.type = type;
     }
 
     public String getName() {
@@ -40,9 +42,17 @@ public class Result {
         this.ignore = ignore;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public static List<Result> fromList(List<Object> resultsList) {
         if (resultsList == null || resultsList.isEmpty()) {
-            return null;
+            return new ArrayList<>();
         }
         List<Result> results = new ArrayList<>();
         for (Object result : resultsList) {
@@ -51,7 +61,8 @@ public class Result {
                 String name = (String) resultMap.getOrDefault("name", null);
                 String path = (String) resultMap.getOrDefault("path", null);
                 String ignore = (String) resultMap.getOrDefault("ignore", null);
-                results.add(new Result(name, path, ignore));
+                String type = (String) resultMap.getOrDefault("type", null);
+                results.add(new Result(name, path, ignore, type));
             }
         }
         return results;
