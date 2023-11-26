@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.FileInputStream;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class WindFile {
 
@@ -45,7 +47,47 @@ public class WindFile {
             Map<String, Object> actionMap = (Map<String, Object>) action;
             windfile.appendAction(Action.fromMap(actionMap));
         }
+        windfile.convertJunitResultsToActions();
         return windfile;
+    }
+
+    private void convertJunitResultsToActions() {
+        List<Action> newActions = new ArrayList<>();
+        for (Action action : this.getActions()) {
+            List<Result> results = action.getResults();
+            if (results.isEmpty() || results.stream().noneMatch(r -> r.getType().equals("junit"))) {
+                newActions.add(action);
+                break;
+            }
+            List<Result> resultsToReplace = results.stream().filter(r -> r.getType().equals("junit")).toList();
+            for (Result result : resultsToReplace) {
+                PlatformAction newResultAction = getResultAction(action, result);
+                newActions.add(newResultAction);
+            }
+            action.setResults(results.stream().filter(r -> !r.getType().equals("junit")).toList());
+        }
+        this.setActions(newActions);
+    }
+
+    @NotNull
+    private static PlatformAction getResultAction(Action action, Result result) {
+        PlatformAction newResultAction = new PlatformAction();
+        newResultAction.setRunAlways(action.isRunAlways());
+        newResultAction.setKind("junit");
+        newResultAction.setName(action.getName() + "-" + result.getName());
+        String path = result.getPath();
+        if (action.getWorkdir() != null) {
+            path = action.getWorkdir() + "/" + path;
+        }
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("test_results", path);
+        parameters.put("ignore_time", false);
+        newResultAction.setParameters(parameters);
+        newResultAction.setEnvironment(action.getEnvironment());
+        newResultAction.setExcludeDuring(action.getExcludeDuring());
+        newResultAction.setEnvironment(action.getEnvironment());
+        newResultAction.setDocker(action.getDocker());
+        return newResultAction;
     }
 
     public static WindFile fromFile(String filePath) throws FileNotFoundException {

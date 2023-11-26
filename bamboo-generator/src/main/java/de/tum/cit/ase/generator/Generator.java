@@ -195,10 +195,22 @@ public class Generator {
         result = BambooSpecSerializer.dump(plan);
     }
 
+    /**
+     * This method is used to add the artifacts to the job, it is used to add the artifacts to the default job
+     * if we only have one stage, and to add the artifacts to the job of the stage if we have multiple stages.
+     * If the result is of type "junit", we add the junit parser to the job in other parts of the application.
+     * @param job the job to add the artifacts to
+     * @param action the action that contains the artifacts
+     * @return the job with the artifacts added
+     */
     public Job addArtifacts(Job job, Action action) {
         if (action.getResults() != null) {
             List<Artifact> artifacts = new ArrayList<>();
             for (Result result : action.getResults()) {
+                if (result.getType().equals("junit")) {
+                    // junit parser is added as a task
+                    continue;
+                }
                 try {
                     var pathComponents = result.getPath().split("/");
                     var pattern = result.getPath();

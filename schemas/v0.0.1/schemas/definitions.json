@@ -647,7 +647,18 @@
         "examples": [
           "*.txt"
         ]
+      },
+      "type": {
+        "description": "The type of the result.",
+        "type": "string",
+        "examples": [
+          "junit"
+        ]
       }
-    }
+    },
+    "required": [
+      "name",
+      "path"
+    ]
   }
 }

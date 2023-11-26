@@ -58,20 +58,17 @@ public class BuildPlanService {
         var tasks = new ArrayList<Task<?, ?>>();
 
         String type = action.getKind();
-        switch (type) {
-            case "junit": {
-                Object parameters = action.getParameters().get("test_results");
-                String param = String.valueOf(parameters);
-                if (parameters instanceof List) {
-                    List<String> results = (List<String>) parameters;
-                    param = String.join(",", results);
-                }
-                TestParserTask task = TestParserTask.createJUnitParserTask()
-                        .description(action.getName())
-                        .resultDirectories(param);
-                tasks.add(task);
-                break;
+        if (type.equals("junit")) {
+            Object parameters = action.getParameters().get("test_results");
+            String param = String.valueOf(parameters);
+            if (parameters instanceof List) {
+                List<String> results = (List<String>) parameters;
+                param = String.join(",", results);
             }
+            TestParserTask task = TestParserTask.createJUnitParserTask()
+                    .description(action.getName())
+                    .resultDirectories(param);
+            tasks.add(task);
         }
         return tasks;
     }

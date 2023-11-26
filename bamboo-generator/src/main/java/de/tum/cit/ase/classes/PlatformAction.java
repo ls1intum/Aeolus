@@ -26,7 +26,7 @@ public class PlatformAction extends Action {
         return kind;
     }
 
-    private void setKind(String kind) {
+    public void setKind(String kind) {
         this.kind = kind;
     }
 }
