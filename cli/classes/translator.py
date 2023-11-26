@@ -317,9 +317,12 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
                     action: Optional[Action] = extract_action(job=job, task=task, environment=environment)
                     if not action:
                         continue
-                    if isinstance(action.root, PlatformAction) and action.root.kind in ("junit", "test_parser"):
-                        homeless_junit_actions.append(action.root)
-                    else:
+                    remove: bool = False
+                    if isinstance(action.root, PlatformAction):
+                        if action.root.kind in ["junit", "test_parser"]:
+                            homeless_junit_actions.append(action.root)
+                            remove = True
+                    if not remove:
                         actions.append(action)
             # we have a different abstraction for artifacts, so we simply append them to the last action
             if job.artifacts is not None:
