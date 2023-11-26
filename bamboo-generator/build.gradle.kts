@@ -36,7 +36,7 @@ repositories {
 
 dependencies {
 //    implementation("com.fasterxml.jackson.core:jackson-annotations:2.15.2")
-    implementation("com.atlassian.bamboo:bamboo-specs:9.3.3")
+    implementation("com.atlassian.bamboo:bamboo-specs:9.3.5")
     // https://mvnrepository.com/artifact/org.jsonschema2pojo/jsonschema2pojo-core
     implementation("org.jsonschema2pojo:jsonschema2pojo-core:1.2.1")
     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
