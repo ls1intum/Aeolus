@@ -734,12 +734,13 @@ Every type of job can have the following properties:
 
 ### Additional Features
 
-| Feature                    | CLI/Bash | Jenkins | Bamboo |
-|----------------------------|:--------:|:-------:|:------:|
-| build trigger              |    ✅     |    ✅    |   ✅    |
-| single docker image        |    ✅     |    ✅    |   ✅    |
-| multiple docker images     |    ❌     |    ✅    |   ✅    |
-| translating back to Aeolus |    ❌     |    ❌    |   ✅    |
+| Feature                      | CLI/Bash | Jenkins | Bamboo |
+|------------------------------|:--------:|:-------:|:------:|
+| build trigger                |    ✅     |    ✅    |   ✅    |
+| single docker image          |    ✅     |    ✅    |   ✅    |
+| multiple docker images       |    ❌     |    ✅    |   ✅    |
+| translating back to Aeolus   |    ❌     |    ❌    |   ✅    |
+| publishing results/artifacts |    ✅     |    ✅    |   ✅    |
 
 
 ## Translating back to Aeolus
