@@ -241,9 +241,9 @@ def add_results_to_action(junit_action: PlatformAction, actions: list[Action], r
     for action in reversed(list(actions)):
         if isinstance(action.root, ScriptAction):
             if (
-                  action.root.excludeDuring == junit_action.excludeDuring
-                  and action.root.runAlways == junit_action.runAlways
-                  and action.root.workdir == junit_action.workdir
+                action.root.excludeDuring == junit_action.excludeDuring
+                and action.root.runAlways == junit_action.runAlways
+                and action.root.workdir == junit_action.workdir
             ):
                 could_be_added = True
                 if action.root.results is None:
@@ -269,6 +269,7 @@ def add_results_to_action(junit_action: PlatformAction, actions: list[Action], r
                 )
             )
         )
+
 
 def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions: list[PlatformAction]) -> None:
     """
@@ -314,11 +315,12 @@ def extract_actions(stages: dict[str, BambooStage], environment: EnvironmentSche
             for task in job.tasks:
                 if isinstance(task, BambooTask):
                     action: Optional[Action] = extract_action(job=job, task=task, environment=environment)
-                    if action is not None:
-                        if isinstance(action.root, PlatformAction) and action.root.kind in ("junit", "test_parser"):
-                            homeless_junit_actions.append(action.root)
-                        else:
-                            actions.append(action)
+                    if not action:
+                        continue
+                    if isinstance(action.root, PlatformAction) and action.root.kind in ("junit", "test_parser"):
+                        homeless_junit_actions.append(action.root)
+                    else:
+                        actions.append(action)
             # we have a different abstraction for artifacts, so we simply append them to the last action
             if job.artifacts is not None:
                 if len(actions) > 0:
