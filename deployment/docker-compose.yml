@@ -32,7 +32,6 @@ services:
       - "traefik.http.middlewares.aeolus-api.stripprefix.prefixes=/api"
       - 'traefik.http.routers.aeolus-api.middlewares=aeolus-api'
     networks:
-      - aeolus
       - traefik
   bamboo-api:
     container_name: aeolus-bamboo-api
@@ -44,11 +43,9 @@ services:
     labels:
       - "traefik.enable=false"
     networks:
-      - aeolus
       - traefik
 
 
 networks:
-  aeolus:
   traefik:
     external: true
