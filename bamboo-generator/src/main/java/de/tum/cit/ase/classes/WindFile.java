@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import de.tum.cit.ase.utils.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
@@ -53,7 +54,7 @@ public class WindFile {
         PlatformAction newResultAction = new PlatformAction();
         newResultAction.setRunAlways(action.isRunAlways());
         newResultAction.setKind("junit");
-        newResultAction.setName(action.getName() + "-" + result.getName());
+        newResultAction.setName(Utils.getBambooKeyOf(action.getName() + "-" + result.getName()));
         List<String> paths = results.stream().map(Result::getPath).toList();
         if (action.getWorkdir() != null) {
             paths = paths.stream().map(p -> action.getWorkdir() + "/" + p).toList();
@@ -81,7 +82,7 @@ public class WindFile {
         List<Action> newActions = new ArrayList<>();
         for (Action action : this.getActions()) {
             List<Result> results = action.getResults();
-            if (results.isEmpty() || results.stream().noneMatch(r -> r.getType().equals("junit"))) {
+            if (results.isEmpty() || results.stream().noneMatch(r -> "junit".equals(r.getType()))) {
                 newActions.add(action);
                 continue;
             }
@@ -91,8 +92,9 @@ public class WindFile {
                 continue;
             }
             PlatformAction newResultAction = getResultAction(action, resultsToReplace);
-            newActions.add(newResultAction);
             action.setResults(results.stream().filter(r -> !"junit".equals(r.getType())).toList());
+            newActions.add(action);
+            newActions.add(newResultAction);
         }
         this.setActions(newActions);
     }

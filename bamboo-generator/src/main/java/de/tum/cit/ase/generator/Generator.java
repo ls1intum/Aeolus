@@ -188,7 +188,7 @@ public class Generator {
         }
         List<Artifact> artifacts = new ArrayList<>();
         for (Result result : action.getResults()) {
-            if (result.getType().equals("junit")) {
+            if ("junit".equals(result.getType())) {
                 // junit parser is added as a task
                 continue;
             }
@@ -200,7 +200,7 @@ public class Generator {
                     pattern = pathComponents[pathComponents.length - 1];
                     path = result.getPath().substring(0, result.getPath().length() - pattern.length() - 1);
                 }
-                Artifact artifact = new Artifact().name(result.getName()).copyPatterns(pattern).location(path).shared(false).required(false);
+                Artifact artifact = new Artifact().name(Utils.getBambooKeyOf(result.getName())).copyPatterns(pattern).location(path).shared(false).required(false);
                 if (result.getIgnore() != null) {
                     artifact = artifact.exclusionPatterns(result.getIgnore());
                 }
