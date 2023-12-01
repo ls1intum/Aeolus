@@ -64,7 +64,7 @@ public class Result {
                 String path = (String) resultMap.getOrDefault("path", null);
                 String ignore = (String) resultMap.getOrDefault("ignore", null);
                 String type = (String) resultMap.getOrDefault("type", null);
-                Boolean bool = (Boolean) resultMap.getOrDefault("boolean", false);
+                Boolean bool = (Boolean) resultMap.getOrDefault("before", false);
                 if (bool == null) {
                     bool = false;
                 }
