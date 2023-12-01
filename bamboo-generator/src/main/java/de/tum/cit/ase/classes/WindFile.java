@@ -91,10 +91,14 @@ public class WindFile {
                 newActions.add(action);
                 continue;
             }
-            PlatformAction newResultAction = getResultAction(action, resultsToReplace);
+            List<Result> beforeResults = results.stream().filter(Result::isBefore).toList();
+            List<Result> afterResults = results.stream().filter(r -> !r.isBefore()).toList();
+            PlatformAction beforeResultsAction = getResultAction(action, beforeResults);
+            PlatformAction afterResultsAction = getResultAction(action, afterResults);
             action.setResults(results.stream().filter(r -> !"junit".equals(r.getType())).toList());
+            newActions.add(beforeResultsAction);
             newActions.add(action);
-            newActions.add(newResultAction);
+            newActions.add(afterResultsAction);
         }
         this.setActions(newActions);
     }

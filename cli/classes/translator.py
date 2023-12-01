@@ -295,7 +295,7 @@ def convert_junit_tasks_to_results(actions: list[Action], homeless_junit_actions
             paths.append(junit_action.parameters.root.root["test_results"])
         results: list[Result] = []
         for path in paths:
-            results.append(Result(name=f"{junit_action.name}_{path}", path=path, type="junit", ignore=None))
+            results.append(Result(name=f"{junit_action.name}_{path}", path=path, type="junit", ignore=None, before=True))
         add_results_to_action(junit_action=junit_action, actions=actions, results=results)
 
 
