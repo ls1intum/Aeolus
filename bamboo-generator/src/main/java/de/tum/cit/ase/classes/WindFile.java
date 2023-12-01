@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import de.tum.cit.ase.utils.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.Yaml;
 
@@ -47,13 +48,15 @@ public class WindFile {
         return windfile;
     }
 
-    @NotNull
     private static PlatformAction getResultAction(Action action, List<Result> results) {
+        if (results.isEmpty()) {
+            return null;
+        }
         Result result = results.get(0);
         PlatformAction newResultAction = new PlatformAction();
         newResultAction.setRunAlways(action.isRunAlways());
         newResultAction.setKind("junit");
-        newResultAction.setName(action.getName() + "-" + result.getName());
+        newResultAction.setName(Utils.getBambooKeyOf(action.getName() + "-" + result.getName()));
         List<String> paths = results.stream().map(Result::getPath).toList();
         if (action.getWorkdir() != null) {
             paths = paths.stream().map(p -> action.getWorkdir() + "/" + p).toList();
@@ -81,7 +84,7 @@ public class WindFile {
         List<Action> newActions = new ArrayList<>();
         for (Action action : this.getActions()) {
             List<Result> results = action.getResults();
-            if (results.isEmpty() || results.stream().noneMatch(r -> r.getType().equals("junit"))) {
+            if (results.isEmpty() || results.stream().noneMatch(r -> "junit".equals(r.getType()))) {
                 newActions.add(action);
                 continue;
             }
@@ -90,9 +93,18 @@ public class WindFile {
                 newActions.add(action);
                 continue;
             }
-            PlatformAction newResultAction = getResultAction(action, resultsToReplace);
-            newActions.add(newResultAction);
+            List<Result> beforeResults = resultsToReplace.stream().filter(Result::isBefore).toList();
+            List<Result> afterResults = resultsToReplace.stream().filter(r -> !r.isBefore()).toList();
+            PlatformAction beforeResultsAction = getResultAction(action, beforeResults);
+            PlatformAction afterResultsAction = getResultAction(action, afterResults);
             action.setResults(results.stream().filter(r -> !"junit".equals(r.getType())).toList());
+            if (beforeResultsAction != null){
+                newActions.add(beforeResultsAction);
+            }
+            newActions.add(action);
+            if (afterResultsAction != null){
+                newActions.add(afterResultsAction);
+            }
         }
         this.setActions(newActions);
     }

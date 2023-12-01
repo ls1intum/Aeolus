@@ -45,6 +45,7 @@ class BaseGenerator:
         if env is None:
             raise ValueError(f"No environment found for target {input_settings.target.value}")
         self.environment = env
+        self.results = {}
         self.key = None
 
     def add_line(self, indentation: int, line: str) -> None:

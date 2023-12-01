@@ -32,7 +32,7 @@ jobs:
           - dockerfile: ./docker/bamboo-generator/Dockerfile
             image: ghcr.io/${{ github.repository }}/bamboo-generator
           - dockerfile: ./docker/api/Dockerfile
-            image: ghcr.io/${{ github.repository }}/api
+            image: ghcr.io/${{ github.repository }}/api-slim
           - dockerfile: ./docker/playground/Dockerfile
             image: ghcr.io/${{ github.repository }}/playground
     steps:
