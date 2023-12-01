@@ -654,6 +654,11 @@
         "examples": [
           "junit"
         ]
+      },
+      "before": {
+        "description": "The result must be stored before this action is executed.",
+        "type": "boolean",
+        "default": false
       }
     },
     "required": [
