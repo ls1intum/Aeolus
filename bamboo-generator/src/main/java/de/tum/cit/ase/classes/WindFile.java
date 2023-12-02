@@ -48,8 +48,10 @@ public class WindFile {
         return windfile;
     }
 
-    @NotNull
     private static PlatformAction getResultAction(Action action, List<Result> results) {
+        if (results.isEmpty()) {
+            return null;
+        }
         Result result = results.get(0);
         PlatformAction newResultAction = new PlatformAction();
         newResultAction.setRunAlways(action.isRunAlways());
@@ -91,10 +93,18 @@ public class WindFile {
                 newActions.add(action);
                 continue;
             }
-            PlatformAction newResultAction = getResultAction(action, resultsToReplace);
+            List<Result> beforeResults = resultsToReplace.stream().filter(Result::isBefore).toList();
+            List<Result> afterResults = resultsToReplace.stream().filter(r -> !r.isBefore()).toList();
+            PlatformAction beforeResultsAction = getResultAction(action, beforeResults);
+            PlatformAction afterResultsAction = getResultAction(action, afterResults);
             action.setResults(results.stream().filter(r -> !"junit".equals(r.getType())).toList());
+            if (beforeResultsAction != null){
+                newActions.add(beforeResultsAction);
+            }
             newActions.add(action);
-            newActions.add(newResultAction);
+            if (afterResultsAction != null){
+                newActions.add(afterResultsAction);
+            }
         }
         this.setActions(newActions);
     }

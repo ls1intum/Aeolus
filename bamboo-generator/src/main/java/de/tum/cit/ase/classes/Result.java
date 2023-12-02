@@ -10,12 +10,14 @@ public class Result {
     private String path;
     private String ignore;
     private String type;
+    private boolean before;
 
-    public Result(String name, String path, String ignore, String type) {
+    public Result(String name, String path, String ignore, String type, boolean before) {
         this.name = name;
         this.path = path;
         this.ignore = ignore;
         this.type = type;
+        this.before = before;
     }
 
     public String getName() {
@@ -62,9 +64,21 @@ public class Result {
                 String path = (String) resultMap.getOrDefault("path", null);
                 String ignore = (String) resultMap.getOrDefault("ignore", null);
                 String type = (String) resultMap.getOrDefault("type", null);
-                results.add(new Result(name, path, ignore, type));
+                Boolean bool = (Boolean) resultMap.getOrDefault("before", false);
+                if (bool == null) {
+                    bool = false;
+                }
+                results.add(new Result(name, path, ignore, type, bool));
             }
         }
         return results;
+    }
+
+    public boolean isBefore() {
+        return before;
+    }
+
+    public void setBefore(boolean before) {
+        this.before = before;
     }
 }
