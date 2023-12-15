@@ -200,7 +200,7 @@ public class Generator {
                     pattern = pathComponents[pathComponents.length - 1];
                     path = result.getPath().substring(0, result.getPath().length() - pattern.length() - 1);
                 }
-                Artifact artifact = new Artifact().name(Utils.getBambooKeyOf(result.getName())).copyPatterns(pattern).location(path).shared(false).required(false);
+                Artifact artifact = new Artifact().name(result.getName()).copyPatterns(pattern).location(path).shared(false).required(false);
                 if (result.getIgnore() != null) {
                     artifact = artifact.exclusionPatterns(result.getIgnore());
                 }
