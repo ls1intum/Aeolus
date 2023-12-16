@@ -64,7 +64,7 @@ class CliGenerator(BaseGenerator):
         # to enable sourceing the script, we need to skip execution if we do so
         # for that, we check if the first parameter is sourcing, which is not ever given to the script elsewhere
         self.add_line(indentation=2, line='local _current_lifecycle="${1}"')
-        self.add_line(indentation=4, line=f'if [[ "${{_current_lifecycle}}" == "aeolus_sourcing" ]]; then')
+        self.add_line(indentation=4, line='if [[ "${{_current_lifecycle}}" == "aeolus_sourcing" ]]; then')
         self.add_line(indentation=4, line="# just source to use the methods in the subshell, no execution")
         self.add_line(indentation=4, line="return 0")
         self.add_line(indentation=2, line="fi")

@@ -1,5 +1,6 @@
 import os
 import time
+import typing
 
 import yaml
 
@@ -12,13 +13,13 @@ from classes.yaml_dumper import YamlDumper
 from cli_utils import logger
 
 
-def get_build_plans() -> list[str]:
+def get_build_plans() -> typing.List[(str, str)]:
     """
     Get all build plans from Bamboo.
     :return: list of build plans
     """
-    plans: list[(str, str)] = []
-    with open("extracted_build_plans.txt", "r") as content:
+    plans: typing.List[(str, str)] = []
+    with open("extracted_build_plans.txt", "r", encoding="utf-8") as content:
         for line in content:
             name: str = line.split(";")[0]
             date: str = line.split(";")[1]
@@ -32,7 +33,7 @@ def read_env_vars() -> dict[str, str]:
     :return: token
     """
     credentials: dict[str, str] = {}
-    with open(".env", "r") as content:
+    with open(".env", "r", encoding="utf-8") as content:
         for line in content:
             key: str = line.split("=")[0]
             value: str = line.split("=")[1].replace("\n", "")
@@ -40,7 +41,9 @@ def read_env_vars() -> dict[str, str]:
     return credentials
 
 
-def main():
+def main() -> None:
+    # pylint: disable=too-many-locals
+    # pylint: broad-exception-caught
     plans: list[(str, str)] = get_build_plans()
     input_settings: InputSettings = InputSettings(file_path="extracted_build_plans.txt")
     output_settings: OutputSettings = OutputSettings()
@@ -63,7 +66,7 @@ def main():
             continue
         try:
             start = time.time()
-            windfile: WindFile = translator.translate(plan_key=plan[0])
+            windfile: typing.Optional[WindFile] = translator.translate(plan_key=plan[0])
             end = time.time()
             print(f"Translated plan in {end - start}s")
             translationtimes[plan[0]] = end - start
@@ -81,7 +84,7 @@ def main():
             if sleep_counter == 1000:
                 print("Sleeping for 5 seconds...")
                 time.sleep(1)
-        except Exception as _:
+        except Exception:
             print(f"Could not translate plan {plan[0]}")
             failed_plans.append(plan[0])
             continue
