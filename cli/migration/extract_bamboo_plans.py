@@ -1,3 +1,4 @@
+# type: ignore
 import os
 import time
 import typing
@@ -43,7 +44,6 @@ def read_env_vars() -> dict[str, str]:
 
 def main() -> None:
     # pylint: disable=too-many-locals
-    # pylint: broad-exception-caught
     plans: typing.List[typing.Tuple[str, str]] = get_build_plans()
     input_settings: InputSettings = InputSettings(file_path="extracted_build_plans.txt")
     output_settings: OutputSettings = OutputSettings()
@@ -89,10 +89,10 @@ def main() -> None:
             failed_plans.append(plan[0])
             continue
         print(f"{sleep_counter}/{len(plans)} Done")
-    with open("translation_times.txt", "w") as content:
+    with open("translation_times.txt", "w", encoding="utf-8") as content:
         for key in translationtimes.keys():
             content.write(f"{key};{translationtimes[key]}\n")
-    with open("failed_plans.txt", "w") as content:
+    with open("failed_plans.txt", "w", encoding="utf-8") as content:
         for plan in failed_plans:
             content.write(f"{plan}\n")
 
