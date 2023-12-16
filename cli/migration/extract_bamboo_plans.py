@@ -20,8 +20,8 @@ def get_build_plans() -> list[str]:
     plans: list[(str, str)] = []
     with open("extracted_build_plans.txt", "r") as content:
         for line in content:
-            name: str = line.split(';')[0]
-            date: str = line.split(';')[1]
+            name: str = line.split(";")[0]
+            date: str = line.split(";")[1]
             plans.append((name, date))
     return plans
 
@@ -34,8 +34,8 @@ def read_env_vars() -> dict[str, str]:
     credentials: dict[str, str] = {}
     with open(".env", "r") as content:
         for line in content:
-            key: str = line.split('=')[0]
-            value: str = line.split('=')[1].replace('\n', '')
+            key: str = line.split("=")[0]
+            value: str = line.split("=")[1].replace("\n", "")
             credentials[key] = value
     return credentials
 
@@ -76,12 +76,12 @@ def main():
                 logger.info("🪄", "Translated windfile", output_settings.emoji)
                 content.write(
                     yaml.dump(yaml.safe_load(json), sort_keys=False, Dumper=YamlDumper, default_flow_style=False)
-                    )
+                )
             sleep_counter += 1
             if sleep_counter == 1000:
                 print("Sleeping for 5 seconds...")
                 time.sleep(1)
-        except Exception as e:
+        except Exception as _:
             print(f"Could not translate plan {plan[0]}")
             failed_plans.append(plan[0])
             continue
