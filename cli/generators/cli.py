@@ -73,8 +73,7 @@ class CliGenerator(BaseGenerator):
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
             self.add_line(
-                indentation=2,
-                line=f'sh -c "source ${{_scriptname}} aeolus_sourcing;{function} $_current_lifecycle"'
+                indentation=2, line=f'sh -c "source ${{_scriptname}} aeolus_sourcing;{function} $_current_lifecycle"'
             )
             self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
         self.result.append("}\n")
