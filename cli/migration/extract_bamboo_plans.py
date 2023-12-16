@@ -13,6 +13,7 @@ from classes.translator import BambooTranslator
 from classes.yaml_dumper import YamlDumper
 from cli_utils import logger
 
+
 @typing.no_type_check
 def get_build_plans() -> typing.List[typing.Tuple[str, str]]:
     """
@@ -27,6 +28,7 @@ def get_build_plans() -> typing.List[typing.Tuple[str, str]]:
             plans.append((name, date))
     return plans
 
+
 @typing.no_type_check
 def read_env_vars() -> dict[str, str]:
     """
@@ -40,6 +42,7 @@ def read_env_vars() -> dict[str, str]:
             value: str = line.split("=")[1].replace("\n", "")
             credentials[key] = value
     return credentials
+
 
 @typing.no_type_check
 def main() -> None:
