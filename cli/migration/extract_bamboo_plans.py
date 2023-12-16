@@ -13,12 +13,12 @@ from classes.yaml_dumper import YamlDumper
 from cli_utils import logger
 
 
-def get_build_plans() -> typing.List[(str, str)]:
+def get_build_plans() -> typing.List[typing.Tuple[str, str]]:
     """
     Get all build plans from Bamboo.
     :return: list of build plans
     """
-    plans: typing.List[(str, str)] = []
+    plans: typing.List[typing.Tuple[str, str]] = []
     with open("extracted_build_plans.txt", "r", encoding="utf-8") as content:
         for line in content:
             name: str = line.split(";")[0]
