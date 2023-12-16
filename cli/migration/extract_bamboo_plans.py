@@ -44,7 +44,7 @@ def read_env_vars() -> dict[str, str]:
 def main() -> None:
     # pylint: disable=too-many-locals
     # pylint: broad-exception-caught
-    plans: list[(str, str)] = get_build_plans()
+    plans: typing.List[typing.Tuple[str, str]] = get_build_plans()
     input_settings: InputSettings = InputSettings(file_path="extracted_build_plans.txt")
     output_settings: OutputSettings = OutputSettings()
     credentials: dict[str, str] = read_env_vars()
