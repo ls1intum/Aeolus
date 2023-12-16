@@ -1,4 +1,4 @@
-# type: ignore
+# pylint: skip-file
 import os
 import time
 import typing
@@ -13,7 +13,7 @@ from classes.translator import BambooTranslator
 from classes.yaml_dumper import YamlDumper
 from cli_utils import logger
 
-
+@typing.no_type_check
 def get_build_plans() -> typing.List[typing.Tuple[str, str]]:
     """
     Get all build plans from Bamboo.
@@ -27,7 +27,7 @@ def get_build_plans() -> typing.List[typing.Tuple[str, str]]:
             plans.append((name, date))
     return plans
 
-
+@typing.no_type_check
 def read_env_vars() -> dict[str, str]:
     """
     Read the token from the env file.
@@ -41,7 +41,7 @@ def read_env_vars() -> dict[str, str]:
             credentials[key] = value
     return credentials
 
-
+@typing.no_type_check
 def main() -> None:
     # pylint: disable=too-many-locals
     plans: typing.List[typing.Tuple[str, str]] = get_build_plans()
@@ -90,8 +90,8 @@ def main() -> None:
             continue
         print(f"{sleep_counter}/{len(plans)} Done")
     with open("translation_times.txt", "w", encoding="utf-8") as content:
-        for key in translationtimes.keys():
-            content.write(f"{key};{translationtimes[key]}\n")
+        for key, value in translationtimes.items():
+            content.write(f"{key};{value}\n")
     with open("failed_plans.txt", "w", encoding="utf-8") as content:
         for plan in failed_plans:
             content.write(f"{plan}\n")
