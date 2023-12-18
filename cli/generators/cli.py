@@ -27,6 +27,7 @@ class CliGenerator(BaseGenerator):
     functions: List[str] = []
 
     initial_directory_variable: str = "AEOLUS_INITIAL_DIRECTORY"
+    results_directory_variable: str = "/var/tmp/aeolus-results"
 
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
@@ -74,7 +75,7 @@ class CliGenerator(BaseGenerator):
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
             self.add_line(
-                indentation=2, line=f'sh -c "source ${{_scriptname}} aeolus_sourcing;{function} $_current_lifecycle"'
+                indentation=2, line=f'bash -c "source ${{_scriptname}} aeolus_sourcing;{function} $_current_lifecycle"'
             )
             self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
         self.result.append("}\n")
@@ -128,15 +129,17 @@ class CliGenerator(BaseGenerator):
         self.result.append("\n# move results")
         self.result.append("aeolus_move_results () " + "{")
         self.add_line(indentation=2, line="echo '⚙️ moving results'")
-        self.add_line(indentation=2, line="mkdir -p /aeolus-results")
+        self.add_line(indentation=2, line=f"mkdir -p {self.results_directory_variable}")
         self.add_line(indentation=2, line="shopt -s extglob")
         for workdir, entries in self.results.items():
             self.add_line(indentation=2, line=f"cd {workdir}")
             for result in entries:
                 self.add_line(indentation=2, line=f'local _sources="{result.path}"')
+                self.add_line(indentation=2, line="local _directory=$(dirname $_sources)")
                 if result.ignore:
                     self.add_line(indentation=2, line=f"_sources=$(echo $_sources/!({result.ignore}))")
-                self.add_line(indentation=2, line=f"mv $_sources /aeolus-results/{result.path}")
+                self.add_line(indentation=2, line=f"mkdir -p {self.results_directory_variable}/$_directory")
+                self.add_line(indentation=2, line=f"mv $_sources {self.results_directory_variable}/{result.path}")
         self.result.append("}")
 
     def handle_step_results(self, workdir: Optional[str], step: ScriptAction) -> None:
