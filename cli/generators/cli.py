@@ -70,7 +70,7 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=4, line="# just source to use the methods in the subshell, no execution")
         self.add_line(indentation=4, line="return 0")
         self.add_line(indentation=2, line="fi")
-        self.add_line(indentation=2, line="local _scriptname=$(basename $0)")
+        self.add_line(indentation=2, line="local _scriptname=$0")
         if self.has_always_actions() or self.has_results():
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
