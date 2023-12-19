@@ -70,16 +70,18 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=4, line="# just source to use the methods in the subshell, no execution")
         self.add_line(indentation=4, line="return 0")
         self.add_line(indentation=2, line="fi")
-        self.add_line(indentation=2, line="local _scriptname=$0")
+        self.add_line(indentation=2, line="local _script_name")
+        self.add_line(indentation=2, line='_script_name=$(basename "${0}")')
         if self.has_always_actions() or self.has_results():
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
             self.add_line(
-                indentation=2, line=f'bash -c "source ${{_scriptname}} aeolus_sourcing;{function} $_current_lifecycle"'
+                indentation=2,
+                line=f'bash -c "source "${{_script_name}}" aeolus_sourcing;{function} "${{_current_lifecycle}}""',
             )
-            self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
+            self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
         self.result.append("}\n")
-        self.result.append("main $@")
+        self.result.append('main "${@}"')
 
     def handle_always_steps(self, steps: list[str]) -> None:
         """
@@ -91,10 +93,10 @@ class CliGenerator(BaseGenerator):
         self.result.append("final_aeolus_post_action () " + "{")
         self.add_line(indentation=2, line="set +e # from now on, we don't exit on errors")
         self.add_line(indentation=2, line="echo '⚙️ executing final_aeolus_post_action'")
-        self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
+        self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
         for step in steps:
-            self.add_line(indentation=2, line=f"{step} $_current_lifecycle")
-            self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
+            self.add_line(indentation=2, line=f'{step} "${{_current_lifecycle}}"')
+            self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
         self.result.append("}")
 
     def add_lifecycle_guards(self, name: str, exclusions: Optional[List[Lifecycle]], indentations: int = 2) -> None:
@@ -132,14 +134,15 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=2, line=f"mkdir -p {self.results_directory_variable}")
         self.add_line(indentation=2, line="shopt -s extglob")
         for workdir, entries in self.results.items():
-            self.add_line(indentation=2, line=f"cd {workdir}")
+            self.add_line(indentation=2, line=f'cd "{workdir}"')
             for result in entries:
                 self.add_line(indentation=2, line=f'local _sources="{result.path}"')
-                self.add_line(indentation=2, line="local _directory=$(dirname $_sources)")
+                self.add_line(indentation=2, line="local _directory")
+                self.add_line(indentation=2, line='_directory=$(dirname "$_sources")')
                 if result.ignore:
-                    self.add_line(indentation=2, line=f"_sources=$(echo $_sources/!({result.ignore}))")
-                self.add_line(indentation=2, line=f"mkdir -p {self.results_directory_variable}/$_directory")
-                self.add_line(indentation=2, line=f"mv $_sources {self.results_directory_variable}/{result.path}")
+                    self.add_line(indentation=2, line=f'_sources=$(echo "${{_sources}}"/!({result.ignore}))')
+                self.add_line(indentation=2, line=f'mkdir -p {self.results_directory_variable}/"${{_directory}}"')
+                self.add_line(indentation=2, line=f'mv "${{_sources}}" {self.results_directory_variable}/{result.path}')
         self.result.append("}")
 
     def handle_step_results(self, workdir: Optional[str], step: ScriptAction) -> None:
@@ -182,7 +185,7 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
         self.handle_step_results(workdir=step.workdir, step=step)
         if step.workdir:
-            self.add_line(indentation=2, line=f"cd {step.workdir}")
+            self.add_line(indentation=2, line=f'cd "{step.workdir}"')
         if step.environment:
             for env_var in step.environment.root.root:
                 env_value: typing.Any = step.environment.root.root[env_var]
