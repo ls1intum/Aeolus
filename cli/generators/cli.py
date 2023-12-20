@@ -71,13 +71,13 @@ class CliGenerator(BaseGenerator):
         self.add_line(indentation=4, line="return 0")
         self.add_line(indentation=2, line="fi")
         self.add_line(indentation=2, line="local _script_name")
-        self.add_line(indentation=2, line='_script_name=$(basename "${0}")')
+        self.add_line(indentation=2, line='_script_name=$(realpath "${0}")')
         if self.has_always_actions() or self.has_results():
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
             self.add_line(
                 indentation=2,
-                line=f'bash -c "source "${{_script_name}}" aeolus_sourcing;{function} "${{_current_lifecycle}}""',
+                line=f'bash -c "source ${{_script_name}} aeolus_sourcing;{function} ${{_current_lifecycle}}"',
             )
             self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
         self.result.append("}\n")
