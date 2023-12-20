@@ -100,12 +100,6 @@ class BaseGenerator:
                 return True
         return False
 
-    def handle_results(self) -> None:
-        """
-        Handle results in the windfile.
-        """
-        raise NotImplementedError("handle_results() not implemented")
-
     def add_result(self, workdir: str, result: Result) -> None:
         """
         Add a result to the results dictionary.
