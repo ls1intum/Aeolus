@@ -143,10 +143,9 @@ class CliGenerator(BaseGenerator):
                 indentation=indentation, line=f'cp -a "${{_sources}}" {self.results_directory_variable}/{result.path}'
             )
 
-    def handle_before_results(self, workdir: Optional[str], step: ScriptAction) -> None:
+    def handle_before_results(self, step: ScriptAction) -> None:
         """
         Process the results of a step.
-        :param workdir: working directory of the step
         :param step: object to process
         """
         if not step.results:
@@ -155,15 +154,13 @@ class CliGenerator(BaseGenerator):
         if before:
             self.handle_result_list(indentation=2, results=before)
 
-    def handle_after_results(self, workdir: Optional[str], step: ScriptAction) -> None:
+    def handle_after_results(self, step: ScriptAction) -> None:
         """
         Process the results of a step.
-        :param workdir: working directory of the step
         :param step: object to process
         """
         if not step.results:
             return
-        key: str = workdir if workdir else f"${self.initial_directory_variable}"
         after: List[Result] = [result for result in step.results if not result.before]
         if after:
             self.handle_result_list(indentation=2, results=after)
@@ -195,7 +192,7 @@ class CliGenerator(BaseGenerator):
         self.add_lifecycle_guards(name=name, exclusions=step.excludeDuring, indentations=2)
 
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
-        self.handle_before_results(workdir=step.workdir, step=step)
+        self.handle_before_results(step=step)
         if step.workdir:
             self.add_line(indentation=2, line=f'cd "{step.workdir}"')
         if step.environment:
@@ -214,7 +211,7 @@ class CliGenerator(BaseGenerator):
             if line:
                 self.add_line(indentation=2, line=line)
 
-        self.handle_after_results(workdir=step.workdir, step=step)
+        self.handle_after_results(step=step)
         self.result.append("}")
         return None
 
