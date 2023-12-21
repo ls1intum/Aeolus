@@ -50,8 +50,10 @@ class GenerateTests(unittest.TestCase):
             result: str = cli.generate()
             self.assertTrue(result.count("#!/usr/bin/env bash") == 1)
             self.assertTrue("set -e" in result)
-            # two comments, one definition, one echo for execution, one echo in the actual action, and one call
-            self.assertTrue(result.count("internal-action") == 5)
+            # two comments, one echo for execution, one echo in the actual action
+            self.assertTrue(result.count("internal-action") == 3)
+            # one call to the function and the function itself
+            self.assertTrue(result.count("internalaction") == 2)
             self.assertTrue(result.count("{") == result.count("}"))
             self.assertTrue(cli.check(content=result))
 
@@ -129,9 +131,9 @@ class GenerateTests(unittest.TestCase):
             self.assertTrue(cli.check(content=result))
             # we change into the workdir, so we need to change back, and to be sure to always
             # be in the correct directory, we need to do this after every action
-            self.assertTrue(result.count("cd /aeolus") == 1)
+            self.assertTrue(result.count('cd "/aeolus"') == 1)
             self.assertIn("export AEOLUS_INITIAL_DIRECTORY=$(pwd)", result)
-            self.assertTrue(result.count("cd $AEOLUS_INITIAL_DIRECTORY") == len(windfile.actions) + 1)
+            self.assertTrue(result.count('cd "${AEOLUS_INITIAL_DIRECTORY}"') == len(windfile.actions) + 1)
 
     def test_generate_jenkinsfile_with_workdir(self) -> None:
         with TemporaryFileWithContent(WINDFILE_WITH_WORKDIR_ACTION) as file:

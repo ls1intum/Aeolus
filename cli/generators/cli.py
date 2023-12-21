@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
 import os
+import re
 import subprocess
 import tempfile
 import typing
@@ -9,7 +10,7 @@ from docker.client import DockerClient  # type: ignore
 from docker.models.containers import Container  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
 
-from classes.generated.definitions import ScriptAction, Repository, Target, Lifecycle
+from classes.generated.definitions import ScriptAction, Repository, Target, Lifecycle, Result
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -26,6 +27,7 @@ class CliGenerator(BaseGenerator):
     functions: List[str] = []
 
     initial_directory_variable: str = "AEOLUS_INITIAL_DIRECTORY"
+    results_directory_variable: str = "/var/tmp/aeolus-results"
 
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
@@ -61,14 +63,25 @@ class CliGenerator(BaseGenerator):
         self.result.append("\n")
         self.result.append("# main function")
         self.result.append("main () {")
+        # to enable sourceing the script, we need to skip execution if we do so
+        # for that, we check if the first parameter is sourcing, which is not ever given to the script elsewhere
         self.add_line(indentation=2, line='local _current_lifecycle="${1}"')
+        self.add_line(indentation=4, line='if [[ "${_current_lifecycle}" == "aeolus_sourcing" ]]; then')
+        self.add_line(indentation=4, line="# just source to use the methods in the subshell, no execution")
+        self.add_line(indentation=4, line="return 0")
+        self.add_line(indentation=2, line="fi")
+        self.add_line(indentation=2, line="local _script_name")
+        self.add_line(indentation=2, line='_script_name=$(realpath "${0}")')
         if self.has_always_actions() or self.has_results():
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
-            self.add_line(indentation=2, line=f"{function} $_current_lifecycle")
-            self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
+            self.add_line(
+                indentation=2,
+                line=f'bash -c "source ${{_script_name}} aeolus_sourcing;{function} ${{_current_lifecycle}}"',
+            )
+            self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
         self.result.append("}\n")
-        self.result.append("main $@")
+        self.result.append('main "${@}"')
 
     def handle_always_steps(self, steps: list[str]) -> None:
         """
@@ -80,10 +93,10 @@ class CliGenerator(BaseGenerator):
         self.result.append("final_aeolus_post_action () " + "{")
         self.add_line(indentation=2, line="set +e # from now on, we don't exit on errors")
         self.add_line(indentation=2, line="echo '⚙️ executing final_aeolus_post_action'")
-        self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
+        self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
         for step in steps:
-            self.add_line(indentation=2, line=f"{step} $_current_lifecycle")
-            self.add_line(indentation=2, line=f"cd ${self.initial_directory_variable}")
+            self.add_line(indentation=2, line=f'{step} "${{_current_lifecycle}}"')
+            self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
         self.result.append("}")
 
     def add_lifecycle_guards(self, name: str, exclusions: Optional[List[Lifecycle]], indentations: int = 2) -> None:
@@ -109,36 +122,48 @@ class CliGenerator(BaseGenerator):
                 indentations -= 2
                 self.add_line(indentation=indentations, line="fi")
 
-    def handle_results(self) -> None:
-        """
-        https://askubuntu.com/a/889746
-        https://stackoverflow.com/a/8088439
-        Handle the results of all steps
-        """
-        self.result.append("\n# move results")
-        self.result.append("aeolus_move_results () " + "{")
-        self.add_line(indentation=2, line="echo '⚙️ moving results'")
-        self.add_line(indentation=2, line="mkdir -p /aeolus-results")
-        self.add_line(indentation=2, line="shopt -s extglob")
-        for workdir, entries in self.results.items():
-            self.add_line(indentation=2, line=f"cd {workdir}")
-            for result in entries:
-                self.add_line(indentation=2, line=f'local _sources="{result.path}"')
-                if result.ignore:
-                    self.add_line(indentation=2, line=f"_sources=$(echo $_sources/!({result.ignore}))")
-                self.add_line(indentation=2, line=f"mv $_sources /aeolus-results/{result.path}")
-        self.result.append("}")
-
-    def handle_step_results(self, workdir: Optional[str], step: ScriptAction) -> None:
+    def handle_result_list(self, indentation: int, results: List[Result]) -> None:
         """
         Process the results of a step.
-        :param workdir: working directory of the step
+        https://askubuntu.com/a/889746
+        https://stackoverflow.com/a/8088439
+        :param indentation: indentation level
+        :param results: list of results
+        """
+        self.add_line(indentation=indentation, line=f"mkdir -p {self.results_directory_variable}")
+        self.add_line(indentation=indentation, line="shopt -s extglob")
+        for result in results:
+            self.add_line(indentation=indentation, line=f'local _sources="{result.path}"')
+            self.add_line(indentation=indentation, line="local _directory")
+            self.add_line(indentation=indentation, line='_directory=$(dirname "${_sources}")')
+            if result.ignore:
+                self.add_line(indentation=indentation, line=f'_sources=$(echo "${{_sources}}"/!({result.ignore}))')
+            self.add_line(indentation=indentation, line=f'mkdir -p {self.results_directory_variable}/"${{_directory}}"')
+            self.add_line(
+                indentation=indentation, line=f'cp -a "${{_sources}}" {self.results_directory_variable}/{result.path}'
+            )
+
+    def handle_before_results(self, step: ScriptAction) -> None:
+        """
+        Process the results of a step.
         :param step: object to process
         """
-        key: str = workdir if workdir else f"${self.initial_directory_variable}"
-        if step.results:
-            for result in step.results:
-                self.add_result(workdir=key, result=result)
+        if not step.results:
+            return
+        before: List[Result] = [result for result in step.results if result.before]
+        if before:
+            self.handle_result_list(indentation=2, results=before)
+
+    def handle_after_results(self, step: ScriptAction) -> None:
+        """
+        Process the results of a step.
+        :param step: object to process
+        """
+        if not step.results:
+            return
+        after: List[Result] = [result for result in step.results if not result.before]
+        if after:
+            self.handle_result_list(indentation=2, results=after)
 
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """
@@ -160,15 +185,16 @@ class CliGenerator(BaseGenerator):
         self.result.append(f"# step {name}")
         self.result.append(f"# generated from step {original_name}")
         self.result.append(f"# original type was {original_type}")
+        valid_funtion_name: str = re.sub("[^a-zA-Z]+", "", name)
         if call:
-            self.functions.append(name)
-        self.result.append(f"{name} () " + "{")
+            self.functions.append(valid_funtion_name)
+        self.result.append(f"{valid_funtion_name} () " + "{")
         self.add_lifecycle_guards(name=name, exclusions=step.excludeDuring, indentations=2)
 
         self.add_line(indentation=2, line="echo '⚙️ executing " f"{name}'")
-        self.handle_step_results(workdir=step.workdir, step=step)
+        self.handle_before_results(step=step)
         if step.workdir:
-            self.add_line(indentation=2, line=f"cd {step.workdir}")
+            self.add_line(indentation=2, line=f'cd "{step.workdir}"')
         if step.environment:
             for env_var in step.environment.root.root:
                 env_value: typing.Any = step.environment.root.root[env_var]
@@ -184,6 +210,8 @@ class CliGenerator(BaseGenerator):
         for line in step.script.split("\n"):
             if line:
                 self.add_line(indentation=2, line=line)
+
+        self.handle_after_results(step=step)
         self.result.append("}")
         return None
 
@@ -302,15 +330,11 @@ class CliGenerator(BaseGenerator):
         for step in self.windfile.actions:
             if isinstance(step.root, ScriptAction):
                 self.handle_step(name=step.root.name, step=step.root, call=not step.root.runAlways)
-        if self.has_results():
-            self.handle_results()
         if self.has_always_actions() or self.has_results():
             always_actions: list[str] = []
             for step in self.windfile.actions:
                 if isinstance(step.root, ScriptAction) and step.root.runAlways:
                     always_actions.append(step.root.name)
-            if self.has_results():
-                always_actions.append("aeolus_move_results")
             self.handle_always_steps(steps=always_actions)
         self.add_postfix()
         return super().generate()

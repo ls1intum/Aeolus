@@ -1,0 +1,5 @@
+.env
+extracted_build_plans.txt
+translation_times.txt
+translated_plans/**
+failed_plans.txt
