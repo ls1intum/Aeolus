@@ -60,10 +60,8 @@ class CliGenerator(BaseGenerator):
         Add the postfix to the bash script.
         E.g. some output settings, the callable functions etc.
         """
-        self.result.append("\n")
-        self.result.append("# main function")
-        self.result.append("main () {")
-        # to enable sourceing the script, we need to skip execution if we do so
+        self.result.append("\nmain () {")
+        # to enable sourcing the script, we need to skip execution if we do so
         # for that, we check if the first parameter is sourcing, which is not ever given to the script elsewhere
         self.add_line(indentation=2, line='local _current_lifecycle="${1}"')
         self.add_line(indentation=4, line='if [[ "${_current_lifecycle}" == "aeolus_sourcing" ]]; then')
@@ -89,7 +87,6 @@ class CliGenerator(BaseGenerator):
         :param steps: to call always
         :return: CI action
         """
-        self.result.append("\n# always steps")
         self.result.append("final_aeolus_post_action () " + "{")
         self.add_line(indentation=2, line="set +e # from now on, we don't exit on errors")
         self.add_line(indentation=2, line="echo '⚙️ executing final_aeolus_post_action'")
@@ -122,25 +119,31 @@ class CliGenerator(BaseGenerator):
                 indentations -= 2
                 self.add_line(indentation=indentations, line="fi")
 
-    def handle_result_list(self, indentation: int, results: List[Result]) -> None:
+    def handle_result_list(self, indentation: int, results: List[Result], workdir: Optional[str]) -> None:
         """
         Process the results of a step.
         https://askubuntu.com/a/889746
         https://stackoverflow.com/a/8088439
         :param indentation: indentation level
         :param results: list of results
+        :param workdir: workdir of the step
         """
+        self.add_line(indentation=indentation, line=f'cd "${{{self.initial_directory_variable}}}"')
         self.add_line(indentation=indentation, line=f"mkdir -p {self.results_directory_variable}")
         self.add_line(indentation=indentation, line="shopt -s extglob")
         for result in results:
-            self.add_line(indentation=indentation, line=f'local _sources="{result.path}"')
+            source_path: str = result.path
+            if workdir:
+                source_path = f"{workdir}/{result.path}"
+            self.add_line(indentation=indentation, line=f'local _sources="{source_path}"')
             self.add_line(indentation=indentation, line="local _directory")
             self.add_line(indentation=indentation, line='_directory=$(dirname "${_sources}")')
             if result.ignore:
                 self.add_line(indentation=indentation, line=f'_sources=$(echo "${{_sources}}"/!({result.ignore}))')
             self.add_line(indentation=indentation, line=f'mkdir -p {self.results_directory_variable}/"${{_directory}}"')
             self.add_line(
-                indentation=indentation, line=f'cp -a "${{_sources}}" {self.results_directory_variable}/{result.path}'
+                indentation=indentation,
+                line=f'cp -a "${{_sources}}" {self.results_directory_variable}/"${{_directory}}"',
             )
 
     def handle_before_results(self, step: ScriptAction) -> None:
@@ -152,7 +155,7 @@ class CliGenerator(BaseGenerator):
             return
         before: List[Result] = [result for result in step.results if result.before]
         if before:
-            self.handle_result_list(indentation=2, results=before)
+            self.handle_result_list(indentation=2, results=before, workdir=step.workdir)
 
     def handle_after_results(self, step: ScriptAction) -> None:
         """
@@ -163,7 +166,7 @@ class CliGenerator(BaseGenerator):
             return
         after: List[Result] = [result for result in step.results if not result.before]
         if after:
-            self.handle_result_list(indentation=2, results=after)
+            self.handle_result_list(indentation=2, results=after, workdir=step.workdir)
 
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """
@@ -173,18 +176,14 @@ class CliGenerator(BaseGenerator):
         :param call: whether to call the step or not
         :return: CI action
         """
-        original_name: Optional[str] = self.metadata.get_original_name_of(name)
         original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
-        if original_type == "platform":
+        if original_type == "platform" or (step.platform and step.platform != Target.cli):
             logger.info(
                 "🔨",
                 "Platform action detected. Skipping...",
                 self.output_settings.emoji,
             )
             return None
-        self.result.append(f"# step {name}")
-        self.result.append(f"# generated from step {original_name}")
-        self.result.append(f"# original type was {original_type}")
         valid_funtion_name: str = re.sub("[^a-zA-Z]+", "", name)
         if call:
             self.functions.append(valid_funtion_name)
@@ -212,7 +211,7 @@ class CliGenerator(BaseGenerator):
                 self.add_line(indentation=2, line=line)
 
         self.handle_after_results(step=step)
-        self.result.append("}")
+        self.result.append("}\n")
         return None
 
     def check(self, content: str) -> bool:

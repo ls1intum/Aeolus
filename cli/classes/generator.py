@@ -87,9 +87,10 @@ class Generator(PassSettings):
             if self.output_settings.verbose:
                 logger.info(
                     "📄",
-                    f"Generated {self.target} pipeline:\n{result}",
+                    f"Generated {self.target} pipeline:",
                     self.output_settings.emoji,
                 )
+            print(result)
             if self.check_syntax:
                 if actual_generator.check(result):
                     logger.info(
