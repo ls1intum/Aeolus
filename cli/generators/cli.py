@@ -96,13 +96,18 @@ class CliGenerator(BaseGenerator):
         :param steps: to call always
         :return: CI action
         """
+        self.result.append("")
         self.result.append("final_aeolus_post_action () " + "{")
         self.add_line(indentation=2, line="set +e # from now on, we don't exit on errors")
         self.add_line(indentation=2, line="echo '⚙️ executing final_aeolus_post_action'")
         self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
         for step in steps:
-            self.add_line(indentation=2, line=f'{step} "${{_current_lifecycle}}"')
-            self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
+            parameter: str = ""
+            if self.needs_lifecycle_parameter:
+                parameter = ' ${{_current_lifecycle}}"'
+            self.add_line(indentation=2, line=f"{step}{parameter}")
+            if len(steps) > 1:
+                self.add_line(indentation=2, line=f'cd "${{{self.initial_directory_variable}}}"')
         self.result.append("}")
 
     def add_lifecycle_guards(self, name: str, exclusions: Optional[List[Lifecycle]], indentations: int = 2) -> None:
@@ -195,9 +200,10 @@ class CliGenerator(BaseGenerator):
                 self.output_settings.emoji,
             )
             return None
-        valid_funtion_name: str = re.sub("[^a-zA-Z]+", "", name)
+        valid_funtion_name: str = re.sub("[^a-zA-Z_]+", "", name)
         if call:
             self.functions.append(valid_funtion_name)
+        self.result.append("")
         self.result.append(f"{valid_funtion_name} () " + "{")
         self.add_lifecycle_guards(name=name, exclusions=step.excludeDuring, indentations=2)
 

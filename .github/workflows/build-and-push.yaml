@@ -25,7 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - dockerfile: ./docker/cli/Dockerfile
+          - dockerfile: ./docker/cli/Dockerfile-slim
             image: ghcr.io/${{ github.repository }}/cli
           - dockerfile: ./docker/worker/Dockerfile
             image: ghcr.io/${{ github.repository }}/worker
