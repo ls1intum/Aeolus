@@ -1,0 +1,9 @@
+api: v0.0.1
+metadata:
+    name: java-gradle-static
+    id: java-windfile
+    description: Build Plan for a java Exercise
+actions:
+    - name: tests
+      script: ./gradlew clean test tiaTests --run-all-tests
+      runAlways: false

@@ -274,6 +274,11 @@ class WindfileMetadata(BaseModel):
         description='The result hook that is called after the execution of the actions, always. This can be used to send the results to a server.',
         examples=['https://example.com/hey-i-got-news-for-you'],
     )
+    moveResultsTo: Optional[str] = Field(
+        None,
+        description='The path where the results are moved to after the execution of the actions, always. This can be used to move the results to a deterministic location.',
+        examples=['/results'],
+    )
 
 
 class Action(RootModel):

@@ -10,10 +10,6 @@ actions:
     - name: static_code_analysis
       script: ./gradlew check -x test
       runAlways: false
-    - name: setup_working_di5ectory_for_cleanup
-      script: chmod -R 775 ${WORKDIR}
-      runAlways: true
-      workdir: target
     - name: setup_working_directory_for_cleanup
       script: chmod -R 777 ${WORKDIR}
       runAlways: true
