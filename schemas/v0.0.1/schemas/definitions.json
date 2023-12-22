@@ -71,6 +71,13 @@
         "examples": [
           "https://example.com/hey-i-got-news-for-you"
         ]
+      },
+      "moveResultsTo": {
+        "description": "The path where the results are moved to after the execution of the actions, always. This can be used to move the results to a deterministic location.",
+        "type": "string",
+        "examples": [
+          "/results"
+        ]
       }
     },
     "required": [
