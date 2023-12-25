@@ -421,6 +421,7 @@ class BambooTranslator(PassSettings):
             gitCredentials=specs.repositories[list(specs.repositories.keys())[0]].shared_credentials,
             resultHook=None,
             moveResultsTo=None,
+            resultHookCredentials=None,
         )
         windfile: WindFile = WindFile(
             api=Api(root="v0.0.1"), metadata=metadata, actions=actions, repositories=repositories
