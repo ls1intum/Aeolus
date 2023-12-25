@@ -55,6 +55,18 @@ class JenkinsGenerator(BaseGenerator):
         self.add_line(indentation=indentation, line="  }")
         self.add_line(indentation=indentation, line="}")
 
+    def add_lifecycle_parameter(self, indentation: int) -> None:
+        self.add_line(indentation=indentation, line="parameters {")
+        # we set it to working_time by default, as this is the most common case, and we want to avoid
+        # that the job does not execute stages only meant to be executed during evaluation (e.g. hidden tests)
+        indentation += 2
+        self.add_line(
+            indentation=indentation,
+            line="string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current stage')",
+        )
+        indentation -= 2
+        self.add_line(indentation=indentation, line="}")
+
     def add_prefix(self) -> None:
         """
         Add the prefix to the pipeline, e.g. the agent,
@@ -66,19 +78,11 @@ class JenkinsGenerator(BaseGenerator):
         if self.windfile.metadata.docker is None:
             self.add_line(indentation=indentation, line="agent any")
         else:
-            self.add_docker_config(config=self.windfile.metadata.docker, indentation=indentation + 2)
+            self.add_docker_config(config=self.windfile.metadata.docker, indentation=indentation)
         # to respect the exclusion during different parts of the lifecycle
         # we need a parameter that holds the current lifecycle
-        self.add_line(indentation=indentation, line="parameters {")
-        # we set it to working_time by default, as this is the most common case, and we want to avoid
-        # that the job does not execute stages only meant to be executed during evaluation (e.g. hidden tests)
-        indentation += 2
-        self.add_line(
-            indentation=indentation,
-            line="string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current stage')",
-        )
-        indentation -= 2
-        self.add_line(indentation=indentation, line="}")
+        if self.needs_lifecycle_parameter:
+            self.add_lifecycle_parameter(indentation=indentation)
         # to work with jenkins and bamboo, we need a way to access the repository url, as this is not possible
         # in a scripted jenkins pipeline, we set it as an environment variable
         self.add_repository_urls_to_environment()
@@ -108,12 +112,8 @@ class JenkinsGenerator(BaseGenerator):
         :param indentation: indentation level
         :return: CI action
         """
-        original_name: Optional[str] = self.metadata.get_original_name_of(name)
         original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
 
-        self.add_line(indentation=indentation, line=f"// step {name}")
-        self.add_line(indentation=indentation, line=f"// generated from step {original_name}")
-        self.add_line(indentation=indentation, line=f"// original type was {original_type}")
         self.add_script(
             wrapper="always",
             name=name,
@@ -123,6 +123,19 @@ class JenkinsGenerator(BaseGenerator):
             workdir=step.workdir,
         )
         self.handle_step_results(workdir=step.workdir, step=step)
+        if self.windfile.metadata.resultHook:
+            script: str = "sendTestResults "
+            if self.windfile.metadata.resultHookCredentials:
+                script += f"credentialsId: '{self.windfile.metadata.resultHookCredentials}', "
+            script += f"notificationUrl: '{self.windfile.metadata.resultHook}'"
+            self.add_script(
+                wrapper="post",
+                name=name,
+                original_type=original_type,
+                script=script,
+                indentation=indentation,
+                workdir=None,
+            )
 
     # pylint: disable=too-many-arguments
     def add_script(
@@ -143,25 +156,25 @@ class JenkinsGenerator(BaseGenerator):
         :param indentation: indentation level
         :param workdir: workdir to use
         """
-        self.result.append(" " * indentation + f"{wrapper} " + "{")
+        self.add_line(indentation=indentation, line=f"{wrapper} " + "{")
         indentation += 2
-        self.result.append(" " * indentation + f"echo '⚙️ executing {name}'")
+        self.add_line(indentation=indentation, line=f"echo '⚙️ executing {name}'")
         if workdir:
-            self.result.append(" " * indentation + f"dir('{workdir}') " + "{")
+            self.add_line(indentation=indentation, line=f"dir('{workdir}') " + "{")
             indentation += 2
         was_script_or_file: bool = original_type in ("file", "script")
         if was_script_or_file:
-            self.result.append(" " * indentation + "sh '''")
+            self.add_line(indentation=indentation, line="sh '''")
         for line in script.split("\n"):
             if line:
-                self.result.append(" " * indentation + f"{line}")
+                self.add_line(indentation=indentation, line=line)
         if was_script_or_file:
-            self.result.append(" " * indentation + "'''")
+            self.add_line(indentation=indentation, line="'''")
         if workdir:
             indentation -= 2
-            self.result.append(" " * indentation + "}")
+            self.add_line(indentation=indentation, line="}")
         indentation -= 2
-        self.result.append(" " * indentation + "}")
+        self.add_line(indentation=indentation, line="}")
 
     def add_results(
         self,
@@ -196,7 +209,6 @@ class JenkinsGenerator(BaseGenerator):
         :param call: whether to call the step or not
         :return: CI action
         """
-        original_name: Optional[str] = self.metadata.get_original_name_of(name)
         original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
         if original_type == "platform":
             if step.platform == Target.jenkins.name:
@@ -213,20 +225,17 @@ class JenkinsGenerator(BaseGenerator):
                 self.output_settings.emoji,
             )
             return None
-        self.result.append(f"    // step {name}")
-        self.result.append(f"    // generated from step {original_name}")
-        self.result.append(f"    // original type was {original_type}")
-        self.result.append(f"    stage('{name}') " + "{")
+        self.add_line(indentation=4, line=f"stage('{name}') " + "{")
         self.add_docker_config(config=step.docker, indentation=6)
         self.handle_step_results(workdir=step.workdir, step=step)
 
         if step.excludeDuring is not None:
-            self.result.append("      when {")
-            self.result.append("        anyOf {")
+            self.add_line(indentation=6, line="when {")
+            self.add_line(indentation=8, line="anyOf {")
             for exclusion in step.excludeDuring:
-                self.result.append(f"          expression {{ params.current_lifecycle != '{exclusion.name}' }}")
-            self.result.append("        }")
-            self.result.append("      }")
+                self.add_line(indentation=10, line=f"expression {{ params.current_lifecycle != '{exclusion.name}' }}")
+            self.add_line(indentation=8, line="}")
+            self.add_line(indentation=6, line="}")
         self.add_environment_variables(step=step)
         self.add_script(
             wrapper="steps",
@@ -236,7 +245,7 @@ class JenkinsGenerator(BaseGenerator):
             indentation=6,
             workdir=step.workdir,
         )
-        self.result.append("    }")
+        self.add_line(indentation=4, line="}")
         return None
 
     def handle_step_results(self, workdir: Optional[str], step: ScriptAction) -> None:
