@@ -15,6 +15,7 @@ RUN pip install -r /requirements.txt && rm /requirements.txt
 
 COPY ../../cli /
 RUN rm requirements.txt requirements.in
+COPY schemas /schemas
 RUN ln -s /main.py /usr/local/bin/aeolus && chmod +x /usr/local/bin/aeolus
 
 ENTRYPOINT ["aeolus"]

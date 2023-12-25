@@ -28,6 +28,9 @@ class BaseGenerator:
     environment: EnvironmentSchema
     key: typing.Optional[str]
     results: dict[str, list[Result]] = {}
+    needs_lifecycle_parameter: bool = False
+    has_multiple_steps: bool = False
+    needs_subshells: bool = False
 
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
@@ -47,6 +50,18 @@ class BaseGenerator:
         self.environment = env
         self.results = {}
         self.key = None
+        self.has_multiple_steps = (
+            len(
+                [
+                    action
+                    for action in self.windfile.actions
+                    if action.root.platform == self.input_settings.target or not action.root.platform
+                ]
+            )
+            > 1
+        )
+        self.needs_lifecycle_parameter = self.__needs_lifecycle_parameter()
+        self.needs_subshells = self.has_multiple_steps
 
     def add_line(self, indentation: int, line: str) -> None:
         """
@@ -85,7 +100,9 @@ class BaseGenerator:
         Check if there are always actions in the windfile.
         """
         for action in self.windfile.actions:
-            if action.root.runAlways:
+            if action.root.runAlways and (
+                action.root.platform == self.input_settings.target or not action.root.platform
+            ):
                 return True
         return False
 
@@ -96,7 +113,7 @@ class BaseGenerator:
         if self.results:
             return True
         for action in self.windfile.actions:
-            if action.root.results:
+            if action.root.results and (action.root.platform == self.input_settings.target or not action.root.platform):
                 return True
         return False
 
@@ -107,6 +124,17 @@ class BaseGenerator:
         if workdir not in self.results:
             self.results[workdir] = []
         self.results[workdir].append(result)
+
+    def __needs_lifecycle_parameter(self) -> bool:
+        """
+        Check if the CI system needs lifecycle parameters.
+        """
+        for action in self.windfile.actions:
+            if action.root.excludeDuring and (
+                action.root.platform == self.input_settings.target or not action.root.platform
+            ):
+                return True
+        return False
 
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
         """
