@@ -61,14 +61,18 @@ jobs:
           mkdir -p ~/.ssh
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add - <<< $GATEWAY_SSH_KEY
-          echo "adding ssh keys 1/2"
           ssh-add - <<< $DEPLOYMENT_SSH_KEY
-          echo "adding ssh keys 2/2"
           cat - <<< $GATEWAY_HOST_PUBLIC_KEY >> ~/.ssh/known_hosts
           cat - <<< $(sed 's/\\n/\n/g' <<< "$DEPLOYMENT_HOST_PUBLIC_KEYS") >> ~/.ssh/known_hosts
+
+      - name: Copy deployment scripts
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r deployment "$DEPLOYMENT_USER@$DEPLOYMENT_HOST:$DEPLOYMENT_DIRECTORY"
 
       - name: Deploy Aeolus with Docker
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
-          ./aeolus-deployment docker-deploy "$DEPLOYMENT_USER@$DEPLOYMENT_HOST" -g "$GATEWAY_USER@$GATEWAY_HOST" -t $DOCKER_TAG -b $BRANCH_NAME -d $DEPLOYMENT_DIRECTORY -y
+          $DEPLOYMENT_DIRECTORY/deployment/aeolus-deployment docker-deploy "$DEPLOYMENT_USER@$DEPLOYMENT_HOST" -g "$GATEWAY_USER@$GATEWAY_HOST" -t $DOCKER_TAG -b $BRANCH_NAME -d $DEPLOYMENT_DIRECTORY -y
