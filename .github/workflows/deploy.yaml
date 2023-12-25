@@ -61,7 +61,9 @@ jobs:
           mkdir -p ~/.ssh
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add - <<< $GATEWAY_SSH_KEY
+          echo "adding ssh keys 1/2"
           ssh-add - <<< $DEPLOYMENT_SSH_KEY
+          echo "adding ssh keys 2/2"
           cat - <<< $GATEWAY_HOST_PUBLIC_KEY >> ~/.ssh/known_hosts
           cat - <<< $(sed 's/\\n/\n/g' <<< "$DEPLOYMENT_HOST_PUBLIC_KEYS") >> ~/.ssh/known_hosts
 
