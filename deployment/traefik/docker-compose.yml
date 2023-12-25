@@ -1,0 +1,67 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# Deployment with Traefik
+# ----------------------------------------------------------------------------------------------------------------------
+
+services:
+  playground:
+    extends:
+      file: ../docker-compose.yml
+      service: playground
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - 'traefik.http.routers.aeolus-playground.rule=(HostRegexp(`{host:.+}`) && !PathPrefix("/api"))'
+      - "traefik.http.routers.aeolus-playground.entrypoints=https"
+      - "traefik.http.routers.aeolus-playground.tls=true"
+      - "traefik.http.routers.aeolus-playground.tls.certResolver=leresolver"
+      - "traefik.services.aeolus-playground.loadbalancer.passHostHeader=true"
+    networks:
+      - traefik
+  api:
+    extends:
+      file: ../docker-compose.yml
+      service: api
+    environment:
+      BAMBOO_GENERATOR_API_HOST: "http://aeolus-bamboo-api:8091"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - 'traefik.http.routers.aeolus-api.rule=(HostRegexp(`{host:.+}`) && PathPrefix("/api"))'
+      - "traefik.http.routers.aeolus-api.entrypoints=https"
+      - "traefik.http.routers.aeolus-api.tls=true"
+      - "traefik.http.routers.aeolus-api.tls.certResolver=leresolver"
+      - 'traefik.services.aeolus-api.loadbalancer.passHostHeader=true'
+      - "traefik.http.middlewares.aeolus-api.stripprefix.prefixes=/api"
+      - "traefik.http.routers.aeolus-api.middlewares=aeolus-api"
+    networks:
+      - traefik
+  bamboo-api:
+    extends:
+      file: ../docker-compose.yml
+      service: bamboo-api
+    networks:
+      - traefik
+  traefik:
+    container_name: traefik
+    image: traefik:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yaml:/traefik.yaml
+      # Configuration for the file provider (needed for host networking and default TLS Options)
+      - ./traefik-provider.yaml:/traefik-provider.yaml
+      - ./acme.json:/acme.json
+      - ./traefik.log:/traefik.log
+    labels:
+      - 'traefik.enable=false'
+      - "traefik.docker.network=traefik"
+    networks:
+      - traefik
+    ports:
+      - 80:80/tcp
+      - 443:443/tcp
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  traefik:
