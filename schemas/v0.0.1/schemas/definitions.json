@@ -72,6 +72,13 @@
           "https://example.com/hey-i-got-news-for-you"
         ]
       },
+      "resultHookCredentials": {
+        "description": "The credentials that are used to call the result hook",
+        "type": "string",
+        "examples": [
+          "credentials-id"
+        ]
+      },
       "moveResultsTo": {
         "description": "The path where the results are moved to after the execution of the actions, always. This can be used to move the results to a deterministic location.",
         "type": "string",
