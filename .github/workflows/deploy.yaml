@@ -49,6 +49,7 @@ jobs:
       - name: Fetch Aeolus Deployment CLI
         run: |
           wget ${{ env.RAW_URL }}/deployment/aeolus-deployment
+          wget ${{ env.RAW_URL }}/deployment/aeolus-docker
           chmod +x aeolus-deployment
 
       # Configure SSH Key
@@ -69,17 +70,16 @@ jobs:
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
-          ssh -J "$DEPLOYMENT_USER@$DEPLOYMENT_HOST" "$DEPLOYMENT_USER@$DEPLOYMENT_HOST" "mkdir -p $DEPLOYMENT_DIRECTORY"
+          ssh -J "$GATEWAY_USER@$GATEWAY_HOST" "$DEPLOYMENT_USER@$DEPLOYMENT_HOST" "mkdir -p $DEPLOYMENT_DIRECTORY"
 
       - name: Copy deployment scripts
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
-          ls -lah
-          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts -o ProxyJump="$GATEWAY_USER@$GATEWAY_HOST" -r deployment "$DEPLOYMENT_USER@$DEPLOYMENT_HOST:$DEPLOYMENT_DIRECTORY"
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts -o ProxyJump="$GATEWAY_USER@$GATEWAY_HOST" aeolus-docker "$DEPLOYMENT_USER@$DEPLOYMENT_HOST:$DEPLOYMENT_DIRECTORY"
 
       - name: Deploy Aeolus with Docker
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
-          $DEPLOYMENT_DIRECTORY/deployment/aeolus-deployment docker-deploy "$DEPLOYMENT_USER@$DEPLOYMENT_HOST" -g "$GATEWAY_USER@$GATEWAY_HOST" -t $DOCKER_TAG -b $BRANCH_NAME -d $DEPLOYMENT_DIRECTORY -y
+          ./aeolus-deployment docker-deploy "$DEPLOYMENT_USER@$DEPLOYMENT_HOST" -g "$GATEWAY_USER@$GATEWAY_HOST" -t $DOCKER_TAG -b $BRANCH_NAME -d $DEPLOYMENT_DIRECTORY -y

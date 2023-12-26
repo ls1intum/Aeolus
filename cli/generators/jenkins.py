@@ -131,7 +131,7 @@ class JenkinsGenerator(BaseGenerator):
             self.add_script(
                 wrapper="post",
                 name=name,
-                original_type=original_type,
+                original_type="custom",
                 script=script,
                 indentation=indentation,
                 workdir=None,

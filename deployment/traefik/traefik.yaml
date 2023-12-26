@@ -1,14 +1,17 @@
 log:
   level: DEBUG
   filePath: /traefik.log
-docker:
-  watch: true
-  exposedbydefault: false
 providers:
   docker:
     endpoint: unix:///var/run/docker.sock
   file:
     filename: /traefik-provider.yaml
+certificatesResolvers:
+  leresolver:
+    acme:
+      email: letsencrypt@resch.io
+      storage: acme.json
+      tlsChallenge: {}
 entryPoints:
   http:
     address: :80/tcp
@@ -22,10 +25,4 @@ entryPoints:
     http:
       tls:
         certResolver: leresolver
-certificatesResolvers:
-  leresolver:
-    acme:
-      email: letsencrypt@resch.io
-      storage: acme.json
-      tlsChallenge: {}
 retry: {}
