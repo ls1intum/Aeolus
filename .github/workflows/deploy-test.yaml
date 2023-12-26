@@ -155,7 +155,7 @@ jobs:
     with:
       docker-tag: ${{ needs.compute-tag.outputs.tag }}
       branch-name: ${{ github.event.pull_request.head.ref }}
-      environment-name: aeolus test
+      environment-name: aeolus-dev
       environment-url: https://aeolus-test.artemis.cit.tum.de
     secrets: inherit
 

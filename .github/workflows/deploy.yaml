@@ -49,6 +49,7 @@ jobs:
       - name: Fetch Aeolus Deployment CLI
         run: |
           wget ${{ env.RAW_URL }}/deployment/aeolus-deployment
+          wget ${{ env.RAW_URL }}/deployment/aeolus-docker
           chmod +x aeolus-deployment
 
       # Configure SSH Key
@@ -64,6 +65,18 @@ jobs:
           ssh-add - <<< $DEPLOYMENT_SSH_KEY
           cat - <<< $GATEWAY_HOST_PUBLIC_KEY >> ~/.ssh/known_hosts
           cat - <<< $(sed 's/\\n/\n/g' <<< "$DEPLOYMENT_HOST_PUBLIC_KEYS") >> ~/.ssh/known_hosts
+
+      - name: Prepare directory
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh -J "$GATEWAY_USER@$GATEWAY_HOST" "$DEPLOYMENT_USER@$DEPLOYMENT_HOST" "mkdir -p $DEPLOYMENT_DIRECTORY"
+
+      - name: Copy deployment scripts
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=~/.ssh/known_hosts -o ProxyJump="$GATEWAY_USER@$GATEWAY_HOST" aeolus-docker "$DEPLOYMENT_USER@$DEPLOYMENT_HOST:$DEPLOYMENT_DIRECTORY"
 
       - name: Deploy Aeolus with Docker
         env:

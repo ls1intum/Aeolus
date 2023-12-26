@@ -10,7 +10,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
-      - 'traefik.http.routers.aeolus-playground.rule=(HostRegexp(`{host:.+}`) && !PathPrefix("/api"))'
+      - 'traefik.http.routers.aeolus-playground.rule=(Host(`${AEOLUS_HOST}`) && !PathPrefix("/api"))'
       - "traefik.http.routers.aeolus-playground.entrypoints=https"
       - "traefik.http.routers.aeolus-playground.tls=true"
       - "traefik.http.routers.aeolus-playground.tls.certResolver=leresolver"
@@ -26,7 +26,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
-      - 'traefik.http.routers.aeolus-api.rule=(HostRegexp(`{host:.+}`) && PathPrefix("/api"))'
+      - 'traefik.http.routers.aeolus-api.rule=(Host(`${AEOLUS_HOST}`) && PathPrefix("/api"))'
       - "traefik.http.routers.aeolus-api.entrypoints=https"
       - "traefik.http.routers.aeolus-api.tls=true"
       - "traefik.http.routers.aeolus-api.tls.certResolver=leresolver"
@@ -50,8 +50,8 @@ services:
       - ./traefik.yaml:/traefik.yaml
       # Configuration for the file provider (needed for host networking and default TLS Options)
       - ./traefik-provider.yaml:/traefik-provider.yaml
-      - ./acme.json:/acme.json
-      - ./traefik.log:/traefik.log
+      - ../../../acme.json:/acme.json
+      - ../../../traefik.log:/traefik.log
     labels:
       - 'traefik.enable=false'
       - "traefik.docker.network=traefik"

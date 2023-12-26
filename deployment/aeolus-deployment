@@ -48,8 +48,7 @@ function docker_deploy {
 
     ssh -J "$_gateway_host" -o "StrictHostKeyChecking=no" "$_deployment_host" << COMMAND
 mkdir -p $_deployment_directory
-cd $_deployment_directory
-sudo /usr/bin/bash $_deployment_directory/pyris-docker.sh restart $3 $4
+/usr/bin/bash $_deployment_directory/aeolus-docker restart $_pr_tag $_pr_branch
 COMMAND
 }
 

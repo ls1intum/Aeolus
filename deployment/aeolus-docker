@@ -3,7 +3,8 @@
 # Adapted from https://github.com/ls1intum/Pyris
 # this script is used to start the Aeolus docker containers, and must be available on the deployment server
 
-PROJECT_DIR="/opt/aeolus/deployment"
+WORKING_DIR="/opt/aeolus"
+PROJECT_DIR="/opt/aeolus/Aeolus/deployment"
 COMPOSE_FILE="traefik/docker-compose.yml"
 ENV_FILE="/opt/aeolus/docker.env"
 
@@ -26,17 +27,25 @@ function start {
   local pr_branch=$2
 
   echo "Starting aeolus with PR tag: $pr_tag and branch: $pr_branch"
-  rm -rf Pyris
+  rm -rf Aeolus
+  cd $WORKING_DIR || exit
   git clone https://github.com/ls1intum/Aeolus.git -b "$pr_branch" Aeolus
   sed -i "s/AEOLUS_DOCKER_TAG=.*/AEOLUS_DOCKER_TAG='$pr_tag'/g" $ENV_FILE
-  docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --pull always --no-build
+  if [ ! -f "$WORKING_DIR/acme.json" ]; then
+      touch "$WORKING_DIR/acme.json"
+      chmod 600 "$WORKING_DIR/acme.json"
+  fi
+  if [ ! -f "$WORKING_DIR/traefik.log" ]; then
+      touch "$WORKING_DIR/traefik.log"
+  fi
+  docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" up -d --pull always --no-build
 }
 
 function stop {
   # TODO: In the future extract pr_tag and pr_branch from env
 
   echo "Stopping aeolus"
-  docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" stop pyris-app
+  docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" down
 }
 
 function restart {
@@ -45,15 +54,15 @@ function restart {
 }
 
 function aeolus_logs {
-   docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" logs -f aeolus-api
+   docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" logs -f aeolus-api
 }
 
 function all_logs {
-   docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" logs -f
+   docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" logs -f
 }
 
 function run_docker_compose_cmd {
-   docker compose --project-directory "$PROJECT_DIR" -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
+   docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
 }
 
 # read subcommand `aeolus-docker subcommand server` in variable and remove base command from argument list

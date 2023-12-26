@@ -18,6 +18,6 @@ jobs:
     with:
       docker-tag: latest
       branch-name: develop
-      environment-name: Aeolus Production
+      environment-name: aeolus-prod
       environment-url: https://aeolus.artemis.cit.tum.de
     secrets: inherit
