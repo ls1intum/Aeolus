@@ -1,0 +1,44 @@
+name: Deploy to develop
+
+on:
+  pull_request:
+    types: [unlabeled]
+
+jobs:
+  get-removed-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the removed label
+        run: |
+          # The path to the JSON file with the event payload
+          EVENT_PAYLOAD_PATH=${{ github.event_path }}
+
+          # Extract the label name using jq (a lightweight and flexible command-line JSON processor)
+          LABEL_NAME=$(jq '.label.name' $EVENT_PAYLOAD_PATH)
+
+          # Output the label name
+          echo $LABEL_NAME
+
+  # Deploy to develop to test server
+  deploy:
+    needs: [ get-removed-labels ]
+    uses: ./.github/workflows/deploy.yaml
+    if: ${{ needs.get-removed-labels.outputs.result }} == 'deploy:aeolus-test' || ${{ needs.get-removed-labels.outputs.result }} == 'lock:aeolus-test'
+    with:
+      docker-tag: "nightly"
+      branch-name: "develop"
+      environment-name: aeolus-dev
+      environment-url: https://aeolus-test.artemis.cit.tum.de
+    secrets: inherit
+
+
+  # Check that the build job has run successfully otherwise add an error label
+  add-error-label:
+    needs: [ deploy ]
+    runs-on: ubuntu-latest
+    if: ${{ failure() }}
+    steps:
+      - name: Add error label
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          labels: deployment-error
