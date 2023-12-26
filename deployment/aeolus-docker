@@ -31,6 +31,13 @@ function start {
   cd $WORKING_DIR || exit
   git clone https://github.com/ls1intum/Aeolus.git -b "$pr_branch" Aeolus
   sed -i "s/AEOLUS_DOCKER_TAG=.*/AEOLUS_DOCKER_TAG='$pr_tag'/g" $ENV_FILE
+  if [ ! -f "$WORKING_DIR/docker.env" ]; then
+      wget -O "$WORKING_DIR/docker.env" https://raw.githubusercontent.com/ls1intum/Aeolus/develop/.env.example
+      sed -i "s/AEOLUS_DOCKER_TAG=.*/AEOLUS_DOCKER_TAG='$pr_tag'/g" $WORKING_DIR/docker.env
+      local _hostname
+      _hostname=$(hostname)
+      sed -i "s/AEOLUS_HOST=.*/AEOLUS_HOST='${_hostname}'/g" $WORKING_DIR/docker.env
+  fi
   if [ ! -f "$WORKING_DIR/acme.json" ]; then
       touch "$WORKING_DIR/acme.json"
       chmod 600 "$WORKING_DIR/acme.json"
@@ -42,14 +49,13 @@ function start {
 }
 
 function stop {
-  # TODO: In the future extract pr_tag and pr_branch from env
-
   echo "Stopping aeolus"
   docker compose -f "$PROJECT_DIR/$COMPOSE_FILE" --env-file "$ENV_FILE" down
 }
 
 function restart {
     stop "$@"
+    sleep 1
     start "$@"
 }
 
