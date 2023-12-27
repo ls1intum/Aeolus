@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       docker-tag:
-        description: 'Docker tag to deploy (e.g. 1.0.0 or latest, default: latest)'
+        description: 'Docker tag to deploy (e.g. 1.0.0 or latest, default: nightly)'
         required: true
         default: 'nightly'
       branch-name:
