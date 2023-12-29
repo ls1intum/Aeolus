@@ -67,11 +67,10 @@ class CliGenerator(BaseGenerator):
             self.add_line(indentation=2, line='local _current_lifecycle="${1}"')
         if self.needs_subshells:
             self.add_line(indentation=2, line='if [[ "${1}" == "aeolus_sourcing" ]]; then')
-            self.add_line(indentation=2, line="# just source to use the methods in the subshell, no execution")
-            self.add_line(indentation=2, line="return 0")
+            self.add_line(indentation=4, line="return 0 # just source to use the methods in the subshell, no execution")
             self.add_line(indentation=2, line="fi")
             self.add_line(indentation=2, line="local _script_name")
-            self.add_line(indentation=2, line='_script_name=$(realpath "${0}")')
+            self.add_line(indentation=2, line="_script_name=${BASH_SOURCE[0]:-$0}")
         if self.has_always_actions():
             self.add_line(indentation=2, line="trap final_aeolus_post_action EXIT")
         for function in self.functions:
@@ -201,6 +200,17 @@ class CliGenerator(BaseGenerator):
             )
             return None
         valid_funtion_name: str = re.sub("[^a-zA-Z_]+", "", name)
+        if valid_funtion_name in self.functions:
+            logger.info(
+                "💥",
+                f"Function name {valid_funtion_name} already exists. Adding a number to it...",
+                self.output_settings.emoji,
+            )
+            number: int = 1
+            while f"{valid_funtion_name}_{number}" in self.functions:
+                number += 1
+            valid_funtion_name += f"_{number}"
+            step.name = valid_funtion_name
         if call:
             self.functions.append(valid_funtion_name)
         self.result.append("")
