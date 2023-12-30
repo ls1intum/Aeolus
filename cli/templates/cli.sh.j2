@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+{% set initial_directory = "\"${%s}\"" % initial_directory_variable -%}
+set -e
+{% if has_multiple_steps -%}
+  export {{ initial_directory_variable }}=${PWD}
+{%- endif -%}
+
+{# Handling environment variables from windfile -#}
+{%- for env_var in environment -%}
+  export {{ env_var }}="{{ environment[env_var] }}"
+{%- endfor -%}
+
+{# Additional functions based on steps -#}
+{%- for step in steps %}
+{{ step.name }} () {
+  echo '⚙️ executing {{ step.name }}'
+  {% if step.workdir -%}
+    cd "{{ step.workdir }}"
+  {% endif %}
+  {%- if step.environment -%}
+    {%- for env_var, env_value in step.environment.items -%}
+      export {{ env_var }}="{{ env_value }}"
+    {%- endfor -%}
+  {% endif %}
+  {%- if step.parameters -%}
+    {%- for param_var, param_value in step.parameters.items -%}
+      export {{ param_var }}="{{ param_value }}"
+    {% endfor %}
+  {%- endif -%}
+  {%- if step.needs_lifecycle_parameter -%}
+    local _current_lifecycle="${1}"
+  {% endif %}
+  {%- if metadata.moveResultsTo %}
+   cd {{ initial_directory }}
+   mkdir -p {{ metadata.moveResultsTo }}
+   shopt -s extglob
+  {%- for result in before_results[step.name] %}
+  {%- set source_path = result.path -%}
+   {%- if step.workdir -%}
+   {%- set source_path = step.workdir + "/" + result.path -%}
+   {%- endif -%}
+   local _sources="{{ source_path }}"
+   local _directory
+   _directory=$(dirname "${_sources}")
+   {%- if result.ignore -%}
+   _sources=$(echo ${_sources}/!({{ result.ignore | join(' ') }}))
+   {%- endif -%}
+   cp -a ${_sources} {{ metadata.moveResultsTo }}/${_directory}
+   {%- endfor -%}
+  {%- endif -%}
+  {{ step.script }}
+  {%- if metadata.moveResultsTo %}
+   cd {{ initial_directory }}
+   mkdir -p {{ metadata.moveResultsTo }}
+   shopt -s extglob
+  {%- for result in after_results[step.name] %}
+  {%- set source_path = result.path -%}
+   {%- if step.workdir -%}
+   {%- set source_path = step.workdir + "/" + result.path -%}
+   {%- endif -%}
+   local _sources="{{ source_path }}"
+   local _directory
+   _directory=$(dirname "${_sources}")
+   {%- if result.ignore -%}
+   _sources=$(echo ${_sources}/!({{ result.ignore | join(' ') }}))
+   {%- endif -%}
+   cp -a ${_sources} {{ metadata.moveResultsTo }}/${_directory}
+   {%- endfor -%}
+  {%- endif %}
+}
+{% endfor -%}
+
+{%- if has_always_actions -%}
+function final_aeolus_post_action () {
+  set +e # from now on, we don't exit on errors
+  echo '⚙️ executing final_aeolus_post_action'
+  cd {{ initial_directory }}
+  {%- for step in always_steps -%}
+  {%- if needs_lifecycle_parameter %}
+  {{ step.name }} "${_current_lifecycle}"
+  {%- else %}
+  {{ step.name }}
+  {%- endif -%}
+  {% endfor %}
+}
+{% endif %}
+main () {
+  if [[ "${1}" == "aeolus_sourcing" ]]; then
+    return 0 # just source to use the methods in the subshell, no execution
+  fi
+{%- if needs_lifecycle_parameter -%}
+  local _current_lifecycle="${1}"
+{% endif %}
+{%- if needs_subshells %}
+  local _script_name
+  _script_name=${BASH_SOURCE[0]:-$0}
+{%- endif -%}
+{% if has_always_actions %}
+  trap final_aeolus_post_action EXIT
+{% endif %}
+{%- for function in functions %}
+{%- if needs_lifecycle_parameter -%}
+{%- if needs_subshells -%}
+  cd {{ initial_directory }}
+  bash -c "source ${_script_name} aeolus_sourcing; {{ function }} \"${_current_lifecycle}\""
+{%- else %}
+  cd {{ initial_directory }}
+  {{ function }} "${_current_lifecycle}"
+  {%- endif -%}
+  {%- else -%}
+  {%- if needs_subshells %}
+  cd {{ initial_directory }}
+  bash -c "source ${_script_name} aeolus_sourcing; {{ function }}"
+  {%- else %}
+  cd {{ initial_directory }}
+  {{ function }}
+  {%- endif -%}
+  {%- endif -%}
+{% endfor %}
+}
+
+main "${@}"

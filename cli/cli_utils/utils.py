@@ -172,6 +172,29 @@ def replace_environment_variables(
     return result
 
 
+def replace_environment_variables_in_dict(
+    environment: EnvironmentSchema,
+    haystack: dict[typing.Any, typing.Any | str | float | bool | None],
+    reverse: bool = False,
+) -> dict[typing.Any, typing.Any | str | float | bool | None]:
+    """
+    Replaces the environment variables in the given list.
+    :param environment: Environment variables
+    :param haystack: List to replace
+    :param reverse: Whether to reverse the replacement or not
+    :return: Replaced list
+    """
+    result: dict[typing.Any, typing.Any | str | float | bool | None] = {}
+    for item_key, item_value in haystack.items():
+        for key, value in environment.__dict__.items():
+            if reverse:
+                value, key = key, value
+            if isinstance(item_value, str):
+                item_value = item_value.replace(key, value)
+        result[item_key] = item_value
+    return result
+
+
 def get_target_environment_variable(
     target: Target, target_independent_name: str, environment: Optional[EnvironmentSchema]
 ) -> str:
@@ -274,6 +297,13 @@ def replace_environment_variables_in_windfile(environment: EnvironmentSchema, wi
         if isinstance(action.root, ScriptAction):
             action.root.script = replace_environment_variable(environment=environment, haystack=action.root.script)
         action.root.environment = replace_environment_dictionary(environment=environment, env=action.root.environment)
+        if action.root.parameters:
+            parameters: Dictionary = Dictionary(
+                root=replace_environment_variables_in_dict(
+                    environment=environment, haystack=action.root.parameters.root.root
+                )
+            )
+            action.root.parameters.root = parameters
 
 
 def combine_docker_config(windfile: WindFile, output_settings: OutputSettings) -> None:

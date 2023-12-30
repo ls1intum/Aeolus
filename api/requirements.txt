@@ -67,7 +67,9 @@ iniconfig==2.0.0
 isort==5.12.0
     # via datamodel-code-generator
 jinja2==3.1.2
-    # via datamodel-code-generator
+    # via
+    #   -r ../cli/requirements.in
+    #   datamodel-code-generator
 jsonschema==4.19.2
     # via
     #   openapi-schema-validator
