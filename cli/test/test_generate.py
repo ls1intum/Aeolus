@@ -132,7 +132,7 @@ class GenerateTests(unittest.TestCase):
             # be in the correct directory, we need to do this after every action
             print(result)
             self.assertTrue(result.count('cd "/aeolus"') == 1)
-            self.assertIn("export AEOLUS_INITIAL_DIRECTORY=$(pwd)", result)
+            self.assertIn("export AEOLUS_INITIAL_DIRECTORY=${PWD}", result)
             self.assertTrue(result.count('cd "${AEOLUS_INITIAL_DIRECTORY}"') == len(windfile.actions))
 
     def test_generate_jenkinsfile_with_workdir(self) -> None:
