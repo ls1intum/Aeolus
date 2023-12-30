@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-{%- set initial_directory = "\"${%s}\"" % initial_directory_variable -%}
+{% set initial_directory = "\"${%s}\"" % initial_directory_variable -%}
 set -e
 {% if has_multiple_steps -%}
   export {{ initial_directory_variable }}=${PWD}
@@ -12,7 +12,7 @@ set -e
 
 {# Additional functions based on steps -#}
 {%- for step in steps %}
-function {{ step.name }} () {
+{{ step.name }} () {
   echo '⚙️ executing {{ step.name }}'
   {% if step.workdir -%}
     cd "{{ step.workdir }}"
@@ -85,6 +85,9 @@ function final_aeolus_post_action () {
 }
 {% endif %}
 main () {
+  if [[ "${1}" == "aeolus_sourcing" ]]; then
+    return 0 # just source to use the methods in the subshell, no execution
+  fi
 {%- if needs_lifecycle_parameter -%}
   local _current_lifecycle="${1}"
 {% endif %}
@@ -99,7 +102,7 @@ main () {
 {%- if needs_lifecycle_parameter -%}
 {%- if needs_subshells -%}
   cd {{ initial_directory }}
-  bash -c "source ${_script_name}; {{ function }} \"${_current_lifecycle}\""
+  bash -c "source ${_script_name} aeolus_sourcing; {{ function }} \"${_current_lifecycle}\""
 {%- else %}
   cd {{ initial_directory }}
   {{ function }} "${_current_lifecycle}"
@@ -107,7 +110,7 @@ main () {
   {%- else -%}
   {%- if needs_subshells %}
   cd {{ initial_directory }}
-  bash -c "source ${_script_name}; {{ function }}"
+  bash -c "source ${_script_name} aeolus_sourcing; {{ function }}"
   {%- else %}
   cd {{ initial_directory }}
   {{ function }}

@@ -67,10 +67,11 @@ class CliGenerator(BaseGenerator):
             self.functions.append(valid_funtion_name)
         step.name = valid_funtion_name
 
-        if self.windfile.metadata.moveResultsTo:
-            self.before_results[step.name] = [result for result in step.results if result.before]
-        if self.windfile.metadata.moveResultsTo:
-            self.after_results[step.name] = [result for result in step.results if result.before]
+        if step.results:
+            if self.windfile.metadata.moveResultsTo:
+                self.before_results[step.name] = [result for result in step.results if result.before]
+            if self.windfile.metadata.moveResultsTo:
+                self.after_results[step.name] = [result for result in step.results if result.before]
         return None
 
     def add_environment(self, step: ScriptAction) -> None:

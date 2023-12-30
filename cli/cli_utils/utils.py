@@ -173,8 +173,10 @@ def replace_environment_variables(
 
 
 def replace_environment_variables_in_dict(
-    environment: EnvironmentSchema, haystack: dict[str, str], reverse: bool = False
-) -> dict[str, str]:
+    environment: EnvironmentSchema,
+    haystack: dict[typing.Any, typing.Any | str | float | bool | None],
+    reverse: bool = False,
+) -> dict[typing.Any, typing.Any | str | float | bool | None]:
     """
     Replaces the environment variables in the given list.
     :param environment: Environment variables
@@ -182,7 +184,7 @@ def replace_environment_variables_in_dict(
     :param reverse: Whether to reverse the replacement or not
     :return: Replaced list
     """
-    result: dict[str, str] = {}
+    result: dict[typing.Any, typing.Any | str | float | bool | None] = {}
     for item_key, item_value in haystack.items():
         for key, value in environment.__dict__.items():
             if reverse:
