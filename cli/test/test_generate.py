@@ -130,7 +130,6 @@ class GenerateTests(unittest.TestCase):
             self.assertTrue(cli.check(content=result))
             # we change into the workdir, so we need to change back, and to be sure to always
             # be in the correct directory, we need to do this after every action
-            print(result)
             self.assertTrue(result.count('cd "/aeolus"') == 1)
             self.assertIn("export AEOLUS_INITIAL_DIRECTORY=${PWD}", result)
             self.assertTrue(result.count('cd "${AEOLUS_INITIAL_DIRECTORY}"') == len(windfile.actions))
