@@ -50,7 +50,6 @@ class GenerateTests(unittest.TestCase):
             result: str = cli.generate()
             self.assertTrue(result.count("#!/usr/bin/env bash") == 1)
             self.assertTrue("set -e" in result)
-            print(result)
             # one echo for execution, one call to the function and the function itself
             self.assertTrue(result.count("internalaction") == 3)
             self.assertTrue(result.count("{") == result.count("}"))
