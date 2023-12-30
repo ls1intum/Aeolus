@@ -102,6 +102,7 @@ class EnvironmentReplacementTests(unittest.TestCase):
                 metadata=metadata,
             )
             result: str = gen.generate()
+
             if windfile is None:
                 self.fail("Windfile is None")
 
@@ -132,5 +133,5 @@ class EnvironmentReplacementTests(unittest.TestCase):
         allowed: List[str] = [env_vars.__dict__[e] for e in env_vars.__dict__.keys()]
         forbidden_with_none: List[Optional[str]] = [e if e not in allowed else None for e in env_vars.__dict__.keys()]
         forbidden: List[str] = [e for e in forbidden_with_none if e is not None]
-        self.assertFalse(all(e not in result for e in forbidden))
+        self.assertTrue(all(e not in result for e in forbidden))
         self.assertTrue(any(e in result for e in allowed))

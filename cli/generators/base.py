@@ -27,7 +27,9 @@ class BaseGenerator:
     final_result: typing.Optional[str]
     environment: EnvironmentSchema
     key: typing.Optional[str]
+    before_results: dict[str, list[Result]] = {}
     results: dict[str, list[Result]] = {}
+    after_results: dict[str, list[Result]] = {}
     needs_lifecycle_parameter: bool = False
     has_multiple_steps: bool = False
     needs_subshells: bool = False
@@ -49,6 +51,8 @@ class BaseGenerator:
             raise ValueError(f"No environment found for target {input_settings.target.value}")
         self.environment = env
         self.results = {}
+        self.before_results = {}
+        self.after_results = {}
         self.key = None
         self.has_multiple_steps = (
             len(
@@ -110,7 +114,7 @@ class BaseGenerator:
         """
         Check if there are results in the windfile.
         """
-        if self.results:
+        if self.before_results or self.after_results:
             return True
         for action in self.windfile.actions:
             if action.root.results and (action.root.platform == self.input_settings.target or not action.root.platform):
