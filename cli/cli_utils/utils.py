@@ -189,7 +189,8 @@ def replace_environment_variables_in_dict(
         for key, value in environment.__dict__.items():
             if reverse:
                 value, key = key, value
-            item_value = item_value.replace(key, value)
+            if isinstance(item_value, str):
+                item_value = item_value.replace(key, value)
         result[item_key] = item_value
     return result
 
