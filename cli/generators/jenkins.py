@@ -4,6 +4,7 @@ Jenkins generator. Generates a jenkins pipeline to be used in the Jenkins CI sys
 The generated pipeline is a scripted pipeline.
 """
 import os
+import typing
 from typing import Optional, List
 from xml.dom.minidom import Document, parseString, Element
 
@@ -114,11 +115,11 @@ class JenkinsGenerator(BaseGenerator):
             env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "..", "templates")))
             self.template = env.get_template("Jenkinsfile.j2")
 
-        data = {
+        data: dict[str, typing.Any] = {
             "docker": self.windfile.metadata.docker,
-            "environment": self.windfile.environment.root.root if self.windfile.environment else {},
+            "environment": self.windfile.environment.root.root if self.windfile.environment else None,
             "needs_lifecycle_parameter": self.needs_lifecycle_parameter,
-            "repositories": self.windfile.repositories if self.windfile.repositories else {},
+            "repositories": self.windfile.repositories if self.windfile.repositories else None,
             "has_always_actions": self.has_always_actions(),
             "steps": [action.root for action in self.windfile.actions if not action.root.runAlways],
             "always_steps": [action.root for action in self.windfile.actions if action.root.runAlways],

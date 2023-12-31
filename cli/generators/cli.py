@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import tempfile
+import typing
 from typing import List, Optional
 
 from jinja2 import Environment, FileSystemLoader, Template
@@ -176,7 +177,7 @@ class CliGenerator(BaseGenerator):
             self.template = env.get_template("cli.sh.j2")
 
         # Prepare your data
-        data = {
+        data: dict[str, typing.Any] = {
             "has_multiple_steps": self.has_multiple_steps,
             "initial_directory_variable": self.initial_directory_variable,
             "environment": self.windfile.environment.root.root if self.windfile.environment else {},
