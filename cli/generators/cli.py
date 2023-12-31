@@ -6,6 +6,9 @@ import tempfile
 from typing import List, Optional
 
 from jinja2 import Environment, FileSystemLoader, Template
+from docker.client import DockerClient  # type: ignore
+from docker.models.containers import Container  # type: ignore
+from docker.types.daemon import CancellableStream  # type: ignore
 
 from classes.generated.definitions import ScriptAction, Repository, Target
 from classes.generated.windfile import WindFile
@@ -14,9 +17,6 @@ from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
 from cli_utils import logger, utils
 from generators.base import BaseGenerator
-from docker.client import DockerClient  # type: ignore
-from docker.models.containers import Container  # type: ignore
-from docker.types.daemon import CancellableStream  # type: ignore
 
 
 class CliGenerator(BaseGenerator):
