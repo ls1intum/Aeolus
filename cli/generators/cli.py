@@ -6,10 +6,10 @@ import tempfile
 import typing
 from typing import List, Optional
 
+from jinja2 import Environment, FileSystemLoader, Template
 from docker.client import DockerClient  # type: ignore
 from docker.models.containers import Container  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
-from jinja2 import Environment, FileSystemLoader
 
 from classes.generated.definitions import ScriptAction, Repository, Target
 from classes.generated.windfile import WindFile
@@ -28,6 +28,8 @@ class CliGenerator(BaseGenerator):
     functions: List[str] = []
 
     initial_directory_variable: str = "AEOLUS_INITIAL_DIRECTORY"
+
+    template: Optional[Template] = None
 
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
@@ -73,30 +75,6 @@ class CliGenerator(BaseGenerator):
             if self.windfile.metadata.moveResultsTo:
                 self.after_results[step.name] = [result for result in step.results if result.before]
         return None
-
-    def add_environment(self, step: ScriptAction) -> None:
-        """
-        Add environment variables to the step.
-        :param step: to add environment variables to
-        """
-        if step.environment:
-            for env_var in step.environment.root.root:
-                env_value: typing.Any = step.environment.root.root[env_var]
-                if isinstance(env_value, List):
-                    env_value = " ".join(env_value)
-                self.result.append(f'export {env_var}="' f'{env_value}"')
-
-    def add_parameters(self, step: ScriptAction) -> None:
-        """
-        Add parameters to the step.
-        :param step: to add parameters to
-        """
-        if step.parameters is not None:
-            for parameter in step.parameters.root.root:
-                value: typing.Any = step.parameters.root.root[parameter]
-                if isinstance(value, List):
-                    value = " ".join(value)
-                self.add_line(indentation=2, line=f'{parameter}="' f'{value}"')
 
     def check(self, content: str) -> bool:
         """
@@ -194,11 +172,12 @@ class CliGenerator(BaseGenerator):
         Generate the bash script to be used as a local CI system with jinja2.
         """
         # Load the template from the file system
-        env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "..", "templates")))
-        template = env.get_template("cli.sh.j2")
+        if not self.template:
+            env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "..", "templates")))
+            self.template = env.get_template("cli.sh.j2")
 
         # Prepare your data
-        data = {
+        data: dict[str, typing.Any] = {
             "has_multiple_steps": self.has_multiple_steps,
             "initial_directory_variable": self.initial_directory_variable,
             "environment": self.windfile.environment.root.root if self.windfile.environment else {},
@@ -214,7 +193,7 @@ class CliGenerator(BaseGenerator):
         }
 
         # Render the template with your data
-        rendered_script = template.render(data)
+        rendered_script = self.template.render(data)
 
         return rendered_script
 
@@ -224,11 +203,11 @@ class CliGenerator(BaseGenerator):
         we don't want to handle the credentials in the CI system.
         :return: bash script
         """
-        self.result = []
+        self.result = ""
         utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         self.add_repository_urls_to_environment()
         for step in self.windfile.actions:
             if isinstance(step.root, ScriptAction):
                 self.handle_step(name=step.root.name, step=step.root, call=not step.root.runAlways)
-        self.result.append(self.generate_using_jinja2())
+        self.result = self.generate_using_jinja2()
         return super().generate()

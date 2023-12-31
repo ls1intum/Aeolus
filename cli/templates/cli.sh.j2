@@ -5,12 +5,12 @@ set -e
   export {{ initial_directory_variable }}=${PWD}
 {%- endif -%}
 
-{# Handling environment variables from windfile -#}
-{%- for env_var in environment -%}
-  export {{ env_var }}="{{ environment[env_var] }}"
-{%- endfor -%}
+{%- if environment -%}
+{% for env_var in environment %}
+export {{ env_var }}="{{ environment[env_var] }}"
+{% endfor %}
+{%- endif -%}
 
-{# Additional functions based on steps -#}
 {%- for step in steps %}
 {{ step.name }} () {
   echo '⚙️ executing {{ step.name }}'
@@ -70,8 +70,8 @@ set -e
 }
 {% endfor -%}
 
-{%- if has_always_actions -%}
-function final_aeolus_post_action () {
+{%- if has_always_actions %}
+final_aeolus_post_action () {
   set +e # from now on, we don't exit on errors
   echo '⚙️ executing final_aeolus_post_action'
   cd {{ initial_directory }}

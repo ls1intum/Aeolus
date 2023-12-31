@@ -23,7 +23,7 @@ class BaseGenerator:
     input_settings: InputSettings
     output_settings: OutputSettings
     metadata: PassMetadata
-    result: typing.List[str]
+    result: str
     final_result: typing.Optional[str]
     environment: EnvironmentSchema
     key: typing.Optional[str]
@@ -41,7 +41,7 @@ class BaseGenerator:
         self.input_settings = input_settings
         self.output_settings = output_settings
         self.metadata = metadata
-        self.result = []
+        self.result = ""
         if input_settings.target is None:
             raise ValueError("No target specified")
         env: typing.Optional[EnvironmentSchema] = utils.get_ci_environment(
@@ -66,14 +66,6 @@ class BaseGenerator:
         )
         self.needs_lifecycle_parameter = self.__needs_lifecycle_parameter()
         self.needs_subshells = self.has_multiple_steps
-
-    def add_line(self, indentation: int, line: str) -> None:
-        """
-        Add a line to the result.
-        :param indentation: indentation level
-        :param line: line to add
-        """
-        self.result.append(" " * indentation + line)
 
     def add_repository_urls_to_environment(self) -> None:
         """
@@ -160,8 +152,7 @@ class BaseGenerator:
         """
         Generate the CI file.
         """
-        self.final_result = "\n".join(self.result)
-        return self.final_result
+        return self.result
 
     def run(self, job_id: str) -> None:
         """
