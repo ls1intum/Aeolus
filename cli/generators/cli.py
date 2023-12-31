@@ -202,11 +202,11 @@ class CliGenerator(BaseGenerator):
         we don't want to handle the credentials in the CI system.
         :return: bash script
         """
-        self.result = []
+        self.result = ""
         utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         self.add_repository_urls_to_environment()
         for step in self.windfile.actions:
             if isinstance(step.root, ScriptAction):
                 self.handle_step(name=step.root.name, step=step.root, call=not step.root.runAlways)
-        self.result.append(self.generate_using_jinja2())
+        self.result = self.generate_using_jinja2()
         return super().generate()
