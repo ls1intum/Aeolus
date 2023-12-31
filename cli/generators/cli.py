@@ -29,6 +29,8 @@ class CliGenerator(BaseGenerator):
 
     initial_directory_variable: str = "AEOLUS_INITIAL_DIRECTORY"
 
+    template: Optional[typing.Any] = None
+
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
@@ -194,8 +196,9 @@ class CliGenerator(BaseGenerator):
         Generate the bash script to be used as a local CI system with jinja2.
         """
         # Load the template from the file system
-        env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "..", "templates")))
-        template = env.get_template("cli.sh.j2")
+        if not self.template:
+            env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "..", "templates")))
+            self.template = env.get_template("cli.sh.j2")
 
         # Prepare your data
         data = {
@@ -214,7 +217,7 @@ class CliGenerator(BaseGenerator):
         }
 
         # Render the template with your data
-        rendered_script = template.render(data)
+        rendered_script = self.template.render(data)
 
         return rendered_script
 
