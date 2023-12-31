@@ -37,6 +37,7 @@ pipeline {
 {%- endif %}
 
 stages {
+    {%- if repositories %}
     {%- for name, repository in repositories.items() %}
       stage('{{ name }}') {
         steps {
@@ -59,7 +60,8 @@ stages {
           }
         }
       }
-    {%- endfor %}
+    {%- endfor -%}
+    {%- endif %}
     {%- for step in steps %}
       stage('{{ step.name }}') {
         {%- if step.docker %}
