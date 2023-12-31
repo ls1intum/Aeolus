@@ -3,13 +3,9 @@ import os
 import re
 import subprocess
 import tempfile
-import typing
 from typing import List, Optional
 
-from docker.client import DockerClient  # type: ignore
-from docker.models.containers import Container  # type: ignore
-from docker.types.daemon import CancellableStream  # type: ignore
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, Template
 
 from classes.generated.definitions import ScriptAction, Repository, Target
 from classes.generated.windfile import WindFile
@@ -18,6 +14,9 @@ from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
 from cli_utils import logger, utils
 from generators.base import BaseGenerator
+from docker.client import DockerClient  # type: ignore
+from docker.models.containers import Container  # type: ignore
+from docker.types.daemon import CancellableStream  # type: ignore
 
 
 class CliGenerator(BaseGenerator):
@@ -29,7 +28,7 @@ class CliGenerator(BaseGenerator):
 
     initial_directory_variable: str = "AEOLUS_INITIAL_DIRECTORY"
 
-    template: Optional[typing.Any] = None
+    template: Optional[Template] = None
 
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
@@ -75,30 +74,6 @@ class CliGenerator(BaseGenerator):
             if self.windfile.metadata.moveResultsTo:
                 self.after_results[step.name] = [result for result in step.results if result.before]
         return None
-
-    def add_environment(self, step: ScriptAction) -> None:
-        """
-        Add environment variables to the step.
-        :param step: to add environment variables to
-        """
-        if step.environment:
-            for env_var in step.environment.root.root:
-                env_value: typing.Any = step.environment.root.root[env_var]
-                if isinstance(env_value, List):
-                    env_value = " ".join(env_value)
-                self.result.append(f'export {env_var}="' f'{env_value}"')
-
-    def add_parameters(self, step: ScriptAction) -> None:
-        """
-        Add parameters to the step.
-        :param step: to add parameters to
-        """
-        if step.parameters is not None:
-            for parameter in step.parameters.root.root:
-                value: typing.Any = step.parameters.root.root[parameter]
-                if isinstance(value, List):
-                    value = " ".join(value)
-                self.add_line(indentation=2, line=f'{parameter}="' f'{value}"')
 
     def check(self, content: str) -> bool:
         """

@@ -16,10 +16,6 @@ import time
 from typing import List, Any, Optional
 
 import requests
-from docker.client import DockerClient  # type: ignore
-from docker.errors import DockerException  # type: ignore
-from docker.models.containers import Container  # type: ignore
-from docker.types.daemon import CancellableStream  # type: ignore
 
 import cli_utils
 from classes.generated.definitions import Target
@@ -29,6 +25,10 @@ from classes.output_settings import OutputSettings
 from classes.pass_metadata import PassMetadata
 from cli_utils import logger, utils
 from generators.base import BaseGenerator
+from docker.client import DockerClient  # type: ignore
+from docker.errors import DockerException  # type: ignore
+from docker.models.containers import Container  # type: ignore
+from docker.types.daemon import CancellableStream  # type: ignore
 
 
 def docker_available() -> bool:
@@ -111,7 +111,7 @@ class BambooGenerator(BaseGenerator):
             if response.status_code == 200:
                 logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
                 body: dict[str, str] = response.json()
-                self.result.append(body["result"])
+                self.result = body["result"]
                 return body["key"]
             logger.error("❌", "Bamboo YAML Spec file generation failed", self.output_settings.emoji)
             raise ValueError("Bamboo YAML Spec file generation failed")
@@ -142,7 +142,7 @@ class BambooGenerator(BaseGenerator):
             raise ValueError("Bamboo YAML Spec file generation failed")
         logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
         result_logs: str = process.stdout
-        self.result.append(result_logs)
+        self.result = result_logs
 
     def generate_in_docker(self, base64_str: str) -> None:
         """
@@ -182,7 +182,7 @@ class BambooGenerator(BaseGenerator):
         logger.info("🔨", "Bamboo YAML Spec file generated", self.output_settings.emoji)
         result_logs: str = container.logs(stdout=True, stderr=False).decode("utf-8")
         container.remove()
-        self.result.append(result_logs)
+        self.result = result_logs
 
     def check(self, content: str) -> bool:
         raise NotImplementedError("check_syntax() not implemented")

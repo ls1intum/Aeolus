@@ -3,13 +3,14 @@
 Jenkins generator. Generates a jenkins pipeline to be used in the Jenkins CI system.
 The generated pipeline is a scripted pipeline.
 """
-import typing
-from typing import Optional, List, Any
+import os
+from typing import Optional, List
 from xml.dom.minidom import Document, parseString, Element
 
 import jenkins  # type: ignore
+from jinja2 import Environment, FileSystemLoader, Template
 
-from classes.generated.definitions import ScriptAction, Target, Repository, Docker
+from classes.generated.definitions import Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -24,310 +25,24 @@ class JenkinsGenerator(BaseGenerator):
     to be used in the Jenkins CI system.
     """
 
+    template: Optional[Template] = None
+
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
         input_settings.target = Target.jenkins
         super().__init__(windfile, input_settings, output_settings, metadata)
 
-    def add_docker_config(self, config: Optional[Docker], indentation: int) -> None:
-        """
-        Add the docker configuration to the pipeline or stage
-        :param config: Docker configuration to add
-        :param indentation: indentation level
-        """
-        if config is None:
-            return
-        tag: str = config.tag if config.tag is not None else "latest"
-        complete_image: str = config.image + ":" + tag if ":" not in config.image else config.image
-        self.add_line(indentation=indentation, line="agent {")
-        self.add_line(indentation=indentation, line="  docker {")
-        self.add_line(indentation=indentation, line="    image '" + complete_image + "'")
-        args: Optional[str] = None
-        if config.volumes is not None:
-            args = "-v " + ":".join(config.volumes)
-        if config.parameters is not None:
-            if args is None:
-                args = ""
-            args += " " + " ".join(config.parameters)
-        if args is not None:
-            self.add_line(indentation=indentation, line="    args '" + args + "'")
-        self.add_line(indentation=indentation, line="  }")
-        self.add_line(indentation=indentation, line="}")
-
-    def add_lifecycle_parameter(self, indentation: int) -> None:
-        self.add_line(indentation=indentation, line="parameters {")
-        # we set it to working_time by default, as this is the most common case, and we want to avoid
-        # that the job does not execute stages only meant to be executed during evaluation (e.g. hidden tests)
-        indentation += 2
-        self.add_line(
-            indentation=indentation,
-            line="string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current stage')",
-        )
-        indentation -= 2
-        self.add_line(indentation=indentation, line="}")
-
     def add_prefix(self) -> None:
         """
         Add the prefix to the pipeline, e.g. the agent,
         the environment, etc.
         """
-        indentation: int = 0
-        self.add_line(indentation=indentation, line="pipeline {")
-        indentation += 2
-        if self.windfile.metadata.docker is None:
-            self.add_line(indentation=indentation, line="agent any")
-        else:
-            self.add_docker_config(config=self.windfile.metadata.docker, indentation=indentation)
         # to respect the exclusion during different parts of the lifecycle
         # we need a parameter that holds the current lifecycle
-        if self.needs_lifecycle_parameter:
-            self.add_lifecycle_parameter(indentation=indentation)
         # to work with jenkins and bamboo, we need a way to access the repository url, as this is not possible
         # in a scripted jenkins pipeline, we set it as an environment variable
         self.add_repository_urls_to_environment()
-        if self.windfile.environment:
-            self.add_line(indentation=indentation, line="environment {")
-            indentation += 2
-            for env_var in self.windfile.environment.root.root:
-                self.add_line(
-                    indentation=indentation, line=f"{env_var} = '{self.windfile.environment.root.root[env_var]}'"
-                )
-            indentation -= 2
-            self.add_line(indentation=indentation, line="}")
-        assert indentation == 2  # we need to be at the same level as in the beginning, otherwise something is wrong
-        self.add_line(indentation=indentation, line="stages {")
-
-    def add_postfix(self) -> None:
-        """
-        Add the postfix to the pipeline
-        """
-        self.result.append("}")
-
-    def handle_always_step(self, name: str, step: ScriptAction, indentation: int = 4) -> None:
-        """
-        Translate a step into a CI post action.
-        :param name: Name of the step to handle
-        :param step: to translate
-        :param indentation: indentation level
-        :return: CI action
-        """
-        original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
-
-        self.add_script(
-            wrapper="always",
-            name=name,
-            original_type=original_type,
-            script=step.script,
-            indentation=indentation,
-            workdir=step.workdir,
-        )
-        self.handle_step_results(workdir=step.workdir, step=step)
-        if self.windfile.metadata.resultHook:
-            script: str = "sendTestResults "
-            if self.windfile.metadata.resultHookCredentials:
-                script += f"credentialsId: '{self.windfile.metadata.resultHookCredentials}', "
-            script += f"notificationUrl: '{self.windfile.metadata.resultHook}'"
-            self.add_script(
-                wrapper="post",
-                name=name,
-                original_type="custom",
-                script=script,
-                indentation=indentation,
-                workdir=None,
-            )
-
-    # pylint: disable=too-many-arguments
-    def add_script(
-        self,
-        wrapper: str,
-        name: str,
-        original_type: Optional[str],
-        script: str,
-        indentation: int,
-        workdir: Optional[str],
-    ) -> None:
-        """
-        Add a script to the pipeline.
-        :param wrapper: wrapper to use, e.g. steps, post, always etc.
-        :param name: Name of the step to handle
-        :param original_type: original type of the action
-        :param script: Script to add
-        :param indentation: indentation level
-        :param workdir: workdir to use
-        """
-        self.add_line(indentation=indentation, line=f"{wrapper} " + "{")
-        indentation += 2
-        self.add_line(indentation=indentation, line=f"echo '⚙️ executing {name}'")
-        if workdir:
-            self.add_line(indentation=indentation, line=f"dir('{workdir}') " + "{")
-            indentation += 2
-        was_script_or_file: bool = original_type in ("file", "script")
-        if was_script_or_file:
-            self.add_line(indentation=indentation, line="sh '''")
-        for line in script.split("\n"):
-            if line:
-                self.add_line(indentation=indentation, line=line)
-        if was_script_or_file:
-            self.add_line(indentation=indentation, line="'''")
-        if workdir:
-            indentation -= 2
-            self.add_line(indentation=indentation, line="}")
-        indentation -= 2
-        self.add_line(indentation=indentation, line="}")
-
-    def add_results(
-        self,
-        indentation: int,
-    ) -> None:
-        """
-        Add a script to the pipeline.
-        :param indentation: indentation level
-        """
-        self.add_line(indentation=indentation, line="always {")
-        indentation += 2
-        self.add_line(indentation=indentation, line="echo '⚙️ publishing results'")
-        for workdir, entries in self.results.items():
-            for result in entries:
-                full_path: str = workdir + "/" + result.path
-                ignore: str = f"exclude: {result.ignore}" if result.ignore else ""
-                if result.type == "junit":
-                    self.add_line(indentation=indentation, line=f"junit '{full_path}'")
-                else:
-                    self.add_line(
-                        indentation=indentation,
-                        line=f"archiveArtifacts: '{full_path}', fingerprint: true, allowEmptyArchive: true, {ignore}",
-                    )
-        indentation -= 2
-        self.add_line(indentation=indentation, line="}")
-
-    def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
-        """
-        Translate a step into a CI action.
-        :param name: Name of the step to handle
-        :param step: to translate
-        :param call: whether to call the step or not
-        :return: CI action
-        """
-        original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
-        if original_type == "platform":
-            if step.platform == Target.jenkins.name:
-                logger.info(
-                    "🔨",
-                    "Platform action detected. Should be executed now...",
-                    self.output_settings.emoji,
-                )
-                # TODO implement # pylint: disable=fixme
-                return None
-            logger.info(
-                "🔨",
-                "Unfitting platform action detected. Skipping...",
-                self.output_settings.emoji,
-            )
-            return None
-        self.add_line(indentation=4, line=f"stage('{name}') " + "{")
-        self.add_docker_config(config=step.docker, indentation=6)
-        self.handle_step_results(workdir=step.workdir, step=step)
-
-        if step.excludeDuring is not None:
-            self.add_line(indentation=6, line="when {")
-            self.add_line(indentation=8, line="anyOf {")
-            for exclusion in step.excludeDuring:
-                self.add_line(indentation=10, line=f"expression {{ params.current_lifecycle != '{exclusion.name}' }}")
-            self.add_line(indentation=8, line="}")
-            self.add_line(indentation=6, line="}")
-        self.add_environment_variables(step=step)
-        self.add_script(
-            wrapper="steps",
-            name=name,
-            original_type=original_type,
-            script=step.script,
-            indentation=6,
-            workdir=step.workdir,
-        )
-        self.add_line(indentation=4, line="}")
-        return None
-
-    def handle_step_results(self, workdir: Optional[str], step: ScriptAction) -> None:
-        """
-        Process the results of a step.
-        :param workdir: working directory of the step
-        :param step: object to process
-        """
-        key: str = workdir if workdir else "."
-        if step.results:
-            for result in step.results:
-                self.add_result(workdir=key, result=result)
-
-    def add_environment_variables(self, step: ScriptAction) -> None:
-        """
-        Add environment variables and parameters to the step.
-        :param step: Step to add environment variables to
-        """
-        if step.environment is not None or step.parameters is not None:
-            self.add_line(indentation=6, line="environment {")
-            if step.parameters is not None:
-                for param in step.parameters.root.root:
-                    param_value: typing.Any = step.parameters.root.root[param]
-                    if isinstance(param_value, List):
-                        param_value = " ".join(param_value)
-                    self.add_line(indentation=8, line=f'{param} = "{param_value}"')
-            if step.environment is not None:
-                for env_var in step.environment.root.root:
-                    value: typing.Any = step.environment.root.root[env_var]
-                    if isinstance(value, List):
-                        value = " ".join(value)
-                    self.add_line(indentation=8, line=f'{env_var} = "{value}"')
-            self.add_line(indentation=6, line="}")
-
-    def handle_clone(self, name: str, repository: Repository, indentation: int) -> None:
-        """
-        Handles the clone step.
-        :param name: Name of the repository to clone
-        :param repository: Repository ot checkout
-        :param indentation: indentation level
-        """
-        original_indentation: int = indentation
-        self.add_line(indentation=indentation, line=f"stage('{name}') " + "{")
-        indentation += 2
-        self.add_line(indentation=indentation, line="steps {")
-        indentation += 2
-        self.add_line(indentation=indentation, line=f"echo '🖨️ cloning {name}'")
-        if repository.path != ".":
-            self.add_line(indentation=indentation, line=f"dir('{repository.path}') " + "{")
-            indentation += 2
-        self.add_line(indentation=indentation, line="checkout([$class: 'GitSCM',")
-        indentation += 2
-        self.add_line(indentation=indentation, line="branches: [[name: '" + repository.branch + "']],")
-        self.add_line(indentation=indentation, line="doGenerateSubmoduleConfigurations: false,")
-        self.add_line(indentation=indentation, line="extensions: [],")
-        self.add_line(indentation=indentation, line="submoduleCfg: [],")
-        self.add_line(indentation=indentation, line="userRemoteConfigs: [[")
-        indentation += 2
-        if self.windfile.metadata.gitCredentials and isinstance(self.windfile.metadata.gitCredentials, str):
-            self.add_line(
-                indentation=indentation, line="credentialsId: '" + self.windfile.metadata.gitCredentials + "',"
-            )
-        self.add_line(indentation=indentation, line=f"name: '{name}',")
-        url: str = repository.url
-        if self.metadata.get(scope="repositories", key=name, subkey="url") is not None:
-            repository_metadata: dict[str, Any] = self.metadata.get(scope="repositories")
-            if repository_metadata is not None and name in repository_metadata and "url" in repository_metadata[name]:
-                cached_value: str = repository_metadata[name]["url"]
-                url = "${" + cached_value + "}"
-        self.add_line(indentation=indentation, line=f"url: '{url}'")
-        indentation -= 2
-        self.add_line(indentation=indentation, line="]]")
-        indentation -= 2
-        self.add_line(indentation=indentation, line="])")
-        indentation -= 2
-        self.add_line(indentation=indentation, line="}")
-        if repository.path != ".":
-            indentation -= 2
-            self.add_line(indentation=indentation, line="}")
-        indentation -= 2
-        self.add_line(indentation=indentation, line="}")
-        assert indentation == original_indentation
 
     def run(self, job_id: str) -> None:
         """
@@ -391,6 +106,35 @@ class JenkinsGenerator(BaseGenerator):
 
         server.upsert_job(job_name, config_xml.toxml())
 
+    def generate_using_jinja2(self) -> str:
+        """
+        Generate the bash script to be used as a local CI system with jinja2.
+        """
+        if not self.template:
+            env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "..", "templates")))
+            self.template = env.get_template("Jenkinsfile.j2")
+
+        data = {
+            "docker": self.windfile.metadata.docker,
+            "environment": self.windfile.environment.root.root if self.windfile.environment else {},
+            "needs_lifecycle_parameter": self.needs_lifecycle_parameter,
+            "repositories": self.windfile.repositories if self.windfile.repositories else {},
+            "has_always_actions": self.has_always_actions(),
+            "steps": [action.root for action in self.windfile.actions if not action.root.runAlways],
+            "always_steps": [action.root for action in self.windfile.actions if action.root.runAlways],
+            "metadata": self.windfile.metadata,
+            "before_results": self.before_results,
+            "after_results": self.after_results,
+            "repo_metadata": self.metadata.get(scope="repositories"),
+            "has_results": self.has_results(),
+            "results": self.results,
+        }
+
+        # Render the template with your data
+        rendered_script = self.template.render(data)
+
+        return rendered_script
+
     def generate(self) -> str:
         """
         Generate the bash script to be used as a local CI system.
@@ -398,25 +142,10 @@ class JenkinsGenerator(BaseGenerator):
         """
         utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         self.add_prefix()
-        if self.windfile.repositories:
-            for name in self.windfile.repositories:
-                repository: Repository = self.windfile.repositories[name]
-                self.handle_clone(name=name, repository=repository, indentation=4)
-        for step in self.windfile.actions:
-            if isinstance(step.root, ScriptAction) and not step.root.runAlways:
-                self.handle_step(name=step.root.name, step=step.root, call=True)
-        self.add_line(indentation=2, line="}")
-        if self.has_always_actions() or self.has_results():
-            self.add_line(indentation=2, line="post {")
-            for post_step in self.windfile.actions:
-                if isinstance(post_step.root, ScriptAction) and post_step.root.runAlways:
-                    self.handle_always_step(name=post_step.root.name, step=post_step.root)
-            if self.has_results():
-                self.add_results(indentation=4)
-            self.add_line(indentation=2, line="}")
-        self.add_postfix()
+
         if self.output_settings.ci_credentials is not None:
             self.publish()
+        self.result = self.generate_using_jinja2()
         return super().generate()
 
     def check(self, content: str) -> bool:

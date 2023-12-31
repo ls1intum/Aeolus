@@ -1,0 +1,161 @@
+pipeline {
+{%- if docker %}
+  agent {
+    docker {
+  {%- set dockerImage = "%s" % docker.image -%}
+  {%- if docker.tag -%}
+    {% set dockerImage = "{}:{}".format(dockerImage, docker.tag) %}
+  {%- endif %}
+      image '{{ dockerImage }}'
+  {%- if docker.parameters -%}
+    {%- set dockerParameters = docker.parameters | join(' ') -%}
+  {%- endif %}
+  {%- if docker.volumes -%}
+    {%- set dockerParameters = '-v ' + (docker.volumes | join(' ')) + ' ' + dockerParameters -%}
+  {%- endif %}
+  {%- if dockerParameters %}
+      args '{{ dockerParameters }}'
+    }
+    {%- endif %}
+  }
+{%- else %}
+  agent any
+{%- endif -%}
+
+{%- if needs_lifecycle_parameter %}
+  parameters {
+    string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current stage')
+  }
+{%- endif %}
+
+{%- if environment %}
+  environment {
+  {%- for env_var, env_value in environment.items() %}
+    {{ env_var }} = '{{ env_value }}'
+  {%- endfor %}
+  }
+{%- endif %}
+
+stages {
+    {%- for name, repository in repositories.items() %}
+      stage('{{ name }}') {
+        steps {
+          echo '🖨️ cloning aeolus'
+          dir('{{ repository.path }}') {
+            checkout([$class: 'GitSCM',
+              branches: [[name: '{{ repository.branch }}']],
+              doGenerateSubmoduleConfigurations: false,
+              extensions: [],
+              submoduleCfg: [],
+              userRemoteConfigs: [[
+                {%- if metadata.gitCredentials %}
+                credentialsId: '{{ metadata.gitCredentials }}',
+                {%- endif %}
+                name: '{{ name }}',
+                {%- set url = '${%s}' % repo_metadata[name]["url"] %}
+                url: '{{ url }}'
+              ]]
+            ])
+          }
+        }
+      }
+    {%- endfor %}
+    {%- for step in steps %}
+      stage('{{ step.name }}') {
+        {%- if step.docker %}
+        agent {
+          docker {
+        {%- set dockerImage = "%s" % step.docker.image -%}
+        {%- if docker.tag -%}
+          {% set dockerImage = "{}:{}".format(dockerImage, step.docker.tag) %}
+        {%- endif %}
+            image '{{ dockerImage }}'
+        {%- if docker.parameters %}
+            args '{{ docker.parameters | join(' ') }}'
+        {%- endif %}
+          }
+        }
+        {%- if step.excludeDuring %}
+        when {
+          anyOf {
+            {%- for exclude in step.excludeDuring %}
+              expression { params.current_lifecycle != '{{ exclude | replace('Lifecycle.', '') }}' }
+            {%- endfor %}
+          }
+        }
+        {%- endif %}
+        {%- if step.environment %}
+        environment {
+        {%- for env_var, env_value in step.environment.items %}
+          {{ env_var }} = '{{ env_value }}'
+        {%- endfor %}
+        }
+        {%- endif %}
+      {%- endif %}
+        steps {
+          echo '⚙️ executing {{ step.name }}'
+          {%- if step.workdir %}
+          dir('{{ step.workdir }}') {
+            sh '''
+            {{ step.script }}
+            '''
+          }
+          {%- else %}
+          sh '''
+          {{ step.script }}
+          '''
+          {%- endif %}
+        }
+      }
+    {%- endfor %}
+  }
+
+  {%- if has_always_actions %}
+  post {
+  {%- for action in always_steps %}
+    always {
+      echo '⚙️ executing {{ action.name }}'
+      {%- if action.workdir %}
+      dir('{{ action.workdir }}') {
+        sh '''
+        {{ action.script }}
+        '''
+      }
+      {%- else %}
+      sh '''
+      {{ action.script }}
+      '''
+      {%- endif %}
+    }
+    {%- endfor %}
+  {%- if metadata.resultHook %}
+
+  {%- endif %}
+  {%- if has_results %}
+    always {
+      echo '📊 publishing results'
+    {%- for workdir, entries in results.items() %}
+      dir('{{ workdir }}') {
+        {%- for result in entries %}
+        {%- if result.type == 'junit' %}
+        junit './{{ result.path }}'
+        {%- else %}
+        archiveArtifacts: './{{result.path}}', fingerprint: true, allowEmptyArchive: true,
+        {%- endif %}
+        {%- endfor %}
+      }
+    {%- endfor %}
+    }
+    {%- if metadata.resultHook %}
+    always {
+      {%- if metadata.resultHookCredentials %}
+      sendTestResults credentialsId: '{{ metadata.resultHookCredentials }}', notificationUrl: '{{ metadata.resultHook }}'
+      {%- else %}
+      sendTestResults notificationUrl: '{{ metadata.resultHook }}'
+      {%- endif %}
+    }
+    {%- endif %}
+  {%- endif %}
+  }
+  {%- endif %}
+}
