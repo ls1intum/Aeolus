@@ -18,7 +18,7 @@ from classes.generated.definitions import (
     Environment,
     PlatformAction,
     FileAction,
-    ExternalAction,
+    TemplateAction,
     ScriptAction,
     Docker,
 )
@@ -33,7 +33,7 @@ from classes.validator import (
     get_external_actions,
     get_file_actions,
     Validator,
-    get_internal_actions_with_names,
+    get_script_actions_with_names,
 )
 from cli_utils import logger, utils
 from cli_utils.utils import get_content_of, get_path_to_file, file_exists
@@ -124,8 +124,8 @@ class Merger(PassSettings):
         """
         if self.windfile is None:
             return False
-        logger.info("🏠 ", "Merging internal actions", self.output_settings.emoji)
-        actions: List[tuple[str, Action]] = get_internal_actions_with_names(self.windfile)
+        logger.info("🏠 ", "Merging script actions", self.output_settings.emoji)
+        actions: List[tuple[str, Action]] = get_script_actions_with_names(self.windfile)
         for action in actions:
             index: int = [i for i, item in enumerate(self.windfile.actions) if action[0] == item.root.name][0]
             merge_docker(self.windfile.metadata.docker, self.windfile.actions[index])
@@ -178,7 +178,7 @@ class Merger(PassSettings):
             )
 
     def pull_external_action(
-        self, action: ExternalAction
+        self, action: TemplateAction
     ) -> Optional[typing.Tuple[typing.List[str], typing.List[Action]]]:
         """
         Pulls the given external action from GitHub/or other GIT hostings and converts it to internal actions.
@@ -283,14 +283,14 @@ class Merger(PassSettings):
                     if isinstance(action, PlatformAction):
                         if path is None:
                             converted = ([name], [Action(root=action)])
-                elif isinstance(action, ExternalAction):
+                elif isinstance(action, TemplateAction):
                     path = action.use
                 if path:
                     converted = self.convert_external_action_to_internal(
                         external_file=path,
                         action=action,
                     )
-                    if not converted and isinstance(action, ExternalAction):
+                    if not converted and isinstance(action, TemplateAction):
                         # try to pull the action from GitHub
                         converted = self.pull_external_action(action=action)
                     if not converted:
@@ -393,7 +393,7 @@ class Merger(PassSettings):
             for internals in actionfile.steps:
                 internal: Optional[Action] = None
                 content: Optional[str] = None
-                if isinstance(internals.root, ExternalAction):
+                if isinstance(internals.root, TemplateAction):
                     logger.error(
                         "❌ ",
                         "external actions in an external action are not supported yet",
@@ -473,7 +473,7 @@ class Merger(PassSettings):
     def convert_external_action_to_internal(
         self,
         external_file: str,
-        action: ExternalAction | FileAction | PlatformAction | Action,
+        action: TemplateAction | FileAction | PlatformAction | Action,
     ) -> Optional[typing.Tuple[typing.List[str], typing.List[Action]]]:
         """
         Converts the given external action to an internal action. For
@@ -511,7 +511,7 @@ class Merger(PassSettings):
                 )
                 original_types.append("file")
                 actions.append(internal_action)
-            if isinstance(action, ExternalAction):
+            if isinstance(action, TemplateAction):
                 logger.info(
                     "📄 ",
                     f"reading external action {absolute_path}",
