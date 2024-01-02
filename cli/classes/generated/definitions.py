@@ -116,39 +116,6 @@ class Author(RootModel):
     root: Union[str, ContactData] = Field(..., description='The author of the windfile.', title='Author')
 
 
-class ExternalAction(BaseModel):
-    """
-    External action that can be executed with or without parameters.
-    """
-
-    model_config = ConfigDict(
-        extra='forbid',
-    )
-    name: str = Field(..., description='The name of the action.', examples=['rust-exercise-jobs'])
-    use: str = Field(..., description='The name of the external action.', title='Name of the external action.')
-    parameters: Optional[Parameters] = None
-    excludeDuring: Optional[List[Lifecycle]] = Field(
-        None,
-        description='Exclude this action during the specified parts of the lifetime of an exercise.',
-        title='Exclude during',
-    )
-    environment: Optional[Environment] = Field(None, description='Environment variables for this external action.')
-    platform: Optional[Target] = Field(
-        None,
-        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
-    )
-    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
-    runAlways: Optional[bool] = Field(
-        False, description='If this is set to true, the action is always executed, even if other actions fail.'
-    )
-    workdir: Optional[str] = Field(
-        None, description='The working directory of the external action.', examples=['tests']
-    )
-    results: Optional[List[Result]] = Field(
-        None, description='The results of the action. For the CI system to keep/publish.'
-    )
-
-
 class FileAction(BaseModel):
     """
     Action that is defined in a file.
@@ -247,6 +214,39 @@ class ScriptAction(BaseModel):
     )
 
 
+class TemplateAction(BaseModel):
+    """
+    Template action that can be executed with or without parameters.
+    """
+
+    model_config = ConfigDict(
+        extra='forbid',
+    )
+    name: str = Field(..., description='The name of the action.', examples=['rust-exercise-jobs'])
+    use: str = Field(..., description='The name of the template action.', title='Name of the template action.')
+    parameters: Optional[Parameters] = None
+    excludeDuring: Optional[List[Lifecycle]] = Field(
+        None,
+        description='Exclude this action during the specified parts of the lifetime of an exercise.',
+        title='Exclude during',
+    )
+    environment: Optional[Environment] = Field(None, description='Environment variables for this template action.')
+    platform: Optional[Target] = Field(
+        None,
+        description="The platform that this action is defined for. If it's not set, the action is defined for all platforms.",
+    )
+    docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
+    runAlways: Optional[bool] = Field(
+        False, description='If this is set to true, the action is always executed, even if other actions fail.'
+    )
+    workdir: Optional[str] = Field(
+        None, description='The working directory of the template action.', examples=['tests']
+    )
+    results: Optional[List[Result]] = Field(
+        None, description='The results of the action. For the CI system to keep/publish.'
+    )
+
+
 class WindfileMetadata(BaseModel):
     """
     Metadata of the windfile.
@@ -285,7 +285,7 @@ class WindfileMetadata(BaseModel):
 
 
 class Action(RootModel):
-    root: Union[FileAction, ScriptAction, PlatformAction, ExternalAction] = Field(
+    root: Union[FileAction, ScriptAction, PlatformAction, TemplateAction] = Field(
         ..., description='Action that can be executed.', title='Action'
     )
 

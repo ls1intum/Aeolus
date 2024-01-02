@@ -48,7 +48,7 @@ export {{ env_var }}="{{ environment[env_var] }}"
    cp -a ${_sources} {{ metadata.moveResultsTo }}/${_directory}
    {%- endfor -%}
   {%- endif -%}
-  {{ step.script }}
+  {{ step.script | indent(2, false) }}
   {%- if metadata.moveResultsTo %}
    cd {{ initial_directory }}
    mkdir -p {{ metadata.moveResultsTo }}

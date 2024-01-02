@@ -18,7 +18,7 @@ from classes.generated.definitions import (
     ScriptAction,
     FileAction,
     PlatformAction,
-    ExternalAction,
+    TemplateAction,
 )
 from classes.generated.environment import EnvironmentSchema
 from classes.generated.windfile import WindFile
@@ -339,7 +339,7 @@ def clean_up(windfile: WindFile, output_settings: OutputSettings) -> None:
     """
     combine_docker_config(windfile=windfile, output_settings=output_settings)
     for index, _ in enumerate(windfile.actions):
-        root_action: FileAction | ScriptAction | PlatformAction | ExternalAction = windfile.actions[index].root
+        root_action: FileAction | ScriptAction | PlatformAction | TemplateAction = windfile.actions[index].root
         if root_action.environment is not None and len(root_action.environment.root.root) == 0:
             root_action.environment = None
         if root_action.parameters is not None and len(root_action.parameters.root.root) == 0:

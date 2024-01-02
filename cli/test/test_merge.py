@@ -11,7 +11,7 @@ from test.windfile_definitions import (
     VALID_WINDFILE_WITH_NON_EXISTING_ACTIONFILE,
     VALID_WINDFILE_WITH_FILEACTION,
 )
-from classes.generated.definitions import FileAction, PlatformAction, ExternalAction, ScriptAction
+from classes.generated.definitions import FileAction, PlatformAction, TemplateAction, ScriptAction
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.merger import Merger
@@ -47,7 +47,7 @@ class MergeTests(unittest.TestCase):
             self.assertEqual(len(index), 1)
             self.assertTrue(isinstance(windfile.actions[index[0]].root, ScriptAction))
             if isinstance(windfile.actions[index[0]].root, ScriptAction):
-                action: FileAction | ScriptAction | PlatformAction | ExternalAction = windfile.actions[index[0]].root
+                action: FileAction | ScriptAction | PlatformAction | TemplateAction = windfile.actions[index[0]].root
                 self.assertTrue(isinstance(action, ScriptAction))
                 if isinstance(action, ScriptAction):
                     self.assertEqual(action.script, 'echo "This is an internal action"')
@@ -111,7 +111,7 @@ class MergeTests(unittest.TestCase):
                     index: list[int] = [i for i, item in enumerate(windfile.actions) if name == item.root.name]
                     self.assertEqual(len(index), 1)
                     actual_index: int = index[0]
-                    action: FileAction | ScriptAction | PlatformAction | ExternalAction = windfile.actions[
+                    action: FileAction | ScriptAction | PlatformAction | TemplateAction = windfile.actions[
                         actual_index
                     ].root
                     self.assertTrue(isinstance(action, ScriptAction))
@@ -151,7 +151,7 @@ class MergeTests(unittest.TestCase):
                 index: list[int] = [i for i, item in enumerate(windfile.actions) if "file-action_0" == item.root.name]
                 self.assertEqual(len(index), 1)
                 self.assertTrue(isinstance(windfile.actions[index[0]].root, ScriptAction))
-                action: FileAction | ScriptAction | PlatformAction | ExternalAction = windfile.actions[index[0]].root
+                action: FileAction | ScriptAction | PlatformAction | TemplateAction = windfile.actions[index[0]].root
                 if isinstance(action, ScriptAction):
                     self.assertEqual(action.script, content)
                     if action.excludeDuring is None:
