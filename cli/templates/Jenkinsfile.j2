@@ -120,12 +120,12 @@ pipeline {
       {%- if action.workdir %}
       dir('{{ action.workdir }}') {
         sh '''
-        {{ step.script | indent(8, false) }}
+        {{ action.script | indent(8, false) }}
         '''
       }
       {%- else %}
       sh '''
-      {{ step.script | indent(6, false) }}
+      {{ action.script | indent(6, false) }}
       '''
       {%- endif %}
     }
