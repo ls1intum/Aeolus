@@ -48,7 +48,7 @@ export {{ env_var }}="{{ environment[env_var] }}"
    cp -a ${_sources} {{ metadata.moveResultsTo }}/${_directory}
    {%- endfor -%}
   {%- endif -%}
-  {{ step.script }}
+  {{ step.script | indent(2, false) }}
   {%- if metadata.moveResultsTo %}
    cd {{ initial_directory }}
    mkdir -p {{ metadata.moveResultsTo }}
@@ -85,9 +85,11 @@ final_aeolus_post_action () {
 }
 {% endif %}
 main () {
+{%- if needs_subshells %}
   if [[ "${1}" == "aeolus_sourcing" ]]; then
     return 0 # just source to use the methods in the subshell, no execution
   fi
+{%- endif -%}
 {%- if needs_lifecycle_parameter -%}
   local _current_lifecycle="${1}"
 {% endif %}
@@ -106,16 +108,15 @@ main () {
 {%- else %}
   cd {{ initial_directory }}
   {{ function }} "${_current_lifecycle}"
-  {%- endif -%}
-  {%- else -%}
-  {%- if needs_subshells %}
+{%- endif -%}
+{%- else -%}
+{%- if needs_subshells %}
   cd {{ initial_directory }}
   bash -c "source ${_script_name} aeolus_sourcing; {{ function }}"
-  {%- else %}
-  cd {{ initial_directory }}
+{%- else %}
   {{ function }}
-  {%- endif -%}
-  {%- endif -%}
+{%- endif -%}
+{%- endif -%}
 {% endfor %}
 }
 

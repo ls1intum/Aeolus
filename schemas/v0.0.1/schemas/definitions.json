@@ -184,7 +184,7 @@
         "$ref": "#/platform-action"
       },
       {
-        "$ref": "#/external-action"
+        "$ref": "#/template-action"
       }
     ]
   },
@@ -406,9 +406,9 @@
       "script"
     ]
   },
-  "external-action": {
-    "title": "External Action",
-    "description": "External action that can be executed with or without parameters.",
+  "template-action": {
+    "title": "Template Action",
+    "description": "Template action that can be executed with or without parameters.",
     "type": "object",
     "additionalProperties": false,
     "properties": {
@@ -420,8 +420,8 @@
         ]
       },
       "use": {
-        "description": "The name of the external action.",
-        "title": "Name of the external action.",
+        "description": "The name of the template action.",
+        "title": "Name of the template action.",
         "type": "string"
       },
       "parameters": {
@@ -436,7 +436,7 @@
         }
       },
       "environment": {
-        "description": "Environment variables for this external action.",
+        "description": "Environment variables for this template action.",
         "$ref": "#/environment"
       },
       "platform": {
@@ -453,7 +453,7 @@
         "default": false
       },
       "workdir": {
-        "description": "The working directory of the external action.",
+        "description": "The working directory of the template action.",
         "type": "string",
         "examples": [
           "tests"

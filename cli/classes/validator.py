@@ -10,7 +10,7 @@ from io import TextIOWrapper
 from classes.generated.actionfile import ActionFile
 from classes.generated.definitions import (
     Action,
-    ExternalAction,
+    TemplateAction,
     FileAction,
     ScriptAction,
     PlatformAction,
@@ -30,7 +30,7 @@ def has_external_actions(windfile: WindFile) -> bool:
     :return: True if the windfile contains external actions, False otherwise
     """
     for action in windfile.actions:
-        if isinstance(action.root, ExternalAction):
+        if isinstance(action.root, TemplateAction):
             return True
     return False
 
@@ -43,7 +43,7 @@ def get_external_actions(
     :param windfile: WindFile to analyze
     :return: List of external actions in the given windfile
     """
-    return get_actions_of_type(action_type=ExternalAction, windfile=windfile)
+    return get_actions_of_type(action_type=TemplateAction, windfile=windfile)
 
 
 def get_platform_actions(
@@ -90,11 +90,11 @@ def get_file_actions(
     return get_actions_of_type(action_type=FileAction, windfile=windfile)
 
 
-def get_internal_actions_with_names(
+def get_script_actions_with_names(
     windfile: typing.Optional[WindFile],
 ) -> typing.List[typing.Tuple[str, Action]]:
     """
-    Returns a list of all internal actions in the given windfile with their names.
+    Returns a list of all script actions in the given windfile with their names.
     :param windfile: Windfile to analyze
     :return: List of actions in the given windfile
     """
@@ -103,17 +103,17 @@ def get_internal_actions_with_names(
 
 def get_actions(
     windfile: WindFile,
-) -> typing.List[ScriptAction | ExternalAction | FileAction | PlatformAction]:
+) -> typing.List[ScriptAction | TemplateAction | FileAction | PlatformAction]:
     """
     Returns a list of all actions in the given windfile.
     :param windfile: Windfile to analyze
     :return: List of actions
     """
-    actions: typing.List[ScriptAction | ExternalAction | FileAction | PlatformAction] = []
+    actions: typing.List[ScriptAction | TemplateAction | FileAction | PlatformAction] = []
     for action in windfile.actions:
         if isinstance(action.root, ScriptAction):
             actions.append(action.root)
-        elif isinstance(action.root, ExternalAction):
+        elif isinstance(action.root, TemplateAction):
             actions.append(action.root)
         elif isinstance(action.root, FileAction):
             actions.append(action.root)

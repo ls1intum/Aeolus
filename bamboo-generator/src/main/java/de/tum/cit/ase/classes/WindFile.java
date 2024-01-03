@@ -64,6 +64,8 @@ public class WindFile {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("test_results", paths);
         parameters.put("ignore_time", false);
+        // we force the junit parser to run always
+        newResultAction.setRunAlways(true);
         newResultAction.setParameters(parameters);
         newResultAction.setEnvironment(action.getEnvironment());
         newResultAction.setExcludeDuring(action.getExcludeDuring());
