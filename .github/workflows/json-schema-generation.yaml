@@ -18,7 +18,7 @@ jobs:
       - name: Run generation script
         run: bash schemas/generate-datamodels.sh
       - name: Verify Changed files
-        uses: tj-actions/verify-changed-files@v16
+        uses: tj-actions/verify-changed-files@v17
         id: verify-changed-files
         with:
           files: |
