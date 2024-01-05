@@ -105,71 +105,63 @@ Generate with python main.py -dev generate -t cli -i examples/example-windfile-r
 ```bash
 #!/usr/bin/env bash
 set -e
-# the repository aeolus is expected to be mounted into the container at /aeolus
-# step set-java-container
-# generated from step set-java-container
-# original type was script
-set-java-container () {
-  echo '⚙️ executing set-java-container'
+export AEOLUS_INITIAL_DIRECTORY=${PWD}
+export REPOSITORY_URL="https://github.com/ls1intum/Aeolus.git"
+
+setjavacontainer () {
+  echo '⚙️ executing setjavacontainer'
   set
 }
-# step set-c-container
-# generated from step set-c-container
-# original type was script
-set-c-container () {
-  echo '⚙️ executing set-c-container'
+
+setccontainer () {
+  echo '⚙️ executing setccontainer'
   set
 }
-# step internal-action
-# generated from step internal-action
-# original type was script
-internal-action () {
-  echo '⚙️ executing internal-action'
+
+internalaction () {
+  echo '⚙️ executing internalaction'
   echo "This is an internal action"
+
 }
-# step external-action_0
-# generated from step external-action
-# original type was internal
-external-action_0 () {
-  local _current_lifecycle="${1}"
-  if [[ "${_current_lifecycle}" == "preparation" ]]; then
-    echo '⚠️  external-action_0 is excluded during preparation'
-    return 0
-  fi
-  if [[ "${_current_lifecycle}" == "working_time" ]]; then
-    echo '⚠️  external-action_0 is excluded during working_time'
-    return 0
-  fi
-  echo '⚙️ executing external-action_0'
-  WHO_TO_GREET="world"
+
+externalaction_ () {
+  echo '⚙️ executing externalaction_'
   echo "Hello ${WHO_TO_GREET}"
 }
-# step clean_up
-# generated from step clean_up
-# original type was script
+
 clean_up () {
   echo '⚙️ executing clean_up'
   rm -rf aeolus/
+
 }
 
-# always steps
 final_aeolus_post_action () {
+  set +e # from now on, we don't exit on errors
   echo '⚙️ executing final_aeolus_post_action'
-  clean_up $_current_lifecycle
+  cd "${AEOLUS_INITIAL_DIRECTORY}"
+  clean_up "${_current_lifecycle}"
 }
 
-
-# main function
 main () {
-  local _current_lifecycle="${1}"
+  if [[ "${1}" == "aeolus_sourcing" ]]; then
+    return 0 # just source to use the methods in the subshell, no execution
+  filocal _current_lifecycle="${1}"
+
+  local _script_name
+  _script_name=${BASH_SOURCE[0]:-$0}
   trap final_aeolus_post_action EXIT
-  set-java-container $_current_lifecycle
-  set-c-container $_current_lifecycle
-  internal-action $_current_lifecycle
-  external-action_0 $_current_lifecycle
+
+  cd "${AEOLUS_INITIAL_DIRECTORY}"
+  bash -c "source ${_script_name} aeolus_sourcing; setjavacontainer \"${_current_lifecycle}\""
+  cd "${AEOLUS_INITIAL_DIRECTORY}"
+  bash -c "source ${_script_name} aeolus_sourcing; setccontainer \"${_current_lifecycle}\""
+  cd "${AEOLUS_INITIAL_DIRECTORY}"
+  bash -c "source ${_script_name} aeolus_sourcing; internalaction \"${_current_lifecycle}\""
+  cd "${AEOLUS_INITIAL_DIRECTORY}"
+  bash -c "source ${_script_name} aeolus_sourcing; externalaction_ \"${_current_lifecycle}\""
 }
 
-main $@
+main "${@}"
 ```
 
 And the generated Jenkinsfile would look like this:
@@ -187,6 +179,10 @@ pipeline {
   parameters {
     string(name: 'current_lifecycle', defaultValue: 'working_time', description: 'The current stage')
   }
+  environment {
+    REPOSITORY_URL = 'https://github.com/ls1intum/Aeolus.git'
+  }
+
   stages {
     stage('aeolus') {
       steps {
@@ -200,95 +196,82 @@ pipeline {
                     userRemoteConfigs: [[
                             credentialsId: 'artemis_gitlab_admin_credentials',
                             name: 'aeolus',
-                            url: 'https://github.com/ls1intum/Aeolus.git'
+                            url: "${REPOSITORY_URL}"
                     ]]
           ])
         }
       }
     }
-    // step set-java-container
-    // generated from step set-java-container
-    // original type was script
     stage('set-java-container') {
       agent {
         docker {
           image 'ls1tum/artemis-maven-template:java17-20'
-          args '-v ${PWD}:/aeolus --cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
+          args '--cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
         }
       }
       steps {
         echo '⚙️ executing set-java-container'
         sh '''
-        set
-        '''
+            set
+          '''
       }
     }
-    // step set-c-container
-    // generated from step set-c-container
-    // original type was script
     stage('set-c-container') {
       agent {
         docker {
           image 'ghcr.io/ls1intum/artemis-c-docker:latest'
+          args '--cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
         }
       }
       steps {
         echo '⚙️ executing set-c-container'
         sh '''
-        set
-        '''
+            set
+          '''
       }
     }
-    // step internal-action
-    // generated from step internal-action
-    // original type was script
     stage('internal-action') {
       agent {
         docker {
           image 'ls1tum/artemis-maven-template:java17-20'
-          args '-v ${PWD}:/aeolus --cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
+          args '--cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
         }
       }
       steps {
         echo '⚙️ executing internal-action'
         sh '''
-        echo "This is an internal action"
-        '''
+            echo "This is an internal action"
+
+          '''
       }
     }
-    // step external-action_0
-    // generated from step external-action
-    // original type was internal
     stage('external-action_0') {
       agent {
         docker {
           image 'ls1tum/artemis-maven-template:java17-20'
-          args '-v ${PWD}:/aeolus --cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
+          args '--cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
         }
       }
       when {
         anyOf {
-          expression { params.current_lifecycle != 'working_time' }
           expression { params.current_lifecycle != 'preparation' }
+          expression { params.current_lifecycle != 'working_time' }
         }
-      }
-      environment {
-        WHO_TO_GREET = "world"
       }
       steps {
         echo '⚙️ executing external-action_0'
-        echo "Hello ${WHO_TO_GREET}"
+        sh '''
+            echo "Hello ${WHO_TO_GREET}"
+          '''
       }
     }
   }
   post {
-    // step clean_up
-    // generated from step clean_up
-    // original type was script
     always {
       echo '⚙️ executing clean_up'
       sh '''
       rm -rf aeolus/
+
       '''
     }
   }

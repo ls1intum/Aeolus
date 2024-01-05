@@ -27,9 +27,10 @@ function start {
   local pr_branch=$2
 
   echo "Starting aeolus with PR tag: $pr_tag and branch: $pr_branch"
-  rm -rf Aeolus
   cd $WORKING_DIR || exit
+  rm -rf Aeolus
   git clone https://github.com/ls1intum/Aeolus.git -b "$pr_branch" Aeolus
+  sed -i "s/AEOLUS_DOCKER_BRANCH=.*/AEOLUS_DOCKER_BRANCH='$pr_branch'/g" $ENV_FILE
   sed -i "s/AEOLUS_DOCKER_TAG=.*/AEOLUS_DOCKER_TAG='$pr_tag'/g" $ENV_FILE
   if [ ! -f "$WORKING_DIR/docker.env" ]; then
       wget -O "$WORKING_DIR/docker.env" https://raw.githubusercontent.com/ls1intum/Aeolus/develop/.env.example
