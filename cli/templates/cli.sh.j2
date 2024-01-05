@@ -102,7 +102,7 @@ main () {
 {% endif %}
 {%- for function in functions %}
 {%- if needs_lifecycle_parameter -%}
-{%- if needs_subshells -%}
+{%- if needs_subshells %}
   cd {{ initial_directory }}
   bash -c "source ${_script_name} aeolus_sourcing; {{ function }} \"${_current_lifecycle}\""
 {%- else %}

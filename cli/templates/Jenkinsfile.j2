@@ -46,15 +46,13 @@ pipeline {
             checkout([$class: 'GitSCM',
               branches: [[name: '{{ repository.branch }}']],
               doGenerateSubmoduleConfigurations: false,
-              extensions: [],
-              submoduleCfg: [],
               userRemoteConfigs: [[
                 {%- if metadata.gitCredentials %}
                 credentialsId: '{{ metadata.gitCredentials }}',
                 {%- endif %}
                 name: '{{ name }}',
                 {%- set url = '${%s}' % repo_metadata[name]["url"] %}
-                url: '{{ url }}'
+                url: "{{ url }}"
               ]]
             ])
           }
