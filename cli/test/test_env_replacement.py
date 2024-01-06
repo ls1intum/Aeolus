@@ -115,7 +115,7 @@ class EnvironmentReplacementTests(unittest.TestCase):
                     if index > 0:
                         var_name += f"_{index}"
                     self.assertIn(f"{var_name} = '{repo.url}'", result)
-                    self.assertIn("url: '${" + var_name + "}'", result)
+                    self.assertIn('url: "${' + var_name + '}"', result)
                     index += 1
             elif isinstance(gen, CliGenerator):
                 for repo in windfile.repositories.values():

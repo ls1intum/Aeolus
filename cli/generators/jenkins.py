@@ -11,7 +11,7 @@ from xml.dom.minidom import Document, parseString, Element
 import jenkins  # type: ignore
 from jinja2 import Environment, FileSystemLoader, Template
 
-from classes.generated.definitions import Target
+from classes.generated.definitions import Target, Action
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -115,14 +115,20 @@ class JenkinsGenerator(BaseGenerator):
             env = Environment(loader=FileSystemLoader(os.path.join(os.path.dirname(__file__), "..", "templates")))
             self.template = env.get_template("Jenkinsfile.j2")
 
+        actions: List[Action] = []
+        for action in self.windfile.actions:
+            if action.root.platform and action.root.platform != Target.jenkins:
+                continue
+            actions.append(action)
+
         data: dict[str, typing.Any] = {
             "docker": self.windfile.metadata.docker,
             "environment": self.windfile.environment.root.root if self.windfile.environment else None,
             "needs_lifecycle_parameter": self.needs_lifecycle_parameter,
             "repositories": self.windfile.repositories if self.windfile.repositories else None,
             "has_always_actions": self.has_always_actions(),
-            "steps": [action.root for action in self.windfile.actions if not action.root.runAlways],
-            "always_steps": [action.root for action in self.windfile.actions if action.root.runAlways],
+            "steps": [action.root for action in actions if not action.root.runAlways],
+            "always_steps": [action.root for action in actions if action.root.runAlways],
             "metadata": self.windfile.metadata,
             "before_results": self.before_results,
             "after_results": self.after_results,
