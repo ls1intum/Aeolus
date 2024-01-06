@@ -11,7 +11,7 @@ from docker.client import DockerClient  # type: ignore
 from docker.models.containers import Container  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
 
-from classes.generated.definitions import ScriptAction, Repository, Target, Action
+from classes.generated.definitions import ScriptAction, Repository, Target
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
