@@ -11,7 +11,7 @@ from docker.client import DockerClient  # type: ignore
 from docker.models.containers import Container  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
 
-from classes.generated.definitions import ScriptAction, Repository, Target
+from classes.generated.definitions import ScriptAction, Repository, Target, Action
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -31,11 +31,14 @@ class CliGenerator(BaseGenerator):
 
     template: Optional[Template] = None
 
+    actions: List[ScriptAction] = []
+
     def __init__(
         self, windfile: WindFile, input_settings: InputSettings, output_settings: OutputSettings, metadata: PassMetadata
     ):
         input_settings.target = Target.cli
         self.functions = []
+        self.actions = []
         super().__init__(windfile, input_settings, output_settings, metadata)
 
     def handle_step(self, name: str, step: ScriptAction, call: bool) -> None:
@@ -74,6 +77,7 @@ class CliGenerator(BaseGenerator):
                 self.before_results[step.name] = [result for result in step.results if result.before]
             if self.windfile.metadata.moveResultsTo:
                 self.after_results[step.name] = [result for result in step.results if result.before]
+        self.actions.append(step)
         return None
 
     def check(self, content: str) -> bool:
@@ -185,8 +189,8 @@ class CliGenerator(BaseGenerator):
             "needs_subshells": self.needs_subshells,
             "has_always_actions": self.has_always_actions(),
             "functions": self.functions,
-            "steps": [action.root for action in self.windfile.actions],
-            "always_steps": [action.root for action in self.windfile.actions if action.root.runAlways],
+            "steps": self.actions,
+            "always_steps": [action for action in self.actions if action.runAlways],
             "metadata": self.windfile.metadata,
             "before_results": self.before_results,
             "after_results": self.after_results,
