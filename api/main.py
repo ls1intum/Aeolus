@@ -8,7 +8,7 @@ import yaml
 from fastapi import FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
-from starlette.responses import Response, PlainTextResponse
+from starlette.responses import PlainTextResponse
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 import _paths  # pylint: disable=unused-import # noqa: F401
@@ -16,6 +16,7 @@ from api_classes.publish_payload import PublishPayload
 from api_classes.result_format import ResultFormat
 from api_classes.translate_payload import TranslatePayload
 from api_utils import utils
+
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
 from classes.ci_credentials import CICredentials
@@ -277,8 +278,11 @@ def publish(payload: Optional[PublishPayload], target: Target) -> Dict[str, Opti
 
 @app.put("/translate/{source}/{build_plan_id}")
 def translate(
-    payload: TranslatePayload, source: Target, build_plan_id: str, result_format: ResultFormat = ResultFormat.JSON,
-    exclude_repositories: bool = False
+    payload: TranslatePayload,
+    source: Target,
+    build_plan_id: str,
+    result_format: ResultFormat = ResultFormat.JSON,
+    exclude_repositories: bool = False,
 ) -> Optional[WindFile | str]:
     """
     Translates the build plan id to a target.
