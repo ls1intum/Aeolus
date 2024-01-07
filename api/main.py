@@ -16,6 +16,7 @@ from api_classes.publish_payload import PublishPayload
 from api_classes.result_format import ResultFormat
 from api_classes.translate_payload import TranslatePayload
 from api_utils import utils
+
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
 from classes.ci_credentials import CICredentials
@@ -264,14 +265,16 @@ def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]
             pass
     if not windfile:
         raise HTTPException(status_code=422, detail="Invalid windfile")
-    generated: Optional[Dict[str, str | None]] = generate_target_script(
-        windfile=windfile,
-        target=target,
-        credentials=CICredentials(url=payload.url, username=payload.username, token=payload.token),
-    )
-    if not generated:
-        return {"detail": "generation failed, check api logs"}
-    return generated
+    if payload.url and payload.username and payload.token:
+        generated: Optional[Dict[str, str | None]] = generate_target_script(
+            windfile=windfile,
+            target=target,
+            credentials=CICredentials(url=payload.url, username=payload.username, token=payload.token),
+        )
+        if not generated:
+            return {"detail": "generation failed, check api logs"}
+        return generated
+    return {"detail": "missing credentials"}
 
 
 @app.put("/translate/{source}/{build_plan_id}")
