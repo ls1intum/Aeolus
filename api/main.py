@@ -322,7 +322,7 @@ def translate(
         elif windfile:
             json_repr: str = windfile.model_dump_json(exclude_none=True)
             return yaml.dump(yaml.safe_load(json_repr), sort_keys=False, Dumper=YamlDumper, default_flow_style=False)
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # pylint: disable=broad-exception-raised
         logger.error("🚨", f"Failed to translate {build_plan_id}", output_settings.emoji)
         logger.error("🚨", f"{exc}", output_settings.emoji)
         raise HTTPException(status_code=422, detail=str(exc))
