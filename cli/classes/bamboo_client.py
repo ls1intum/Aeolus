@@ -307,7 +307,7 @@ class BambooClient:
         if response.status_code != 200:
             raise Exception(
                 f"Could not get plan {plan_key} from Bamboo: {response.text}"
-            )  # pylint: disable=broad-exception-raise
+            )  # pylint: disable=broad-exception-raised
         document: dict[str, dict[str, str]] = response.json()
         code: Optional[str] = extract_code(response=document)
         if code is not None:
