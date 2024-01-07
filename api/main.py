@@ -325,5 +325,5 @@ def translate(
     except Exception as exc:
         logger.error("🚨", f"Failed to translate {build_plan_id}", output_settings.emoji)
         logger.error("🚨", f"{exc}", output_settings.emoji)
-        raise HTTPException(status_code=422, detail=str(exc))
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     return None
