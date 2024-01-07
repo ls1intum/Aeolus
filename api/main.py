@@ -236,7 +236,7 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
 
 
 @app.post("/publish/{target}")
-def publish(payload: Optional[PublishPayload], target: Target) -> Dict[str, Optional[str]]:
+def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]:
     """
     Publishes the given windfile for the given target using the provided credentials.
     :param payload: Payload with credentials and windfile
@@ -254,7 +254,6 @@ def publish(payload: Optional[PublishPayload], target: Target) -> Dict[str, Opti
             payload.url = payload.url or os.getenv("JENKINS_URL")
             payload.username = payload.username or os.getenv("JENKINS_USERNAME")
             payload.token = payload.token or os.getenv("JENKINS_TOKEN")
-
     try:
         windfile = WindFile(**yaml.safe_load(payload.windfile))
     except yaml.YAMLError:
