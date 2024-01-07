@@ -7,6 +7,7 @@ from typing import Optional, Tuple, Any, List
 
 import requests
 import yaml
+from starlette.exceptions import HTTPException
 
 from classes.bamboo_specs import (
     BambooSpecs,
@@ -305,7 +306,7 @@ class BambooClient:
             timeout=30,
         )
         if response.status_code != 200:
-            return None
+            raise HTTPException(status_code=response.status_code, detail=response.text)
         document: dict[str, dict[str, str]] = response.json()
         code: Optional[str] = extract_code(response=document)
         if code is not None:

@@ -1,4 +1,5 @@
 import json
+import os
 import time
 import warnings
 from typing import Optional, Dict, Any
@@ -7,13 +8,14 @@ import yaml
 from fastapi import FastAPI, HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
+from starlette.responses import Response, PlainTextResponse
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 import _paths  # pylint: disable=unused-import # noqa: F401
-from api_classes.result_format import ResultFormat
 from api_classes.publish_payload import PublishPayload
+from api_classes.result_format import ResultFormat
 from api_classes.translate_payload import TranslatePayload
 from api_utils import utils
-
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
 from classes.ci_credentials import CICredentials
@@ -59,6 +61,47 @@ async def add_process_time_header(request: Request, call_next: Any) -> Any:
     process_time: float = time.time() - start_time
     response.headers["X-Process-Time"] = str(process_time)
     return response
+
+
+@app.middleware("http")
+async def check_token(request: Request, call_next: Any) -> Any:
+    """
+    Checks the token of the request.
+    :param request: the request
+    :param response: the response
+    :param call_next: next middleware
+    :return: the response
+    """
+    if is_authorized(request=request):
+        return await call_next(request)
+    return PlainTextResponse("Unauthorized", status_code=HTTP_401_UNAUTHORIZED)
+
+
+def needs_auth() -> bool:
+    """
+    Checks whether the api needs authentication.
+    :return: True if authentication is needed, otherwise False
+    """
+    tokens: Optional[str] = os.getenv("AEOLUS_API_KEYS")
+    return tokens is not None
+
+
+def is_authorized(request: Request) -> bool:
+    """
+    Checks the token of the request.
+    :param request: the request
+    :return: the response
+    """
+    tokens: Optional[str] = os.getenv("AEOLUS_API_KEYS")
+    if not tokens:
+        return True
+    if request.url.path.startswith("/docs") or request.url.path.startswith("/openapi.json"):
+        return True
+    token_list = tokens.split(",")
+    if request.headers.get("Authorization") in [f"Bearer {token}" for token in token_list]:
+        return True
+
+    return False
 
 
 @app.get("/healthz")
@@ -192,13 +235,25 @@ async def generate(windfile: WindFile, target: Target) -> Optional[Dict[str, str
 
 
 @app.post("/publish/{target}")
-def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]:
+def publish(payload: Optional[PublishPayload], target: Target) -> Dict[str, Optional[str]]:
     """
     Publishes the given windfile for the given target using the provided credentials.
     :param payload: Payload with credentials and windfile
     :param target: Target to publish for
     """
     windfile: Optional[WindFile] = None
+    if needs_auth():
+        if target == Target.cli:
+            raise HTTPException(status_code=422, detail="CLI does not support publishing")
+        if target == Target.bamboo:
+            payload.url = payload.url or os.getenv("BAMBOO_URL")
+            payload.username = payload.username or os.getenv("BAMBOO_USERNAME")
+            payload.token = payload.token or os.getenv("BAMBOO_TOKEN")
+        elif target == Target.jenkins:
+            payload.url = payload.url or os.getenv("JENKINS_URL")
+            payload.username = payload.username or os.getenv("JENKINS_USERNAME")
+            payload.token = payload.token or os.getenv("JENKINS_TOKEN")
+
     try:
         windfile = WindFile(**yaml.safe_load(payload.windfile))
     except yaml.YAMLError:
@@ -220,18 +275,25 @@ def publish(payload: PublishPayload, target: Target) -> Dict[str, Optional[str]]
     return generated
 
 
-@app.put("/translate/{source}/{build_plan_id}?format={resulting_format}")
+@app.put("/translate/{source}/{build_plan_id}")
 def translate(
-    payload: TranslatePayload, source: Target, build_plan_id: str, resulting_format: ResultFormat
+    payload: TranslatePayload, source: Target, build_plan_id: str, result_format: ResultFormat = ResultFormat.JSON,
+    exclude_repositories: bool = False
 ) -> Optional[WindFile | str]:
     """
     Translates the build plan id to a target.
     :param payload: Payload with credentials
     :param source: Source target, currently only bamboo is supported
     :param build_plan_id: Build plan id to translate
-    :param resulting_format: Format to return the windfile in
+    :param result_format: Format to return the windfile in
+    :param exclude_repositories: Whether to exclude the repositories from the windfile or not
     :return: Windfile with the translated target
     """
+    if needs_auth():
+        if source == Target.bamboo:
+            payload.url = payload.url or os.getenv("BAMBOO_URL")
+            payload.username = payload.username or os.getenv("BAMBOO_USERNAME")
+            payload.token = payload.token or os.getenv("BAMBOO_TOKEN")
     if source != Target.bamboo:
         raise HTTPException(status_code=422, detail="Invalid source target")
     output_settings: OutputSettings = OutputSettings(verbose=True, debug=True, emoji=True)
@@ -241,7 +303,9 @@ def translate(
         input_settings=input_settings, output_settings=output_settings, credentials=ci_credentials
     )
     windfile: Optional[WindFile] = translator.translate(plan_key=build_plan_id)
-    if resulting_format == ResultFormat.JSON:
+    if exclude_repositories and windfile:
+        windfile.repositories = None
+    if result_format == ResultFormat.JSON:
         if windfile:
             warnings.filterwarnings("ignore", category=UserWarning)
             utils.remove_none_values(windfile)
