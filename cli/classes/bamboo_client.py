@@ -7,7 +7,6 @@ from typing import Optional, Tuple, Any, List
 
 import requests
 import yaml
-from fastapi import HTTPException
 
 from classes.bamboo_specs import (
     BambooSpecs,
