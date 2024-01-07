@@ -305,7 +305,9 @@ class BambooClient:
             timeout=30,
         )
         if response.status_code != 200:
-            return None
+            raise Exception(  # pylint: disable=broad-exception-raised
+                f"Could not get plan {plan_key} from Bamboo: {response.text}"
+            )
         document: dict[str, dict[str, str]] = response.json()
         code: Optional[str] = extract_code(response=document)
         if code is not None:

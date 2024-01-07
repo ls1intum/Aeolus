@@ -5,6 +5,6 @@ from pydantic import BaseModel
 
 class PublishPayload(BaseModel):
     windfile: str
-    url: str
+    url: Optional[str]
     username: Optional[str]
-    token: str
+    token: Optional[str]
