@@ -16,7 +16,6 @@ from api_classes.publish_payload import PublishPayload
 from api_classes.result_format import ResultFormat
 from api_classes.translate_payload import TranslatePayload
 from api_utils import utils
-
 # pylint: disable=wrong-import-order
 from api_utils.utils import dump_yaml
 from classes.ci_credentials import CICredentials
@@ -305,18 +304,23 @@ def translate(
     translator: BambooTranslator = BambooTranslator(
         input_settings=input_settings, output_settings=output_settings, credentials=ci_credentials
     )
-    windfile: Optional[WindFile] = translator.translate(plan_key=build_plan_id)
-    if exclude_repositories and windfile:
-        windfile.repositories = None
-    if result_format == ResultFormat.JSON:
-        if windfile:
-            warnings.filterwarnings("ignore", category=UserWarning)
-            utils.remove_none_values(windfile)
-            utils.remove_none_values(windfile.metadata)
-            for action in windfile.actions:  # pylint: disable=not-an-iterable
-                utils.remove_none_values(action.root)
-            return windfile
-    elif windfile:
-        json_repr: str = windfile.model_dump_json(exclude_none=True)
-        return yaml.dump(yaml.safe_load(json_repr), sort_keys=False, Dumper=YamlDumper, default_flow_style=False)
+    try:
+        windfile: Optional[WindFile] = translator.translate(plan_key=build_plan_id)
+        if exclude_repositories and windfile:
+            windfile.repositories = None
+        if result_format == ResultFormat.JSON:
+            if windfile:
+                warnings.filterwarnings("ignore", category=UserWarning)
+                utils.remove_none_values(windfile)
+                utils.remove_none_values(windfile.metadata)
+                for action in windfile.actions:  # pylint: disable=not-an-iterable
+                    utils.remove_none_values(action.root)
+                return windfile
+        elif windfile:
+            json_repr: str = windfile.model_dump_json(exclude_none=True)
+            return yaml.dump(yaml.safe_load(json_repr), sort_keys=False, Dumper=YamlDumper, default_flow_style=False)
+    except Exception as exc:  # pylint: disable=broad-except
+        logger.error("🚨", f"Failed to translate {build_plan_id}", output_settings.emoji)
+        logger.error("🚨", f"{exc}", output_settings.emoji)
+        raise HTTPException(status_code=422, detail=str(exc))
     return None
