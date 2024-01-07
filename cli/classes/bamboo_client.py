@@ -7,7 +7,7 @@ from typing import Optional, Tuple, Any, List
 
 import requests
 import yaml
-from starlette.exceptions import HTTPException
+from starlette.exceptions import HTTPException  # type: ignore
 
 from classes.bamboo_specs import (
     BambooSpecs,
