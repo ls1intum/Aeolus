@@ -296,9 +296,9 @@ def translate(
     """
     if needs_auth():
         if source == Target.bamboo:
-            payload.url = payload.url or os.getenv("BAMBOO_URL")
-            payload.username = payload.username or os.getenv("BAMBOO_USERNAME")
-            payload.token = payload.token or os.getenv("BAMBOO_TOKEN")
+            payload.url = os.getenv("BAMBOO_URL", "needs to be set")
+            payload.username = os.getenv("BAMBOO_USERNAME", "needs to be set")
+            payload.token = os.getenv("BAMBOO_TOKEN", "needs to be set")
     if source != Target.bamboo:
         raise HTTPException(status_code=422, detail="Invalid source target")
     output_settings: OutputSettings = OutputSettings(verbose=True, debug=True, emoji=True)
