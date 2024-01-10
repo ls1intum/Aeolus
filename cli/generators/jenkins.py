@@ -91,7 +91,7 @@ class JenkinsGenerator(BaseGenerator):
         """
 
         # Create the Jenkins Pipeline Job
-        job_name: str = self.windfile.metadata.id.replace("-", "/")
+        job_name: str = self.windfile.metadata.id
         if "/" in job_name:
             path: List[str] = job_name.split("/")
             for i in range(len(path) - 1):
@@ -106,6 +106,7 @@ class JenkinsGenerator(BaseGenerator):
         script.appendChild(config_xml.createTextNode(super().generate()))
 
         server.upsert_job(job_name, config_xml.toxml())
+        self.key = job_name
 
     def generate_using_jinja2(self) -> str:
         """
@@ -150,9 +151,9 @@ class JenkinsGenerator(BaseGenerator):
         utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         self.add_prefix()
 
+        self.result = self.generate_using_jinja2()
         if self.output_settings.ci_credentials is not None:
             self.publish()
-        self.result = self.generate_using_jinja2()
         return super().generate()
 
     def check(self, content: str) -> bool:
