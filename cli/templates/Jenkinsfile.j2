@@ -41,7 +41,7 @@ pipeline {
     {%- for name, repository in repositories.items() %}
     stage('{{ name }}') {
       steps {
-        echo '🖨️ cloning aeolus'
+        echo '🖨️ cloning {{ name }}'
         dir('{{ repository.path }}') {
           checkout([$class: 'GitSCM',
             branches: [[name: '{{ repository.branch }}']],
