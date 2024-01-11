@@ -1,0 +1,48 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# Setup for a Pyris production server.
+
+services:
+  playground:
+    extends:
+      file: ../docker-compose.yml
+      service: playground
+    networks:
+      - aeolus
+  api:
+    extends:
+      file: ../docker-compose.yml
+      service: api
+    replicas: 4
+    networks:
+      - aeolus
+  bamboo-api:
+    extends:
+      file: ../docker-compose.yml
+      service: bamboo-api
+    networks:
+      - aeolus
+
+  cache:
+    image: hazelcast/hazelcast:5.3.1
+    networks:
+      - pyris
+
+  nginx:
+    extends:
+      file: ./nginx.yml
+      service: nginx
+    restart: always
+    volumes:
+      - type: bind
+        source: ${NGINX_PROXY_SSL_CERTIFICATE_PATH:-./nginx/certs/aeolus-nginx+4.pem}
+        target: "/certs/fullchain.pem"
+      - type: bind
+        source: ${NGINX_PROXY_SSL_CERTIFICATE_KEY_PATH:-./nginx/certs/aeolus-nginx+4-key.pem}
+        target: "/certs/priv_key.pem"
+    networks:
+      - aeolus
+
+networks:
+  aeolus:
+    driver: "bridge"
+    name: aeolus
