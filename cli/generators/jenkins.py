@@ -88,9 +88,9 @@ class JenkinsGenerator(BaseGenerator):
                 <triggers/>
                 <disabled>false</disabled>
                 <properties>
-                    <hudson.security.AuthorizationMatrixProperty>
-                        <inheritanceStrategy class="org.jenkinsci.plugins.matrixauth.inheritance.InheritParentStrategy"/>
-                    </hudson.security.AuthorizationMatrixProperty>
+                <hudson.security.AuthorizationMatrixProperty>
+                    <inheritanceStrategy class="org.jenkinsci.plugins.matrixauth.inheritance.InheritParentStrategy"/>
+                </hudson.security.AuthorizationMatrixProperty>
                 </properties>
             </flow-definition>
         """

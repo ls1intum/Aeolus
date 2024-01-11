@@ -113,7 +113,7 @@ class BaseGenerator:
                 return True
         return False
 
-    def add_result(self, workdir: str, result: Result) -> None:
+    def add_result(self, workdir: typing.Optional[str], result: Result) -> None:
         """
         Add a result to the results dictionary.
         """
