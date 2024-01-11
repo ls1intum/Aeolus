@@ -41,7 +41,6 @@ pipeline {
     {%- for name, repository in repositories.items() %}
     stage('{{ name }}') {
       steps {
-        echo '🖨️ cloning {{ name }}'
         dir('{{ repository.path }}') {
           checkout([$class: 'GitSCM',
             branches: [[name: '{{ repository.branch }}']],
@@ -93,7 +92,6 @@ pipeline {
       {%- endif %}
     {%- endif %}
       steps {
-        echo '⚙️ executing {{ step.name }}'
         {%- if step.workdir %}
         dir('{{ step.workdir }}') {
           sh '''
@@ -114,7 +112,6 @@ pipeline {
 post {
   always {
   {%- for action in always_steps %}
-    echo '⚙️ executing {{ action.name }}'
     {%- if action.workdir %}
     dir('{{ action.workdir }}') {
       sh '''
@@ -128,27 +125,33 @@ post {
     {%- endif %}
   {%- endfor %}
   {%- if has_results %}
-      echo '📊 publishing results'
     {%- for workdir, entries in results.items() %}
       dir('{{ workdir }}') {
         {%- for result in entries %}
-        {%- if result.type == 'junit' %}
-        junit './{{ result.path }}'
+         {#%- if result.type == 'junit' %}
+        {#junit './{{ result.path }}'
         {%- else %}
         archiveArtifacts: './{{result.path}}', fingerprint: true, allowEmptyArchive: true,
         {%- endif %}
+           would be cool, but artemis does not work with this #}
+        sh '''
+        mkdir -p results || true
+        cp {{ result.path }} $WORKSPACE/results/ || true
+        sed -i 's/[^[:print:]	]/�/g' $WORKSPACE/{{ result.path }} || true
+        '''
         {%- endfor %}
       }
     {%- endfor %}
     {%- if metadata.resultHook %}
-      {%- if metadata.resultHookCredentials %}
-      sendTestResults credentialsId: '{{ metadata.resultHookCredentials }}', notificationUrl: '{{ metadata.resultHook }}'
-      {%- else %}
-      sendTestResults notificationUrl: '{{ metadata.resultHook }}'
-      {%- endif %}
+    {%- if metadata.resultHookCredentials %}
+    sendTestResults credentialsId: '{{ metadata.resultHookCredentials }}', notificationUrl: '{{ metadata.resultHook }}'
+    {%- else %}
+    sendTestResults notificationUrl: '{{ metadata.resultHook }}'
+    {%- endif %}
     {%- endif %}
   {%- endif %}
   {%- if has_always_actions or has_results %}
+    cleanWs()
     }
   }
   {%- endif %}

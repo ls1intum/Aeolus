@@ -87,6 +87,11 @@ class JenkinsGenerator(BaseGenerator):
                 </definition>
                 <triggers/>
                 <disabled>false</disabled>
+                <properties>
+                    <hudson.security.AuthorizationMatrixProperty>
+                        <inheritanceStrategy class="org.jenkinsci.plugins.matrixauth.inheritance.InheritParentStrategy"/>
+                    </hudson.security.AuthorizationMatrixProperty>
+                </properties>
             </flow-definition>
         """
 
@@ -121,6 +126,9 @@ class JenkinsGenerator(BaseGenerator):
             if action.root.platform and action.root.platform != Target.jenkins:
                 continue
             actions.append(action)
+            if action.root.results:
+                for result in action.root.results:
+                    self.add_result(action.root.workdir, result)
 
         data: dict[str, typing.Any] = {
             "docker": self.windfile.metadata.docker,
@@ -131,8 +139,6 @@ class JenkinsGenerator(BaseGenerator):
             "steps": [action.root for action in actions if not action.root.runAlways],
             "always_steps": [action.root for action in actions if action.root.runAlways],
             "metadata": self.windfile.metadata,
-            "before_results": self.before_results,
-            "after_results": self.after_results,
             "repo_metadata": self.metadata.get(scope="repositories"),
             "has_results": self.has_results(),
             "results": self.results,
