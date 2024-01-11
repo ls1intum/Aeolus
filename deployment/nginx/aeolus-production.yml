@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------------------------------------------------
-# Setup for a Pyris production server.
+# Setup for a Aeolus production server.
 
 services:
   playground:
@@ -22,16 +22,11 @@ services:
     networks:
       - aeolus
 
-  cache:
-    image: hazelcast/hazelcast:5.3.1
-    networks:
-      - pyris
-
   nginx:
     extends:
       file: ./nginx.yml
       service: nginx
-    restart: always
+    restart: if_not_stopped
     volumes:
       - type: bind
         source: ${NGINX_PROXY_SSL_CERTIFICATE_PATH:-./nginx/certs/aeolus-nginx+4.pem}
