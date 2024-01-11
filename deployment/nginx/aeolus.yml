@@ -1,0 +1,29 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# Aeolus base service
+# ----------------------------------------------------------------------------------------------------------------------
+
+services:
+  playground:
+    extends:
+      file: ../docker-compose.yml
+      service: playground
+    networks:
+      - aeolus
+  api:
+    extends:
+      file: ../docker-compose.yml
+      service: api
+    replicas: 1
+    networks:
+      - aeolus
+  bamboo-api:
+    extends:
+      file: ../docker-compose.yml
+      service: bamboo-api
+    networks:
+      - aeolus
+
+networks:
+  aeolus:
+    driver: "bridge"
+    name: aeolus

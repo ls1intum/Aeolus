@@ -1,0 +1,31 @@
+# ----------------------------------------------------------------------------------------------------------------------
+# Nginx base service
+# ----------------------------------------------------------------------------------------------------------------------
+
+services:
+  nginx:
+    container_name: aeolus-nginx
+    image: nginx:1.25
+    pull_policy: if_not_present
+    volumes:
+      - ./nginx/timeouts.conf:/etc/nginx/conf.d/timeouts.conf:ro
+      - ./nginx/aeolus-nginx.conf:/etc/nginx/conf.d/aeolus-nginx.conf:ro
+      - ./nginx/aeolus-server.conf:/etc/nginx/includes/aeolus-server.conf:ro
+      - ./nginx/dhparam.pem:/etc/nginx/dhparam.pem:ro
+      - ./nginx/nginx_502.html:/usr/share/nginx/html/502.html:ro
+      - ./nginx/70-aeolus-setup.sh:/docker-entrypoint.d/70-aeolus-setup.sh
+      - ./nginx/certs/aeolus-nginx+4.pem:/certs/fullchain.pem:ro
+      - ./nginx/certs/aeolus-nginx+4-key.pem:/certs/priv_key.pem:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    healthcheck:
+      test: service nginx status || exit 1
+      start_period: 60s
+    networks:
+      - aeolus
+
+networks:
+  aeolus:
+    driver: "bridge"
+    name: aeolus
