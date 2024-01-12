@@ -15,4 +15,4 @@ gitpython>=3.1.41
 types-requests
 urllib3
 python-jenkins
-Jinja2
+Jinja2>=3.1.3
