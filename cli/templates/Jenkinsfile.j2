@@ -137,7 +137,8 @@ post {
         sh '''
         mkdir -p results || true
         cp {{ result.path }} $WORKSPACE/results/ || true
-        sed -i 's/[^[:print:]	]/�/g' $WORKSPACE/{{ result.path }} || true
+        sed -i 's/<testsuites>/<testsuite>/g ; s/<\\/testsuites>/<\\/testsuite>/g ; s/<testsuites /<testsuite /g' $WORKSPACE/results/{{ result.path.split("/")[-1] }} || true
+        sed -i 's/[^[:print:]	]/�/g' $WORKSPACE/results/{{ result.path.split("/")[-1] }} || true
         '''
         {%- endfor %}
       }
