@@ -168,7 +168,15 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                         docker=docker,
                         parameters=params,
                         environment=envs,
-                        results=None,
+                        results=[
+                            Result(
+                                name="junit",
+                                path="**/target/surefire-reports/*.xml",
+                                ignore=None,
+                                type="junit",
+                                before=False,
+                            )
+                        ],
                         platform=None,
                         runAlways=task.always_execute,
                     )
