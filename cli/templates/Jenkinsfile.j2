@@ -15,8 +15,8 @@ pipeline {
   {%- endif %}
   {%- if dockerParameters %}
       args '{{ dockerParameters }}'
-    }
     {%- endif %}
+    }
   }
 {%- else %}
   agent any
@@ -74,6 +74,7 @@ pipeline {
       {%- endif %}
         }
       }
+      {%- endif %}
       {%- if step.excludeDuring %}
       when {
         anyOf {
@@ -83,14 +84,16 @@ pipeline {
         }
       }
       {%- endif %}
-      {%- if step.environment %}
+      {%- if step.environment or step.parameters %}
       environment {
-      {%- for env_var, env_value in step.environment.items %}
-        {{ env_var }} = '{{ env_value }}'
+      {%- for key in step.environment.root.root %}
+        {{ key }} = '{{ step.environment.root.root[key] }}'
+      {%- endfor %}
+      {%- for key in step.parameters.root.root %}
+        {{ key }} = '{{ step.parameters.root.root[key] }}'
       {%- endfor %}
       }
       {%- endif %}
-    {%- endif %}
       steps {
         {%- if step.workdir %}
         dir('{{ step.workdir }}') {

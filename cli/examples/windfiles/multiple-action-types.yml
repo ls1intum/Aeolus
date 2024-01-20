@@ -1,0 +1,23 @@
+api: v0.0.1
+metadata:
+  name: example windfile
+  id: example-windfile
+  description: This is a windfile with an internal action
+  author: Andreas Resch
+  docker:
+    image: ls1tum/artemis-maven-template
+    tag: java17-20
+repositories:
+  aeolus:
+    url: https://github.com/ls1intum/Aeolus.git
+    branch: develop
+    path: aeolus
+actions:
+  - name: script-action
+    script: echo "I am a script action"
+  - name: template-action
+    use: https://github.com/reschandreas/example-action.git
+    parameters:
+      WHO_TO_GREET: "hello"
+    environment:
+      HELLO: "world"
