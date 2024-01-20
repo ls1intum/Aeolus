@@ -36,37 +36,20 @@ metadata:
   docker:
     image: ls1tum/artemis-maven-template
     tag: java17-20
-    volumes:
-      - $\{WORKDIR}:/aeolus
-    parameters:
-      - --cpus
-      - '"2"'
-      - --memory
-      - '"2g"'
-      - --memory-swap
-      - '"2g"'
-      - --pids-limit
-      - '"1000"'
-  gitCredentials: artemis_gitlab_admin_credentials
 repositories:
   aeolus:
     url: https://github.com/ls1intum/Aeolus.git
     branch: develop
     path: aeolus
 actions:
-  - name: set-java-container
-    script: set
-  - name: set-c-container
-    docker:
-      image: ghcr.io/ls1intum/artemis-c-docker
-    script: set
-  - name: internal-action
-    script: |
-      echo "This is an internal action"
-  - name: clean_up
-    script: |
-      rm -rf aeolus/
-    runAlways: true`;
+  - name: script-action
+    script: echo "I am a script action"
+  - name: template-action
+    use: https://github.com/reschandreas/example-action.git
+    parameters:
+      WHO_TO_GREET: "hello"
+    environment:
+      HELLO: "world"`;
     const [data, setData] = useState<string>(default_windfile);
     const [key, setKey] = useState<string | undefined>(undefined);
     const [markers, setMarkers] = useState<any[]>([]);

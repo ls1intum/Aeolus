@@ -13,39 +13,47 @@ export {{ env_var }}="{{ environment[env_var] }}"
 
 {%- for step in steps %}
 {{ step.name }} () {
+  {%- if step.excludeDuring %}
+  local _current_lifecycle="${1}"
+  {%- for exclude in step.excludeDuring %}
+  if [[ "${_current_lifecycle}" == "{{ exclude | replace('Lifecycle.', '') }}" ]]; then
+    echo "⚙️ skipping {{ step.name }} because it is excluded during {{ exclude | replace('Lifecycle.', '') }}"
+    return 0
+  fi
+  {% endfor %}
+  {%- endif %}
   echo '⚙️ executing {{ step.name }}'
   {% if step.workdir -%}
-    cd "{{ step.workdir }}"
-  {% endif %}
+  cd "{{ step.workdir }}"
+  {% endif -%}
   {%- if step.environment -%}
-    {%- for env_var, env_value in step.environment.items -%}
-      export {{ env_var }}="{{ env_value }}"
-    {%- endfor -%}
-  {% endif %}
+  {%- for key in step.environment.root.root %}
+  export {{ key }}="{{ step.environment.root.root[key] }}"
+  {%- endfor -%}
+  {%- endif -%}
   {%- if step.parameters -%}
-    {%- for param_var, param_value in step.parameters.items -%}
-      export {{ param_var }}="{{ param_value }}"
+    {%- for key in step.parameters.root.root %}
+  export {{ key }}="{{ step.parameters.root.root[key] }}"
     {% endfor %}
   {%- endif -%}
-  {%- if step.needs_lifecycle_parameter -%}
-    local _current_lifecycle="${1}"
+  {%- if step.includeDuring %}
   {% endif %}
   {%- if metadata.moveResultsTo %}
-   cd {{ initial_directory }}
-   mkdir -p {{ metadata.moveResultsTo }}
-   shopt -s extglob
+  cd {{ initial_directory }}
+  mkdir -p {{ metadata.moveResultsTo }}
+  shopt -s extglob
   {%- for result in before_results[step.name] %}
   {%- set source_path = result.path -%}
    {%- if step.workdir -%}
    {%- set source_path = step.workdir + "/" + result.path -%}
    {%- endif -%}
-   local _sources="{{ source_path }}"
-   local _directory
-   _directory=$(dirname "${_sources}")
+  local _sources="{{ source_path }}"
+  local _directory
+  _directory=$(dirname "${_sources}")
    {%- if result.ignore -%}
-   _sources=$(echo ${_sources}/!({{ result.ignore | join(' ') }}))
+  _sources=$(echo ${_sources}/!({{ result.ignore | join(' ') }}))
    {%- endif -%}
-   cp -a ${_sources} {{ metadata.moveResultsTo }}/${_directory}
+  cp -a ${_sources} {{ metadata.moveResultsTo }}/${_directory}
    {%- endfor -%}
   {%- endif -%}
   {{ step.script | indent(2, false) }}
@@ -90,7 +98,7 @@ main () {
     return 0 # just source to use the methods in the subshell, no execution
   fi
 {%- endif -%}
-{%- if needs_lifecycle_parameter -%}
+{%- if needs_lifecycle_parameter %}
   local _current_lifecycle="${1}"
 {% endif %}
 {%- if needs_subshells %}
