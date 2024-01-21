@@ -248,7 +248,7 @@ pipeline {
         }
       }
       when {
-        anyOf {
+        allOf {
           expression { params.current_lifecycle != 'working_time' }
           expression { params.current_lifecycle != 'preparation' }
         }

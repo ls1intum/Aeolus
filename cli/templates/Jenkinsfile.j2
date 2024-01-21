@@ -79,7 +79,7 @@ pipeline {
       {%- endif %}
       {%- if step.excludeDuring %}
       when {
-        anyOf {
+        allOf {
           {%- for exclude in step.excludeDuring %}
             expression { params.current_lifecycle != '{{ exclude | replace('Lifecycle.', '') }}' }
           {%- endfor %}
