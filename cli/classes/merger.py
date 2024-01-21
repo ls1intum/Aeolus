@@ -422,11 +422,11 @@ class Merger(PassSettings):
 
                 elif isinstance(internals.root, PlatformAction):
                     original_types.append("platform")
-                    if internals.root.file:
+                    if internals.root.code:
                         content = get_content_of(
                             file=os.path.join(
                                 os.path.dirname(absolute_path),
-                                internals.root.file,
+                                internals.root.code,
                             )
                         )
                 elif isinstance(internals.root, FileAction):

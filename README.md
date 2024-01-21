@@ -626,10 +626,10 @@ The yaml specification for the windfile can be found [here](schemas/v0.0.1/schem
 
 In a windfile, you can define jobs of different types. Currently, there are four types of jobs:
 
-- `internal`: A job that is defined in the windfile itself
+- `script`: A job that is defined in the windfile itself
 
 ```yaml
-  - name: internal-action
+  - name: script-action
     script: |
       echo "This is an internal action"
 ```

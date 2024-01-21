@@ -156,7 +156,7 @@ class PlatformAction(BaseModel):
         extra='forbid',
     )
     name: str = Field(..., description='The name of the action.', examples=['rust-exercise-jobs'])
-    code: str = Field(..., description='The file of the platform action. Written in Python')
+    code: Optional[str] = Field(None, description='The file of the platform action. Written in Python')
     parameters: Optional[Parameters] = None
     function: Optional[constr(pattern=r'^[a-zA-Z0-9._-]+$')] = Field(
         'run', description='The function of the platform action.', examples=['run']
