@@ -201,7 +201,7 @@
           "rust-exercise-jobs"
         ]
       },
-      "file": {
+      "code": {
         "description": "The file of the platform action. Written in Python",
         "type": "string"
       },
@@ -265,15 +265,9 @@
       }
     },
     "required": [
-      "name"
-    ],
-    "oneOff": [
-      {
-        "required": [
-          "for",
-          "file"
-        ]
-      }
+      "code",
+      "name",
+      "platform"
     ]
   },
   "file-action": {
