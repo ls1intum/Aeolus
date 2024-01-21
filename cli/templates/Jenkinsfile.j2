@@ -9,6 +9,8 @@ pipeline {
       image '{{ dockerImage }}'
   {%- if docker.parameters -%}
     {%- set dockerParameters = docker.parameters | join(' ') -%}
+  {%- else %}
+    {%- set dockerParameters = "" -%}
   {%- endif %}
   {%- if docker.volumes -%}
     {%- set dockerParameters = '-v ' + (docker.volumes | join(' ')) + ' ' + dockerParameters -%}
@@ -86,13 +88,17 @@ pipeline {
       {%- endif %}
       {%- if step.environment or step.parameters %}
       environment {
+      {%- if step.environment %}
       {%- for key in step.environment.root.root %}
         {{ key }} = '{{ step.environment.root.root[key] }}'
       {%- endfor %}
+      {%- endif %}
+      {%- if step.parameters %}
       {%- for key in step.parameters.root.root %}
         {{ key }} = '{{ step.parameters.root.root[key] }}'
       {%- endfor %}
       }
+      {%- endif %}
       {%- endif %}
       steps {
         {%- if step.workdir %}
