@@ -36,13 +36,13 @@ repositories {
 
 dependencies {
 //    implementation("com.fasterxml.jackson.core:jackson-annotations:2.15.2")
-    implementation("com.atlassian.bamboo:bamboo-specs:9.3.5")
+    implementation("com.atlassian.bamboo:bamboo-specs:9.4.2")
     // https://mvnrepository.com/artifact/org.jsonschema2pojo/jsonschema2pojo-core
     implementation("org.jsonschema2pojo:jsonschema2pojo-core:1.2.1")
     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-web
-    implementation("org.springframework.boot:spring-boot-starter-web:3.1.5")
+    implementation("org.springframework.boot:spring-boot-starter-web:3.2.2")
 
     implementation("com.google.code.gson:gson:2.10.1")
     testImplementation(platform("org.junit:junit-bom:5.9.1"))

@@ -5,18 +5,18 @@ is to create a domain-specific language (DSL) for streamlining CI job configurat
 
 ## Why?
 
-Currently, in Artemis, it is hard to create custom CI jobs. With Aeolus we provide a standard definition that
+Currently, in Artemis, it is hard to create custom CI jobs. With Aeolus, we provide a standard definition that
 is able to generate code for several targets.
 
 ## How?
 
-The idea is to define an input language, parse and validate it and generate the CI configuration
+The idea is to define an input language, parse, and validate it and generate the CI configuration
 for multiple platforms (e.g. CLI, Bamboo, Jenkins, ...). And therefore be able to
 switch the CI platform without having to rewrite the configuration.
 
 ## Development
 
-The system is still under development and not ready for use, yet. We plan on supporting the following platforms:
+The system is still under development but already ready for use. We plan on supporting the following platforms:
 
 - CLI
 - Jenkins
@@ -40,15 +40,6 @@ metadata:
     tag: java17-20
     volumes:
       - ${WORKDIR}:/aeolus
-    parameters:
-      - --cpus
-      - '"2"'
-      - --memory
-      - '"2g"'
-      - --memory-swap
-      - '"2g"'
-      - --pids-limit
-      - '"1000"'
   gitCredentials: artemis_gitlab_admin_credentials
 repositories:
   aeolus:
@@ -125,8 +116,21 @@ internalaction () {
 }
 
 externalaction_ () {
+  local _current_lifecycle="${1}"
+  if [[ "${_current_lifecycle}" == "working_time" ]]; then
+    echo "⚙️ skipping externalaction_ because it is excluded during working_time"
+    return 0
+  fi
+  
+  if [[ "${_current_lifecycle}" == "preparation" ]]; then
+    echo "⚙️ skipping externalaction_ because it is excluded during preparation"
+    return 0
+  fi
+  
   echo '⚙️ executing externalaction_'
-  echo "Hello ${WHO_TO_GREET}"
+  
+  export WHO_TO_GREET="world"
+    echo "Hello ${WHO_TO_GREET}"
 }
 
 clean_up () {
@@ -145,7 +149,8 @@ final_aeolus_post_action () {
 main () {
   if [[ "${1}" == "aeolus_sourcing" ]]; then
     return 0 # just source to use the methods in the subshell, no execution
-  filocal _current_lifecycle="${1}"
+  fi
+  local _current_lifecycle="${1}"
 
   local _script_name
   _script_name=${BASH_SOURCE[0]:-$0}
@@ -173,7 +178,7 @@ pipeline {
   agent {
     docker {
       image 'ls1tum/artemis-maven-template:java17-20'
-      args '-v ${PWD}:/aeolus --cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
+      args '-v ${PWD}:/aeolus '
     }
   }
   parameters {
@@ -186,18 +191,15 @@ pipeline {
   stages {
     stage('aeolus') {
       steps {
-        echo '🖨️ cloning aeolus'
         dir('aeolus') {
           checkout([$class: 'GitSCM',
                     branches: [[name: 'develop']],
                     doGenerateSubmoduleConfigurations: false,
-                    extensions: [],
-                    submoduleCfg: [],
                     userRemoteConfigs: [[
-                            credentialsId: 'artemis_gitlab_admin_credentials',
-                            name: 'aeolus',
-                            url: "${REPOSITORY_URL}"
-                    ]]
+                                                credentialsId: 'artemis_gitlab_admin_credentials',
+                                                name: 'aeolus',
+                                                url: "${REPOSITORY_URL}"
+                                        ]]
           ])
         }
       }
@@ -206,73 +208,68 @@ pipeline {
       agent {
         docker {
           image 'ls1tum/artemis-maven-template:java17-20'
-          args '--cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
         }
       }
       steps {
-        echo '⚙️ executing set-java-container'
         sh '''
-            set
-          '''
+          set
+        '''
       }
     }
     stage('set-c-container') {
       agent {
         docker {
           image 'ghcr.io/ls1intum/artemis-c-docker:latest'
-          args '--cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
         }
       }
       steps {
-        echo '⚙️ executing set-c-container'
         sh '''
-            set
-          '''
+          set
+        '''
       }
     }
     stage('internal-action') {
       agent {
         docker {
           image 'ls1tum/artemis-maven-template:java17-20'
-          args '--cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
         }
       }
       steps {
-        echo '⚙️ executing internal-action'
         sh '''
-            echo "This is an internal action"
+          echo "This is an internal action"
 
-          '''
+        '''
       }
     }
     stage('external-action_0') {
       agent {
         docker {
           image 'ls1tum/artemis-maven-template:java17-20'
-          args '--cpus "2" --memory "2g" --memory-swap "2g" --pids-limit "1000"'
         }
       }
       when {
         anyOf {
-          expression { params.current_lifecycle != 'preparation' }
           expression { params.current_lifecycle != 'working_time' }
+          expression { params.current_lifecycle != 'preparation' }
         }
       }
+      environment {
+        WHO_TO_GREET = 'world'
+      }
       steps {
-        echo '⚙️ executing external-action_0'
         sh '''
-            echo "Hello ${WHO_TO_GREET}"
-          '''
+          echo "Hello ${WHO_TO_GREET}"
+        '''
       }
     }
   }
   post {
     always {
-      echo '⚙️ executing clean_up'
       sh '''
-      rm -rf aeolus/
+    rm -rf aeolus/
 
-      '''
+    '''
+      cleanWs()
     }
   }
 }
@@ -285,7 +282,7 @@ And the generated Bamboo YAML specs would look like this:
 ```yaml
 --- !!com.atlassian.bamboo.specs.util.BambooSpecProperties
 rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
-  description: Plan created from stdin
+  description: This is a windfile with an internal action
   enabled: true
   key:
     key: WINDFILE
@@ -418,15 +415,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
           artifacts: []
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments:
-              - --cpus
-              - '"2"'
-              - --memory
-              - '"2g"'
-              - --memory-swap
-              - '"2g"'
-              - --pids-limit
-              - '"1000"'
+            dockerRunArguments: []
             enabled: true
             image: ls1tum/artemis-maven-template:java17-20
             volumes:
@@ -500,15 +489,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
           artifacts: []
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments:
-              - --cpus
-              - '"2"'
-              - --memory
-              - '"2g"'
-              - --memory-swap
-              - '"2g"'
-              - --pids-limit
-              - '"1000"'
+            dockerRunArguments: []
             enabled: true
             image: ls1tum/artemis-maven-template:java17-20
             volumes:
@@ -546,15 +527,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
           artifacts: []
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments:
-              - --cpus
-              - '"2"'
-              - --memory
-              - '"2g"'
-              - --memory-swap
-              - '"2g"'
-              - --pids-limit
-              - '"1000"'
+            dockerRunArguments: []
             enabled: true
             image: ls1tum/artemis-maven-template:java17-20
             volumes:
@@ -610,15 +583,7 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
           artifacts: []
           cleanWorkingDirectory: false
           dockerConfiguration:
-            dockerRunArguments:
-              - --cpus
-              - '"2"'
-              - --memory
-              - '"2g"'
-              - --memory-swap
-              - '"2g"'
-              - --pids-limit
-              - '"1000"'
+            dockerRunArguments: []
             enabled: true
             image: ls1tum/artemis-maven-template:java17-20
             volumes:
@@ -647,7 +612,8 @@ rootEntity: !!com.atlassian.bamboo.specs.api.model.plan.PlanProperties
     - createOnly: false
       name: lifecycle_stage
       value: working_time
-specModelVersion: 9.3.3
+specModelVersion: 9.4.2
+...
 ```
 
 # Features
