@@ -156,7 +156,7 @@ class PlatformAction(BaseModel):
         extra='forbid',
     )
     name: str = Field(..., description='The name of the action.', examples=['rust-exercise-jobs'])
-    file: Optional[str] = Field(None, description='The file of the platform action. Written in Python')
+    code: Optional[str] = Field(None, description='The file of the platform action. Written in Python')
     parameters: Optional[Parameters] = None
     function: Optional[constr(pattern=r'^[a-zA-Z0-9._-]+$')] = Field(
         'run', description='The function of the platform action.', examples=['run']
@@ -167,7 +167,7 @@ class PlatformAction(BaseModel):
         title='Exclude during',
     )
     environment: Optional[Environment] = Field(None, description='Environment variables for this platform action.')
-    platform: Optional[Target] = Field(None, description='Ignored for this action.')
+    platform: Target = Field(..., description='Ignored for this action.')
     kind: Optional[str] = Field(None, description='The kind of the platform action.', examples=['junit'])
     docker: Optional[Docker] = Field(None, description='The docker configuration that is used to execute the action')
     runAlways: Optional[bool] = Field(

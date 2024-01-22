@@ -189,7 +189,7 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                         kind=task.task_type,
                         excludeDuring=exclude,
                         workdir=str(task.parameters["working_dir"]) if "working_dir" in task.parameters else None,
-                        file=None,
+                        code=None,
                         function=None,
                         docker=docker,
                         results=None,

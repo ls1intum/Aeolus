@@ -5,4 +5,5 @@ metadata:
   author: Andreas Resch
 actions:
   - name: hello-world
-    use: ../actions/platform-action.yml
+    platform: bamboo
+    code: install-api.py

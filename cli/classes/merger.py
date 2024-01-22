@@ -278,11 +278,12 @@ class Merger(PassSettings):
                         typing.List[Action],
                     ]
                 ] = None
-                if isinstance(action, (PlatformAction, FileAction)):
+                if isinstance(action, FileAction):
                     path = action.file
-                    if isinstance(action, PlatformAction):
-                        if path is None:
-                            converted = ([name], [Action(root=action)])
+                elif isinstance(action, PlatformAction):
+                    path = action.code
+                    if path is None:
+                        converted = ([name], [Action(root=action)])
                 elif isinstance(action, TemplateAction):
                     path = action.use
                 if path:
@@ -309,6 +310,7 @@ class Merger(PassSettings):
                 logger.error("❌", f"{exception}", self.output_settings.emoji)
                 if self.output_settings.debug:
                     traceback.print_exc()
+                return False
         return True
 
     def inline_actions(
@@ -420,11 +422,11 @@ class Merger(PassSettings):
 
                 elif isinstance(internals.root, PlatformAction):
                     original_types.append("platform")
-                    if internals.root.file:
+                    if internals.root.code:
                         content = get_content_of(
                             file=os.path.join(
                                 os.path.dirname(absolute_path),
-                                internals.root.file,
+                                internals.root.code,
                             )
                         )
                 elif isinstance(internals.root, FileAction):
