@@ -162,7 +162,7 @@ def extract_action(job: BambooJob, task: BambooTask, environment: EnvironmentSch
                 action = Action(  # type: ignore
                     ScriptAction(
                         name=extract_action_name(task=task),
-                        script=f"mvn {task.goal}",
+                        script=f"mvn -B {task.goal}",
                         excludeDuring=exclude,
                         workdir=str(task.parameters["working_dir"]) if "working_dir" in task.parameters else None,
                         docker=docker,
