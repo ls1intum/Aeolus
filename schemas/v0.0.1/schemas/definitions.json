@@ -659,7 +659,8 @@
         "description": "The type of the result.",
         "type": "string",
         "examples": [
-          "junit"
+          "junit",
+          "static-code-analysis"
         ]
       },
       "before": {

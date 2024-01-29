@@ -143,11 +143,15 @@ post {
         archiveArtifacts: './{{result.path}}', fingerprint: true, allowEmptyArchive: true,
         {%- endif %}
            would be cool, but artemis does not work with this #}
+        {%- set directory = "results" -%}
+        {%-if result.type == "static-code-analysis" %}
+          {%- set directory = "staticCodeAnalysis" -%}
+        {%- endif %}
         sh '''
-        mkdir -p results || true
-        cp {{ result.path }} $WORKSPACE/results/ || true
-        sed -i 's/<testsuites>/<testsuite>/g ; s/<\\/testsuites>/<\\/testsuite>/g ; s/<testsuites /<testsuite /g' $WORKSPACE/results/{{ result.path.split("/")[-1] }} || true
-        sed -i 's/[^[:print:]	]/�/g' $WORKSPACE/results/{{ result.path.split("/")[-1] }} || true
+        mkdir -p {{ directory }} || true
+        cp {{ result.path }} $WORKSPACE/{{ directory }}/ || true
+        sed -i 's/<testsuites>/<testsuite>/g ; s/<\\/testsuites>/<\\/testsuite>/g ; s/<testsuites /<testsuite /g' $WORKSPACE/{{ directory }}/{{ result.path.split("/")[-1] }} || true
+        sed -i 's/[^[:print:]	]/�/g' $WORKSPACE/{{ directory }}/{{ result.path.split("/")[-1] }} || true
         '''
         {%- endfor %}
       }
