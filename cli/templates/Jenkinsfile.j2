@@ -148,7 +148,7 @@ post {
           {%- set directory = "staticCodeAnalysis" -%}
         {%- endif %}
         {%-if result.type == "custom-feedback" %}
-          {%- set directory = "customFeedback" -%}
+          {%- set directory = "customFeedbacks" -%}
         {%- endif %}
         sh '''
         mkdir -p {{ directory }} || true
