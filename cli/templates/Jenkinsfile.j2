@@ -147,6 +147,9 @@ post {
         {%-if result.type == "static-code-analysis" %}
           {%- set directory = "staticCodeAnalysis" -%}
         {%- endif %}
+        {%-if result.type == "custom-feedback" %}
+          {%- set directory = "customFeedback" -%}
+        {%- endif %}
         sh '''
         mkdir -p {{ directory }} || true
         cp {{ result.path }} $WORKSPACE/{{ directory }}/ || true
