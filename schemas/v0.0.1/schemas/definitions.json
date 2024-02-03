@@ -660,7 +660,8 @@
         "type": "string",
         "examples": [
           "junit",
-          "static-code-analysis"
+          "static-code-analysis",
+          "custom-feedback"
         ]
       },
       "before": {

@@ -83,7 +83,9 @@ class Result(BaseModel):
         examples=['target/test-reports'],
     )
     ignore: Optional[str] = Field(None, description="Ignore this pattern, don't keep it.", examples=['*.txt'])
-    type: Optional[str] = Field(None, description='The type of the result.', examples=['junit', 'static-code-analysis'])
+    type: Optional[str] = Field(
+        None, description='The type of the result.', examples=['junit', 'static-code-analysis', 'custom-feedback']
+    )
     before: Optional[bool] = Field(False, description='The result must be stored before this action is executed.')
 
 
