@@ -79,9 +79,10 @@ public class BuildPlanService {
                 .map(entry -> entry.getKey() + "=" + entry.getValue())
                 .toArray(String[]::new)).reduce((a, b) -> a + ";" + b).orElse("");
 
+        String script = "#!/usr/bin/env bash\n" + action.getScript();
         ScriptTask task = new ScriptTask()
                 .description(action.getName())
-                .inlineBody(action.getScript());
+                .inlineBody(script);
 
         var parameters = action.getParameters();
         String params = "";
