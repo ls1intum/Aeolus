@@ -227,16 +227,37 @@ def convert_results(artifacts: typing.List[BambooArtifact]) -> typing.List[Resul
     """
     results: list[Result] = []
     for artifact in artifacts:
+        path: str = artifact.location + "/" + artifact.pattern
         results.append(
             Result(
                 name=artifact.name,
-                path=artifact.location + "/" + artifact.pattern,
+                path=path,
                 ignore=artifact.exclusion,
-                type=None,
+                type=get_result_type_from_path(path),
                 before=False,
             )
         )
     return results
+
+
+def get_result_type_from_path(path: str) -> Optional[str]:
+    """
+    Extracts the result type from the given path.
+    :param path: path to extract the result type from
+    :return: result type or None
+    """
+    # java static code analysis
+    if "spotbugsXml.xml" in path or "checkstyle-result.xml" in path or "cpd.xml" in path or "pmd.xml" in path:
+        return "static-code-analysis"
+    # swift static code analysis
+    if "swiftlint-result.xml" in path:
+        return "static-code-analysis"
+    # c static code analysis
+    if "gcc.xml" in path:
+        return "static-code-analysis"
+    if "tiaTests.json" in path:
+        return "testwise-coverage"
+    return None
 
 
 def add_results_to_action(junit_action: PlatformAction, actions: list[Action], results: list[Result]) -> None:
