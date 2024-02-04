@@ -6,10 +6,10 @@ import tempfile
 import typing
 from typing import List, Optional
 
-from jinja2 import Environment, FileSystemLoader, Template
 from docker.client import DockerClient  # type: ignore
 from docker.models.containers import Container  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
+from jinja2 import Environment, FileSystemLoader, Template
 
 from classes.generated.definitions import ScriptAction, Repository, Target
 from classes.generated.windfile import WindFile
@@ -50,12 +50,31 @@ class CliGenerator(BaseGenerator):
         :return: CI action
         """
         original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
-        if original_type == "platform" or (step.platform and step.platform != Target.cli):
+
+        if original_type == "platform" and (step.platform and step.platform != Target.cli):
             logger.info(
                 "🔨",
-                "Platform action detected. Skipping...",
+                "Unwanted platform action detected. Skipping...",
                 self.output_settings.emoji,
             )
+            return None
+        if original_type == "platform" and (step.platform and step.platform == Target.cli) and step.parameters:
+            logger.info(
+                "🔨",
+                "Platform action detected. Executing arbitrary code...",
+                self.output_settings.emoji,
+            )
+            try:
+                if step.parameters.root and step.parameters.root.root and step.script:
+                    function: Optional[str] = str(step.parameters.root.root["__aeolus_call_function"])
+                    code: Optional[str] = step.script
+                    utils.execute_arbitrary_code(code=code, function=function, module_name=step.name)
+            except Exception as exception:  # pylint: disable=broad-except
+                logger.error(
+                    "❌",
+                    f"Error executing platform action: {exception}",
+                    self.output_settings.emoji,
+                )
             return None
         valid_funtion_name: str = re.sub("[^a-zA-Z_]+", "", name)
         if valid_funtion_name in self.functions:
