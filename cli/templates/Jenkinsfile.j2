@@ -103,13 +103,14 @@ pipeline {
       steps {
         {%- if step.workdir %}
         dir('{{ step.workdir }}') {
-          sh '''
-          {{ step.script | indent(12, false) }}
+          {# https://stackoverflow.com/a/45179743 #}
+          sh '''#!/usr/bin/env bash
+          {{ step.script | indent(10) }}
           '''
         }
         {%- else %}
-        sh '''
-          {{ step.script | indent(12, false) }}
+        sh '''#!/usr/bin/env bash
+          {{ step.script | indent(10) }}
         '''
         {%- endif %}
       }
@@ -123,13 +124,13 @@ post {
   {%- for action in always_steps %}
     {%- if action.workdir %}
     dir('{{ action.workdir }}') {
-      sh '''
-      {{ action.script | indent(8, false) }}
+      sh '''#!/usr/bin/env bash
+      {{ action.script | indent(8) }}
       '''
     }
     {%- else %}
-    sh '''
-    {{ action.script | indent(6, false) }}
+    sh '''#!/usr/bin/env bash
+    {{ action.script | indent(6) }}
     '''
     {%- endif %}
   {%- endfor %}
@@ -145,12 +146,15 @@ post {
            would be cool, but artemis does not work with this #}
         {%- set directory = "results" -%}
         {%-if result.type == "static-code-analysis" %}
-          {%- set directory = "staticCodeAnalysis" -%}
+          {%- set directory = "staticCodeAnalysisReports" -%}
         {%- endif %}
         {%-if result.type == "custom-feedback" %}
           {%- set directory = "customFeedbacks" -%}
         {%- endif %}
-        sh '''
+        {%-if result.type == "testwise-coverage" %}
+          {%- set directory = "testwiseCoverageReport" -%}
+        {%- endif %}
+        sh '''#!/usr/bin/env bash
         mkdir -p {{ directory }} || true
         cp {{ result.path }} $WORKSPACE/{{ directory }}/ || true
         sed -i 's/<testsuites>/<testsuite>/g ; s/<\\/testsuites>/<\\/testsuite>/g ; s/<testsuites /<testsuite /g' $WORKSPACE/{{ directory }}/{{ result.path.split("/")[-1] }} || true
