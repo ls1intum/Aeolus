@@ -40,20 +40,22 @@ def get_content_of(file: str) -> Optional[str]:
         return file_pointer.read()
 
 
-def execute_arbitrary_code(code: str, method: str, module_name: str = "module") -> None:
+def execute_arbitrary_code(code: Optional[str], function: Optional[str], module_name: str = "module") -> None:
     """
     Executes the given code. This is a security risk, so use with caution.
     :param code: Code to execute
-    :param method: Method to call
+    :param function: Method to call
     :param module_name: Name of the module
     """
+    if code is None or function is None:
+        return
     # https://stackoverflow.com/a/19850183
     compiled = compile(code, "", "exec")
     module = ModuleType(module_name)
     # function = get_attr(module, method)
     exec(compiled, module.__dict__)  # pylint: disable=exec-used
-    if hasattr(module, method):
-        build(getattr(module, method))
+    if hasattr(module, function):
+        build(getattr(module, function))
 
 
 def build(func: typing.Any) -> None:
@@ -317,6 +319,8 @@ def combine_docker_config(windfile: WindFile, output_settings: OutputSettings) -
     docker_configs: dict[str, Optional[Docker]] = {}
     for index, action in enumerate(windfile.actions):
         docker_configs[action.root.name] = windfile.actions[index].root.docker
+    if len(docker_configs) == 0:
+        return
     first: Optional[Docker] = list(docker_configs.values())[0]
     are_identical: bool = True
     for _, config in docker_configs.items():

@@ -35,7 +35,7 @@ def has_external_actions(windfile: WindFile) -> bool:
     return False
 
 
-def get_external_actions(
+def get_template_actions(
     windfile: typing.Optional[WindFile],
 ) -> typing.List[typing.Tuple[str, Action]]:
     """

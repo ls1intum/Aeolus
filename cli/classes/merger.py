@@ -30,7 +30,7 @@ from classes.pass_settings import PassSettings
 from classes.validator import (
     read_action_file,
     get_platform_actions,
-    get_external_actions,
+    get_template_actions,
     get_file_actions,
     Validator,
     get_script_actions_with_names,
@@ -148,13 +148,13 @@ class Merger(PassSettings):
         self.set_original_types(names=[action_tuple[0] for action_tuple in actions], key="file")
         return self.traverse_external_actions(external_actions=actions)
 
-    def merge_external_actions(self) -> bool:
+    def merge_template_actions(self) -> bool:
         """
         Merges the external actions into the windfile.
         :return: True if the external actions could be merged, False otherwise
         """
         logger.info("🌍", "Merging external actions", self.output_settings.emoji)
-        actions: list[tuple[str, Action]] = get_external_actions(self.windfile)
+        actions: list[tuple[str, Action]] = get_template_actions(self.windfile)
         logger.info(
             "🌍",
             f"found {len(actions)} external actions",
@@ -497,22 +497,45 @@ class Merger(PassSettings):
             original_types: List[str] = []
             actions: typing.List[Action] = []
             if isinstance(action, FileAction):
-                internal_action: Action = Action(
-                    root=ScriptAction(
-                        name=action.name,
-                        script=file.read(),
-                        workdir=action.workdir,
-                        excludeDuring=action.excludeDuring,
-                        environment=action.environment,
-                        parameters=action.parameters,
-                        results=action.results,
-                        platform=action.platform,
-                        docker=action.docker,
-                        runAlways=action.runAlways,
+                original_types.append("file")
+                actions.append(
+                    Action(
+                        root=ScriptAction(
+                            name=action.name,
+                            script=file.read(),
+                            workdir=action.workdir,
+                            excludeDuring=action.excludeDuring,
+                            environment=action.environment,
+                            parameters=action.parameters,
+                            results=action.results,
+                            platform=action.platform,
+                            docker=action.docker,
+                            runAlways=action.runAlways,
+                        )
                     )
                 )
-                original_types.append("file")
-                actions.append(internal_action)
+            if isinstance(action, PlatformAction):
+                parameters: Parameters | None = action.parameters
+                if not parameters:
+                    parameters = Parameters(root=Dictionary(root={}))
+                parameters.root.root["__aeolus_call_function"] = action.function
+                original_types.append("platform")
+                actions.append(
+                    Action(
+                        root=ScriptAction(
+                            name=action.name,
+                            script=file.read(),
+                            workdir=action.workdir,
+                            excludeDuring=action.excludeDuring,
+                            environment=action.environment,
+                            parameters=parameters,
+                            results=action.results,
+                            platform=action.platform,
+                            docker=action.docker,
+                            runAlways=action.runAlways,
+                        )
+                    )
+                )
             if isinstance(action, TemplateAction):
                 logger.info(
                     "📄 ",
@@ -559,7 +582,7 @@ class Merger(PassSettings):
         if (
             not self.merge_script_actions()
             or not self.merge_file_actions()
-            or not self.merge_external_actions()
+            or not self.merge_template_actions()
             or not self.merge_platform_actions()
         ):
             return None

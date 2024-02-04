@@ -22,7 +22,7 @@ from docker.models.containers import Container  # type: ignore
 from docker.types.daemon import CancellableStream  # type: ignore
 
 import cli_utils
-from classes.generated.definitions import Target
+from classes.generated.definitions import Target, ScriptAction
 from classes.generated.windfile import WindFile
 from classes.input_settings import InputSettings
 from classes.output_settings import OutputSettings
@@ -67,6 +67,33 @@ class BambooGenerator(BaseGenerator):
         :return: bamboo yaml specs
         """
         start = time.time()
+        for action in self.windfile.actions:
+            if action.root.platform and action.root.platform != Target.bamboo:
+                continue
+            if action.root.platform and action.root.platform == Target.bamboo:
+                original_type: Optional[str] = self.metadata.get_meta_for_action(action.root.name).get("original_type")
+                if original_type == "platform" and action.root.parameters:
+                    logger.info(
+                        "🔨",
+                        "Platform action detected. Executing arbitrary code...",
+                        self.output_settings.emoji,
+                    )
+                    try:
+                        if (
+                            isinstance(action.root, ScriptAction)
+                            and action.root.script
+                            and action.root.parameters.root
+                            and action.root.parameters.root.root
+                        ):
+                            function: Optional[str] = str(action.root.parameters.root.root["__aeolus_call_function"])
+                            code: Optional[str] = action.root.script
+                            utils.execute_arbitrary_code(code=code, function=function, module_name=action.root.name)
+                    except Exception as exception:  # pylint: disable=broad-except
+                        logger.error(
+                            "❌",
+                            f"Error executing platform action: {exception}",
+                            self.output_settings.emoji,
+                        )
         utils.replace_environment_variables_in_windfile(environment=self.environment, windfile=self.windfile)
         end = time.time()
         cli_utils.logger.info("🔨", f"Replaced environment variables in {end - start}s", self.output_settings.emoji)
