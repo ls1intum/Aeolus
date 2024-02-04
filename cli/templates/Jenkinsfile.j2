@@ -157,8 +157,10 @@ post {
         sh '''#!/usr/bin/env bash
         mkdir -p {{ directory }} || true
         cp {{ result.path }} $WORKSPACE/{{ directory }}/ || true
+        {%- if directory == "results" %}
         sed -i 's/<testsuites>/<testsuite>/g ; s/<\\/testsuites>/<\\/testsuite>/g ; s/<testsuites /<testsuite /g' $WORKSPACE/{{ directory }}/{{ result.path.split("/")[-1] }} || true
         sed -i 's/[^[:print:]	]/�/g' $WORKSPACE/{{ directory }}/{{ result.path.split("/")[-1] }} || true
+        {%- endif %}
         '''
         {%- endfor %}
       }

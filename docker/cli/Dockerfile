@@ -4,7 +4,7 @@ ADD bamboo-generator/ .
 RUN ./gradlew shadowJar --no-daemon -x :generateJsonSchema2Pojo
 RUN cp ./build/libs/bamboo-generator*-all.jar bamboo-generator.jar
 
-FROM python:3.11-slim AS cli
+FROM python:3.12-slim AS cli
 
 RUN apt-get update && apt-get install -y default-jre git && rm -rf /var/cache
 
