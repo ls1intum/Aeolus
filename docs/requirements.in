@@ -1,0 +1,5 @@
+# update with pip-compile requirements.in
+pip-tools
+Sphinx
+sphinx-rtd-theme
+sphinx-autobuild
