@@ -50,8 +50,7 @@ class CliGenerator(BaseGenerator):
         :return: CI action
         """
         original_type: Optional[str] = self.metadata.get_meta_for_action(name).get("original_type")
-
-        if original_type == "platform" and (step.platform and step.platform != Target.cli):
+        if original_type == "platform" or (step.platform and step.platform != Target.cli):
             logger.info(
                 "🔨",
                 "Unwanted platform action detected. Skipping...",
