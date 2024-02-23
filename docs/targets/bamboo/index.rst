@@ -4,7 +4,7 @@ Bamboo
 
 .. toctree::
    :maxdepth: 3
-   :caption: Bamboo
+   :caption: Bamboo Setup
 
    setup
 
