@@ -4,13 +4,13 @@ on:
   pull_request:
     paths:
       - 'docs/**'
-      - '.github/workflows/docs.yml'
+      - '.github/workflows/docs.yaml'
   push:
     branches:
       - develop
     paths:
       - 'docs/**'
-      - '.github/workflows/docs.yml'
+      - '.github/workflows/docs.yaml'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -29,12 +29,11 @@ jobs:
           build-command: make html dirhtml
       - uses: actions/upload-artifact@v3
         with:
-          name: documentation
+          name: Documentation
           path: docs/_build/html/
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/_build/dirhtml/
-
   # Deployment job
   deploy:
     if: github.ref == 'refs/heads/develop'
@@ -46,4 +45,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
