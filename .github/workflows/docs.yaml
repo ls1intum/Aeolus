@@ -23,17 +23,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ammaraskar/sphinx-action@master
+      - uses: ammaraskar/sphinx-action@0.4
         with:
           docs-folder: "docs/"
           build-command: make html dirhtml
       - uses: actions/upload-artifact@v3
         with:
-          name: Documentation
-          path: docs/build/html/
-      - uses: actions/upload-pages-artifact@v2
+          name: documentation
+          path: docs/_build/html/
+      - uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/build/dirhtml/
+          path: docs/_build/dirhtml/
 
   # Deployment job
   deploy:

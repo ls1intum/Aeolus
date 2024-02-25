@@ -36,12 +36,14 @@ packaging==23.2
     # via
     #   build
     #   sphinx
-pip-tools==7.3.0
+pip-tools==7.4.0
     # via -r requirements.in
 pygments==2.17.2
     # via sphinx
 pyproject-hooks==1.0.0
-    # via build
+    # via
+    #   build
+    #   pip-tools
 requests==2.31.0
     # via sphinx
 six==1.16.0
@@ -74,7 +76,7 @@ sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
 tornado==6.4
     # via livereload
-urllib3==2.2.0
+urllib3==2.2.1
     # via requests
 wheel==0.42.0
     # via pip-tools
