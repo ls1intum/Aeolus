@@ -1,6 +1,5 @@
 #run to update: pip-compile --output-file requirements.txt ../cli/requirements.in requirements.in
-fastapi
-starlette
+fastapi>=0.110.0
 pydantic
 uvicorn
 gunicorn

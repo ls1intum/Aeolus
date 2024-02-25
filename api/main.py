@@ -37,7 +37,7 @@ from generators.jenkins import JenkinsGenerator
 
 app = FastAPI()
 
-origins = ["http://localhost", "http://localhost:3000", "https://aeolus.resch.io", "http://localhost:9000"]
+origins = ["http://localhost", "http://localhost:3000", "http://localhost:9000"]
 
 app.add_middleware(
     CORSMiddleware,
