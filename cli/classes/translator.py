@@ -65,8 +65,8 @@ def parse_docker(docker_config: Optional[BambooDockerConfig], environment: Envir
             environment=environment, haystack=docker_config.docker_run_arguments
         )
         docker = Docker(
-            image=docker_config.image if ":" not in docker_config.image else docker_config.image.split(":")[0],
-            tag=docker_config.image.split(":")[1] if ":" in docker_config.image else "latest",
+            image=docker_config.image,
+            tag=None,
             volumes=volume_list,
             parameters=arguments,
         )
