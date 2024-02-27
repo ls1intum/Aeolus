@@ -98,7 +98,10 @@ def handle_script_task(task_dict: dict[str, Any]) -> BambooTask:
         condition = parse_condition(conditions=conditions)
     environment: dict[Any, int | str | float | bool | list | None] = {}
     if "environment" in task_dict:
-        for entry in str(task_dict["environment"]).split(";"):
+        array: list[str] = str(task_dict["environment"]).split(";")
+        if len(array) > 0:
+            array = array[0].split(" ")
+        for entry in array:
             key, value = entry.split("=")
             environment[key] = value
     arguments: List[str] = []
@@ -163,7 +166,7 @@ def handle_tasks(job_dict: list[dict[str, Any]]) -> list[BambooTask | BambooChec
         elif task_type == "checkout":
             tasks.append(
                 BambooCheckoutTask(
-                    repository=str(task_dict["repository"]),
+                    repository=str(task_dict["repository"]) if "repository" in task_dict else "",
                     force_clean_build=bool(task_dict["force_clean_build"]),
                     path=str(task_dict["path"]) if "path" in task_dict else "",
                     description=str(task_dict["description"]) if "description" in task_dict else "",
@@ -321,11 +324,16 @@ class BambooClient:
                 repo_name = list(repo_dict.keys())[0]
                 repo: dict[str, int | bool | str] = repo_dict[repo_name]
                 repo = fix_keys(dictionary=repo)
+                if repo["type"] == "bitbucket-server":
+                    repo["url"] = str(repo["clone_url"]).replace("ssh://", "https://").replace("git@", "")
+                if repo["type"] == "github":
+                    repo["url"] = str(repo["base_url"]) + str(repo["user"]) + "/" + str(repo["repository"])
+                    repo["shared_credentials"] = str(repo["password"])
                 repositories[repo_name] = BambooRepository(
-                    repo_type=str(repo["type"]),
+                    repo_type=str(repo["type"] if "type" in repo else "git"),
                     url=str(repo["url"]),
                     branch=str(repo["branch"]),
-                    shared_credentials=str(repo["shared_credentials"]),
+                    shared_credentials=str(repo["shared_credentials"] if "shared_credentials" in repo else ""),
                     command_timeout_minutes=str(repo["command_timeout_minutes"]),
                     lfs=bool(repo["lfs"]),
                     verbose_logs=bool(repo["verbose_logs"]),
