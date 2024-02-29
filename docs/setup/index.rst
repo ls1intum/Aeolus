@@ -1,6 +1,6 @@
-*********
++++++++++
 Languages
-*********
++++++++++
 
 Aeolus is implemented using different components, each of which is responsible for a specific part of the system. The main components, structured by their language, are:
 
@@ -17,9 +17,9 @@ Aeolus is implemented using different components, each of which is responsible f
 
   * **Bamboo Generator**: A tool that generates the Bamboo configuration files from the CI configuration files.
 
-***************
++++++++++++++++
 Local Dev Setup
-***************
++++++++++++++++
 
 To set up a local development environment, you will need to use a virtual environment, we use `venv` with `pip-tools` for this purpose.
 
@@ -73,4 +73,12 @@ To run the Bamboo Generator, you can use the following command:
     cp ./build/libs/bamboo-generator*-all.jar bamboo-generator.jar
     java -jar bamboo-generator.jar
 
-You can ofcourse also use the IDE of your choice to run, develop, and debug the different components, the above commands are just examples.
+You can of course also use the IDE of your choice to run, develop, and debug the different components, the above commands are just examples.
+
++++++++++++++
+Other Systems
++++++++++++++
+
+Seeing as Aeolus is meant to be a complementary tool to `Artemis <https://github.com/ls1intum/Artemis>`_, please refer to the Artemis documentation for more
+information on how to set up a local development environment for Artemis, including the documentation on how to set up
+`Jenkins <https://docs.artemis.cit.tum.de/dev/setup/jenkins-gitlab.html>`_ and `Bamboo <https://docs.artemis.cit.tum.de/dev/setup/bamboo-bitbucket-jira.html>`_ for local development.
