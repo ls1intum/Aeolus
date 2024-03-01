@@ -1,12 +1,23 @@
 # Aeolus: A Domain-Specific Language for Streamlining CI Job Configuration for Programming Exercises
 
-This repository will contain the work of [my](https://github.com/reschandreas) master's thesis. The goal of this thesis
-is to create a domain-specific language (DSL) for streamlining CI job configuration for programming exercises.
+![tests](https://github.com/ls1intum/Aeolus/actions/workflows/docs.yaml/badge.svg)
+![tests](https://github.com/ls1intum/Aeolus/actions/workflows/python-unit-tests.yaml/badge.svg)
+![containers](https://github.com/ls1intum/Aeolus/actions/workflows/build-and-push.yaml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+On how to use Aeolus, please refer to the [documentation](https://ls1intum.github.io/Aeolus/).
+
+Aeolus is a complementary tool to Artemis, the online platform for programming exercises. It is a domain-specific language
+for streamlining the configuration of continuous integration (CI) jobs for programming exercises. Aeolus provides a
+standard definition that is able to generate code for several targets, such as CLI, Jenkins, and Bamboo. This allows
+instructors to create custom CI jobs for their programming exercises without having to rewrite the configuration for
+each platform.
 
 ## Why?
 
-Currently, in Artemis, it is hard to create custom CI jobs. With Aeolus, we provide a standard definition that
-is able to generate code for several targets.
+In the context of programming exercises, it is common to have a set of CI jobs that are executed for each student
+submission. These jobs typically include tasks such as compiling the code, running tests, and generating test results. In
+addition, there are often platform-specific tasks, such as setting up the environment, that need to be executed before
 
 ## How?
 
@@ -706,3 +717,9 @@ with the CLI tool using the following command:
 python main.py translate -k <bamboo-build-plan-key> --url <bamboo-url> -t <bamboo-token>
 ```
 The tool will connect to bamboo, retrieve the build plan and translate it into a windfile. The windfile will be printed to stdout.
+
+## Contributors
+
+<a href="https://github.com/ls1intum/Aeolus/graphs/contributors">
+  <img src="https://contributors-img.web.app/image?repo=ls1intum/Aeolus"  alt="contributors"/>
+</a>
