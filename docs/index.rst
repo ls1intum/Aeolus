@@ -9,6 +9,8 @@ Welcome to the documentation of Aeolus!
 Aeolus is a Domain Specific Language (DSL) for defining continuous integration (CI) jobs in a declarative way.
 It is designed to be easy to use and to be able to define CI jobs for programming exercises that can be run on different CI platforms.
 
+Check out our playground on `https://aeolus.artemis.cit.tum.de <https://aeolus.artemis.cit.tum.de>`_
+
 .. toctree::
    :maxdepth: 3
    :caption: User Guide
@@ -31,6 +33,7 @@ Currently, Aeolus can generate CI jobs for the following platforms:
 
 All three systems can be used with the same Aeolus configuration file, which makes it easy to switch between different CI platforms.
 The how and why we generate what we generate, is explained in the different target platform sections, see :ref:`targets`.
+
 An example for such a configuration file, we call in Windfile, looks like this:
 
 .. code-block:: yaml

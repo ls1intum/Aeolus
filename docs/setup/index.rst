@@ -82,3 +82,30 @@ Other Systems
 Seeing as Aeolus is meant to be a complementary tool to `Artemis <https://github.com/ls1intum/Artemis>`_, please refer to the Artemis documentation for more
 information on how to set up a local development environment for Artemis, including the documentation on how to set up
 `Jenkins <https://docs.artemis.cit.tum.de/dev/setup/jenkins-gitlab.html>`_ and `Bamboo <https://docs.artemis.cit.tum.de/dev/setup/bamboo-bitbucket-jira.html>`_ for local development.
+
+
+++++++++++++++++
+Production Setup
+++++++++++++++++
+
+If you want to set up Aeolus in a production environment, you can use the provided Docker images and compose files.
+You can find the docker compose files in the ``deployment`` directory.
+
+If you choose to secure the API with a token, you also need to give Aeolus the following environment variables:
+
+.. code-block:: bash
+
+   AEOLUS_API_KEYS=<your-api-key>
+   # if you want to use jenkins as ci system
+   JENKINS_URL=<jenkins-url>
+   JENKINS_USERNAME=<jenkins-username>
+   JENKINS_TOKEN=<jenkins-password-of-the-user>
+
+   # if you want to use bamboo as ci system
+   BAMBOO_URL=<bamboo-url>
+   BAMBOO_USERNAME=<bamboo-username>
+   BAMBOO_TOKEN=<token-of-the-user>
+
+The ``AEOLUS_API_KEYS`` environment variable is a comma-separated list of API keys that are allowed to access the API.
+If you want to use the Jenkins or Bamboo generator, you also need to provide the respective environment variables.
+The key, if it is set, needs to be provided in the ``Authorization`` header of the request with the prefix ``Bearer``.
