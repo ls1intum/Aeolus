@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   pull_request:
   push:
+    tags:
+      - "v*.*.*"
     branches:
       - develop
     paths-ignore:
@@ -87,7 +89,7 @@ jobs:
             type=raw,value={{date 'YYYYMMDD-hhmmss' tz='Europe/Berlin'}}
             type=ref,event=pr
             type=sha
-            type=raw,value={{steps.compute-tag.outputs.result}}
+            type=raw,value=${{steps.compute-tag.outputs.result}}
             type=raw,value=nightly,enable={{is_default_branch}}
       - name: Build and push
         uses: docker/build-push-action@v5

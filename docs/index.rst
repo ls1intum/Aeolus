@@ -13,6 +13,12 @@ Check out our playground on `https://aeolus.artemis.cit.tum.de <https://aeolus.a
 
 .. toctree::
    :maxdepth: 3
+   :caption: Input definition
+
+   input/index
+
+.. toctree::
+   :maxdepth: 3
    :caption: User Guide
 
    user_guide/index

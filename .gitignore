@@ -17,6 +17,7 @@
 
 # Generated files
 .idea/**/contentModel.xml
+.idea/copilot/
 
 # Sensitive or high-churn files
 .idea/**/dataSources/
