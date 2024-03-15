@@ -2,9 +2,9 @@
 
 ![tests](https://github.com/ls1intum/Aeolus/actions/workflows/docs.yaml/badge.svg)
 ![tests](https://github.com/ls1intum/Aeolus/actions/workflows/python-unit-tests.yaml/badge.svg)
+![coverage](https://ls1intum.github.io/Aeolus/_images/coverage.svg)
 ![containers](https://github.com/ls1intum/Aeolus/actions/workflows/build-and-push.yaml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![coverage](https://github.com/ls1intum/Aeolus/badges/coverage.svg)
 
 On how to use Aeolus, please refer to the [documentation](https://ls1intum.github.io/Aeolus/).
 
