@@ -27,6 +27,10 @@ click==8.1.6
     #   black
     #   pip-tools
 coverage==7.3.0
+    # via
+    #   -r requirements.in
+    #   coverage-badge
+coverage-badge==1.1.0
     # via -r requirements.in
 datamodel-code-generator==0.21.4
     # via -r requirements.in
@@ -40,7 +44,7 @@ genson==1.2.2
     # via datamodel-code-generator
 gitdb==4.0.10
     # via gitpython
-gitpython==3.1.41
+gitpython==3.1.42
     # via -r requirements.in
 idna==3.4
     # via
